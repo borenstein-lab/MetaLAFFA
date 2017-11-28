@@ -49,34 +49,34 @@ for line in f:
 	gene_hit = blast_output_fields[1]
 	e_val = float(blast_output_fields[10])
 
-	# If we're still looking at the same read, compare the current hit to the previous hits to see if we should keep it
-	if read_name == curr_read_name:
+	# If we've found a new read, print any filtered hit information for the previous read and reset the tracking variables
+	if read_name != curr_read_name:
 
-		# If the current e value is less than or equal to the best e value for hits for this read and we're using a best hit method or we're using a best ko method and the gene is associated with a ko then we keep this hit
-		if e_val <= curr_best_e_val and (args.filtering_method in ["best_hit", "best_N_hits"] or (args.filtering_method in ["best_ko", "best_N_kos"] and gene_hit in ko_genes)):
-			curr_read_hits.append("\t".join([read_name, gene_hit, str(e_val)]))
-			curr_num_hits += 1
-
-			# If the e value was less than the best e value for this read, that means we had not found a read that satisfies the criterion requirements for this read yet and we should update the best e value for this read
-			if e_val < curr_best_e_val:
-				curr_best_e_val = e_val
-
-		# Otherwise, if the current e value is greater than the best e value, then we only keep it if we are using a best N method, we haven't seen N hits yet, and if we are using the best N ko method then we also check if the gene is associated with a ko
-		elif e_val > curr_best_e_val and (args.filtering_method == "best_N_hits" or (args.filtering_method == "best_N_kos" and gene_hit in ko_genes)) and curr_num_hits < args.number:
-			curr_read_hits.append("\t".join([read_name, gene_hit, str(e_val)]))
-			curr_num_hits += 1
-
-	# Otherwise, we've found a new read
-	else:
-
-		# Print any filtered hit information for the previous read and reset the tracking variables
+		# Print the previous read hit information
 		for hit in curr_read_hits:
 			output.write(hit + "\n")
+
+		# Reset the tracking variables for the new current read
 		curr_read_name = read_name
 		curr_read_hits = []
 		curr_best_e_val = float("Inf")
 		curr_num_hits = 0
 
+	# If the current e value is less than or equal to the best e value for hits for this read and we're using a best hit method or we're using a best ko method and the gene is associated with a ko then we keep this hit
+	if e_val <= curr_best_e_val and (args.filtering_method in ["best_hit", "best_N_hits"] or (args.filtering_method in ["best_ko", "best_N_kos"] and gene_hit in ko_genes)):
+		curr_read_hits.append("\t".join([read_name, gene_hit, str(e_val)]))
+		curr_num_hits += 1
+
+		# If the e value was less than the best e value for this read, that means we had not found a read that satisfies the criterion requirements for this read yet and we should update the best e value for this read
+		if e_val < curr_best_e_val:
+			curr_best_e_val = e_val
+
+	# Otherwise, if the current e value is greater than the best e value, then we only keep it if we are using a best N method, we haven't seen N hits yet, and if we are using the best N ko method then we also check if the gene is associated with a ko
+	elif e_val > curr_best_e_val and (args.filtering_method == "best_N_hits" or (args.filtering_method == "best_N_kos" and gene_hit in ko_genes)) and curr_num_hits < args.number:
+		curr_read_hits.append("\t".join([read_name, gene_hit, str(e_val)]))
+		curr_num_hits += 1
+
 # Don't forget to print any info for the last read
 for hit in curr_read_hits:
 	output.write(hit + "\n")
+output.close()
