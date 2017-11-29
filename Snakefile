@@ -6,7 +6,8 @@ import config,gzip
 
 diamond_output_suffix = "_".join([x for x in ["diamond", config.alignment_method, config.sensitivity, "top_percentage", str(config.top_percentage), "max_e_value", str(config.max_e_value)] if x])
 #default_cluster_params = "-cwd -q borenstein-short.q"
-default_cluster_params = "-cwd"
+#default_cluster_params = "-cwd"
+default_cluster_params = ""
 
 wildcard_constraints:
     sample="[A-Za-z0-9_]+",
@@ -130,10 +131,12 @@ rule gene_mapper:
     params:
         count_method=config.count_method,
         cluster = default_cluster_params
-    run:
-        out_nonzip = output.out.rstrip(".gz")
-        shell("src/count_genes.py {input} {wildcards.sample} {params.count_method} --normalization length > %s" %(out_nonzip) )
-        shell("gzip %s" %(out_nonzip) )
+    shell:
+        "python src/count_genes.py {input} {wildcards.sample} {params.count_method} --normalization length > {output}"
+    #run:
+    #    out_nonzip = output.out.rstrip(".gz")
+    #    shell("python src/count_genes.py {input} {wildcards.sample} {params.count_method} --normalization length > %s" %(out_nonzip) )
+    #    shell("gzip %s" %(out_nonzip) )
 
 rule ko_mapper:
     input:
@@ -145,6 +148,17 @@ rule ko_mapper:
         cluster = default_cluster_params
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell( "src/count_kos.py {input} {params.counting_method} > %s" %(out_nonzip) )
+        shell( "python src/count_kos.py {input} {params.counting_method} > %s" %(out_nonzip) )
         shell("gzip %s" %(out_nonzip) )
+
+#rule normalization:
+#    input:
+#        out=config.diamond_output_directory + "{sample}_kocounts.gz"
+#    output:
+#        out=config.diamond_output_directory + "{sample}_kocounts.gz"
+#    params:
+#        cluster = default_cluster_params
+#    run:
+#        src/normalization_wrapper.sh {ko_profiles} {normalization_method} {output} --musicc_correct {musicc_correction_method}
+
 
