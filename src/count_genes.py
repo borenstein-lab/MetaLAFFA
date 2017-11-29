@@ -69,6 +69,10 @@ for line in f:
 
 			# Add the partial count factor to the abundance of each gene hit
 			for hit in curr_read_hits:
+
+				# If the gene has not been seen before, initialize it's abundance to 0 then add the partial count factor
+				if hit not in gene_abundances:
+					gene_abundances[hit] = 0
 				gene_abundances[hit] += partial_count_factor
 
 		# Reset the tracking variables
@@ -88,6 +92,10 @@ if len(curr_read_hits) > 0:
 
 	# Add the partial count factor to the abundance of each gene hit
 	for hit in curr_read_hits:
+
+		# If the gene has not been seen before, initialize it's abundance to 0 then add the partial count factor
+		if hit not in gene_abundances:
+			gene_abundances[hit] = 0
 		gene_abundances[hit] += partial_count_factor
 
 # Normalize abundances by gene length if specified
