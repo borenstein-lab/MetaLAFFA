@@ -24,7 +24,7 @@
 # --sort_order sort_order					: Sort order for SAM file (default: coordinate)
 # --trim_bwa_style trim_bwa_style			: Location of trimBWAstyle program (default: /net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/trimBWAstyle.usingBam_single_end_capable.pl)
 
-# Initialize variables that need to be set for bmtagger
+# Initialize variables that need to be set for trimBWAstyle
 fastq=""
 sample_name=""
 output=""
@@ -128,7 +128,7 @@ output=${position_args[2]}
 # Check if the required fastq file exists
 if [ ! -e $fastq ]
 then
-	(>&2 echo "The specified fastq file does not exist (${2})")
+	(>&2 echo "The specified fastq file does not exist (${fastq})")
 	exit 1
 fi
 
