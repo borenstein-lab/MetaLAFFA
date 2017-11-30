@@ -100,7 +100,7 @@ then
 	exit 1
 fi
 
-# Perform normalization based on the method chose
+# Perform normalization based on the method chosen
 case $normalization_method in
 
 	# If none, we don't perform any normalization and just copy the input to the output

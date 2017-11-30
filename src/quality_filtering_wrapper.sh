@@ -15,27 +15,27 @@
 #
 # Options:
 # --fastq_to_sam fastq_to_sam				: Location of fastq_to_sam program (default: /net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar)
-# --fix_paired_fastq fix_paired_fastq		: Location of program to fix paired fastq files for conversion to sam format (default: /net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/fix_paired_fastq.py)
+# --fix_paired_fastq fix_paired_fastq		: Location of program to fix paired fastq files for conversion to sam format (default: src/fix_paired_fastq.py)
 # -h										: Print this help information and exit
 # --paired_fastq paired_fastq 				: FASTQ file of paired reads
 # --paired_fastq_output paired_fastq_output	: Output file for filtered paired FASTQ file
 # --quality_format quality_format			: Quality format for SAM file (default: Standard)
 # --singleton_output singleton_output		: Output file for newly generated singleton reads
 # --sort_order sort_order					: Sort order for SAM file (default: coordinate)
-# --trim_bwa_style trim_bwa_style			: Location of trimBWAstyle program (default: /net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/trimBWAstyle.usingBam_single_end_capable.pl)
+# --trim_bwa_style trim_bwa_style			: Location of trimBWAstyle program (default: src/trimBWAstyle.usingBam_single_end_capable.pl)
 
 # Initialize variables that need to be set for trimBWAstyle
 fastq=""
 sample_name=""
 output=""
 fastq_to_sam=/net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar
-fix_paired_fastq=/net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/fix_paired_fastq.py
+fix_paired_fastq=src/fix_paired_fastq.py
 paired_fastq=""
 paired_fastq_output=""
 quality_format=Standard
 singleton_output=""
 sort_order=coordinate
-trim_bwa_style=/net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/trimBWAstyle.usingBam_single_end_capable.pl
+trim_bwa_style=src/trimBWAstyle.usingBam_single_end_capable.pl
 
 # Parse arguments
 position_args=()
