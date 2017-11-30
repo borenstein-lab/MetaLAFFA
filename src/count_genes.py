@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/net/borenstein/vol1/PROGRAMS/python2/bin/python
 #
 # Author: Alex Eng
 # Date: 11/28/2017
@@ -8,7 +8,8 @@ GENE_COLUMN_HEADER = "Gene"
 import argparse,sys
 from file_handling import *
 from future import *
-
+print("Parsing arguments")
+sys.stdout.flush()
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Calculates gene abundances based on filtered blast hits")
 parser.add_argument("filtered_blast_output_file", help="Filtered blast output file to calculate gene abundances from")
@@ -18,32 +19,42 @@ parser.add_argument("--normalization", "-n", choices=["length", "none"], default
 parser.add_argument("--gene_lengths", "-g", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/KEGG_2013_07_15/KEGG_PARSED_2013_07_15/Gene_Lengths.txt.gz", help="File mapping genes to their lengths")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")
 args=parser.parse_args()
-
+print("Setting output stream")
+sys.stdout.flush()
 # Set output stream
 output = sys.stdout
 if args.output:
 	output = open(args.output, "w")
-
+print("Reading gene lengths")
+sys.stdout.flush()
 # If we are normalizing by length, read in gene lengths
 gene_lengths = {}
 if args.normalization == "length":
-
+	print("Actually reading gene lengths")
+	sys.stdout.flush()
 	# Add each gene (first column) mapped to its length (second column)
 	f = custom_read(args.gene_lengths)
-
+	line_count = 0
 	# Skip the first line
 	f.readline()
-
+	line_count += 1
 	for line in f:
+		line_count += 1
+		if line_count % 1000 == 0:
+			print(line_count)
+			sys.stdout.flush()
 		split_line = line.strip().split()
 		gene_lengths[split_line[0]] = int(split_line[1])
 	f.close()
 
+print("Initializing tracking variables")
+sys.stdout.flush()
 # Initialize the variables used for keeping track of information while looping through each blast hit to calculate gene abundances
 gene_abundances = {}
 curr_read_name = None
 curr_read_hits = []
-
+print("Calculating gene abundances")
+sys.stdout.flush()
 # Calculate gene abundances (we assume all hits for the same read will be sequential)
 f = custom_read(args.filtered_blast_output_file)
 for line in f:
@@ -80,7 +91,8 @@ for line in f:
 		curr_read_hits = []
 
 	curr_read_hits.append(gene_hit)
-
+print("Calculating last contribution")
+sys.stdout.flush()
 # Don't forget to calculate gene abundance contributions for the last read
 if len(curr_read_hits) > 0:
 
@@ -97,12 +109,14 @@ if len(curr_read_hits) > 0:
 		if hit not in gene_abundances:
 			gene_abundances[hit] = 0
 		gene_abundances[hit] += partial_count_factor
-
+print("Normalizing by length if required")
+sys.stdout.flush()
 # Normalize abundances by gene length if specified
 if args.normalization == "length":
 	for gene in gene_abundances:
 		gene_abundances[gene] /= gene_lengths[gene]
-
+print("Writing gene abundances")
+sys.stdout.flush()
 # Write the output table (two columns, gene name and gene abundance in the sample)
 output.write("\t".join([GENE_COLUMN_HEADER, args.sample_name]) + "\n")
 for gene in gene_abundances:
