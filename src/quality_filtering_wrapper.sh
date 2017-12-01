@@ -17,6 +17,7 @@
 # --fastq_to_sam fastq_to_sam				: Location of fastq_to_sam program (default: /net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar)
 # --fix_paired_fastq fix_paired_fastq		: Location of program to fix paired fastq files for conversion to sam format (default: src/fix_paired_fastq.py)
 # -h										: Print this help information and exit
+# --java java                               : Location of the Java binary (default: /net/borenstein/vol1/PROGRAMS/java/jre1.8.0_151/bin/java)
 # --paired_fastq paired_fastq 				: FASTQ file of paired reads
 # --paired_fastq_output paired_fastq_output	: Output file for filtered paired FASTQ file
 # --quality_format quality_format			: Quality format for SAM file (default: Standard)
@@ -30,6 +31,7 @@ sample_name=""
 output=""
 fastq_to_sam=/net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar
 fix_paired_fastq=src/fix_paired_fastq.py
+java=/net/borenstein/vol1/PROGRAMS/java/jre1.8.0_151/bin/java
 paired_fastq=""
 paired_fastq_output=""
 quality_format=Standard
@@ -76,6 +78,7 @@ do
 			printf "%-42s%s\n" "--fastq_to_sam fastq_to_sam" ": Location of fastq_to_sam program (default: /net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar)"
 			printf "%-42s%s\n" "--fix_paired_fastq fix_paired_fastq" ": Location of program to fix paired fastq files for conversion to sam format (default: /net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/fix_paired_fastq.py)"
 			printf "%-42s%s\n" "-h" ": Print this help information and exit"
+			printf "%-42s%s\n" "--java java" ": Location of the Java binary (default: /net/borenstein/vol1/PROGRAMS/java/jre1.8.0_151/bin/java)"
 			printf "%-42s%s\n" "--paired_fastq paired_fastq" ": FASTQ file of paired reads"
 			printf "%-42s%s\n" "--paired_fastq_output paired_fastq_output" ": Output file for filtered paired reads"
 			printf "%-42s%s\n" "--quality_format" ": Quality format for SAM file (default: Standard)"
@@ -84,6 +87,16 @@ do
 			printf "%-42s%s\n" "--trim_bwa_style trim_bwa_style" ": Location of trimBWAstyle program (default: /net/borenstein/vol1/PIPELINE/Updated_Functional_Annotation_Pipeline/src/trimBWAstyle.usingBam_single_end_capable.pl)"
 			exit
 			;;
+		--java)
+            if [ -e $2 ]
+            then
+                java=$2
+                shift
+            else
+                (>&2 echo "The specified file for java does not exist (${2})")
+                exit 1
+            fi
+            ;;
 		--paired_fastq)
 			if [ -e $2 ]
 			then
@@ -140,7 +153,7 @@ if [ -z $paired_fastq ]
 then
 
 	# Convert the fastq to SAM format
-	java -jar $fastq_to_sam F1=$fastq O=${fastq}.singleton.sam V=$quality_format SO=$sort_order SM=$sample_name
+	$java -jar $fastq_to_sam F1=$fastq O=${fastq}.singleton.sam V=$quality_format SO=$sort_order SM=$sample_name
 
 	# Run trimBWAstyle
 	$trim_bwa_style -f ${fastq}.singleton.sam -c $output -s
@@ -161,7 +174,7 @@ else
 	$fix_paired_fastq $paired_fastq 2 > ${paired_fastq}.fixed
 
 	# Convert the paired read files to SAM format
-	java -jar $fastq_to_sam F1=${fastq}.fixed F2=${paired_fastq}.fixed O=${fastq}.paired.sam V=$quality_format SO=$sort_order SM=$sample_name
+	$java -jar $fastq_to_sam F1=${fastq}.fixed F2=${paired_fastq}.fixed O=${fastq}.paired.sam V=$quality_format SO=$sort_order SM=$sample_name
 	rm ${fastq}.fixed ${paired_fastq}.fixed
 
 	# Run trimBWAstyle
