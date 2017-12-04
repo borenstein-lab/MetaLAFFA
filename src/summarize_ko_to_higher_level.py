@@ -7,7 +7,7 @@ FUNCTION_COLUMN_HEADER = "Function"
 
 # Check why the path is being overwritten, but for now we make it look in our lab-controlled python lib directory
 import sys
-sys.path = ["/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/site-packages"]
+sys.path = ['', '/net/borenstein/vol1/PROGRAMS/python2/lib/python27.zip', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/plat-linux2', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-tk', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-old', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-dynload', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/site-packages']
 import numpy,pandas,argparse
 from future import *
 
