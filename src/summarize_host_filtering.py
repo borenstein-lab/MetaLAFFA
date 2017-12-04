@@ -5,7 +5,7 @@
 NUM_LINES_PER_READ = 4
 
 import argparse,sys
-from file_handling import *
+from fastq_summarizing import *
 from future import *
 
 # Parse command line arguments
@@ -20,29 +20,14 @@ if args.output:
     output = open(args.output, "w")
 
 # Print the column names for the host filtering summary file
-output.write("\t".join(["filtered_fastq_file", "post_host_filtering_reads"]) + "\n")
+output.write("\t".join(["filtered_fastq_file", "post_host_filtering_reads", "post_host_filtering_average_read_length", "post_host_filtering_average_base_quality"]) + "\n")
 
 # Parse each filtered fastq
 for filename in args.filtered_fastqs:
 
-    # Initialize trackers for parsing a file
-    read_count = 0
-
-    # Parse the filtered fastq file
-    f = custom_read(filename)
-    count = 0
-    line = f.readline()
-    while line != "":
-
-        # If we're on the first line of a read, then we found another read
-        if count == 0:
-            read_count += 1
-
-        # Now update our counter for current line in a read's info
-        count += 1
-        count = count % NUM_LINES_PER_READ
-        line = f.readline()
+    # Get the stats for the FASTQ file
+    read_count, average_read_length, average_base_quality = get_fastq_stats(filename)
 
     # Print the host filtering summary for this file
-    output.write("\t".join([filename, str(read_count)]) + "\n")
+    output.write("\t".join([filename, str(read_count), str(average_read_length), str(average_base_quality)]) + "\n")
 output.close()
