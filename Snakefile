@@ -14,7 +14,7 @@ delete_intermediates = False
 shell.suffix("; sleep 40")
 
 #SAMPLES = ["C68N1ACXX_7", "C82C3ACXX_1"]
-SAMPLES = list(set([x.split(".")[0] for x in os.path.listdir(config.fastq_directory)]))
+SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory)]))
 
 wildcard_constraints:
     sample="[A-Za-z0-9_]+",
@@ -27,33 +27,34 @@ rule all:
         #expand( "".join([config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]), sample = ["C68N1ACXX_7", "C82C3ACXX_1"], type = ["R1","R2","S"] )
         #expand(config.diamond_output_directory + "{sample}_genecounts.gz", sample = ["C68N1ACXX_7", "C82C3ACXX_1"]),
         #expand(config.diamond_output_directory + "{sample}_kocounts_normalized.gz", sample = ["C68N1ACXX_7", "C82C3ACXX_1"])
-        config.diamond_output_directory + "merge_kocounts.gz",
-        config.diamond_output_directory + "ko_functionalsummary.gz",
+        config.module_profiles_directory + "functionalsummary.gz",
         #Summaries
-        #expand(config.summary_directory + "{sample}.{type}.host_filer_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        #expand(config.summary_directory + "{sample}.map_reads_summary.txt", sample = SAMPLES),
-        #expand(config.summary_directory + "{sample}.hit_filtering_summary.txt", sample = SAMPLES),
-        #expand(config.summary_directory + "{sample}.gene_mapper_summary.txt", sample = SAMPLES),
-        #expand(config.summary_directory + "functional_summary_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "{sample}.{type}.host_filer_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        expand(config.summary_directory + "{sample}.map_reads_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "{sample}.hit_filtering_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "{sample}.gene_mapper_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "functional_summary_summary.txt", sample = SAMPLES),
 
 
 
 rule host_filter_duplicate:
     input:
-        F=config.fastq_directory + "{sample}.R1.fastq.gz",
-        R=config.fastq_directory + "{sample}.R2.fastq.gz"
+        R1=config.fastq_directory + "{sample}.R1.fastq.gz",
+        R2=config.fastq_directory + "{sample}.R2.fastq.gz"
     output:
-        F=config.host_filtered_directory + "{sample}.R1.hostfilter.fastq.gz",
-        R=config.host_filtered_directory + "{sample}.R2.hostfilter.fastq.gz"
+        R1=config.host_filtered_directory + "{sample}.R1.hostfilter.fastq.gz",
+        R2=config.host_filtered_directory + "{sample}.R2.hostfilter.fastq.gz",
+        host_marked=config.host_filtered_directory + "{sample}.hostmarked_dup.fastq.gz"
     params:
-        host_marked_reads="",
         cluster=default_cluster_params
     run:
-        out_F_nonzip = output.F.rstrip(".gz")
-        out_R_nonzip = output.R.rstrip(".gz")
-        shell( "src/host_filtering_wrapper.sh {input.R1} {params.host_marked_reads} %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_F_nonzip, out_R_nonzip) )
+        out_F_nonzip = output.R1.rstrip(".gz")
+        out_R_nonzip = output.R2.rstrip(".gz")
+        out_host_nonzip = output.host_marked.rstrip(".gz")
+        shell( "src/host_filtering_wrapper.sh {input.R1} %s %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_host_nonzip, out_F_nonzip, out_R_nonzip) )
         shell( "gzip %s" %(out_F_nonzip) )
         shell( "gzip %s" %(out_R_nonzip) )
+        shell( "gzip %s" %(out_host_nonzip) )
         #Delete intermediate
         if delete_intermediates:
             shell("rm -f {input.R1}")
@@ -64,13 +65,15 @@ rule host_filter_singleton:
         S=config.fastq_directory + "{sample}.S.fastq.gz",
     output:
         S=config.host_filtered_directory + "{sample}.S.hostfilter.fastq.gz",
+        host_marked=config.host_filtered_directory + "{sample}.hostmarked_sig.fastq.gz"
     params:
-        host_marked_reads="",
         cluster=default_cluster_params
     run:
         out_nonzip = output.S.rstrip(".gz")
-        shell(" src/host_filtering_wrapper.sh {input.S} {params.host_marked_reads} %s " %(out_nonzip) )
-        shell( "gzip %s" %(out_S_nonzip) )
+        out_host_nonzip = output.host_marked.rstrip(".gz")
+        shell(" src/host_filtering_wrapper.sh {input.S} %s %s" %(out_host_nonzip, out_nonzip) )
+        shell( "gzip %s" %(out_nonzip) )
+        shell( "gzip %s" %(out_host_nonzip) )
         #Delete intermediate
         if delete_intermediates:
             shell("rm -f {input.S}")
@@ -90,14 +93,18 @@ rule duplicate_filter_singleton:
         S=config.host_filtered_directory + "{sample}.S.hostfilter.fastq.gz",
     output:
         S=config.duplicate_filtered_directory + "{sample}.S.dupfilter.fastq.gz",
+        metrics_output=config.duplicate_filtered_directory + "{sample}.S.metricout.fastq.gz",
+        duplicate_marked_reads=config.duplicate_filtered_directory + "{sample}.S.duplicatemarked.fastq.gz",
     params:
-        metrics_output="",
-        duplicate_marked_reads="",
         cluster=default_cluster_params
     run:
         out_nonzip = output.S.rstrip(".gz")
-        shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} {params.metrics_output} {params.duplicate_marked_reads} %s " %(out_nonzip) )
+        out_metrics_nonzip = output.metrics_output.rstrip(".gz")
+        out_duplicate_nonzip = output.duplicate_marked.rstrip(".gz")
+        shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} %s %s %s " %(out_metrics_nonzip, out_duplicate_nonzip, out_nonzip) )
         shell( "gzip %s" %(out_S_nonzip) )
+        shell( "gzip %s" %(out_metrics_nonzip) )
+        shell( "gzip %s" %(out_duplicate_nonzip) )
         #Delete intermediate
         if delete_intermediates:
             shell("rm -f {input.S}")
@@ -360,11 +367,9 @@ rule merge_tables:
 
 rule normalization:
     input:
-        #config.diamond_output_directory + "{sample}_kocounts.gz"
         config.ko_counts_directory + "merge_kocounts.gz"
     output:
-        #out=config.diamond_output_directory + "{sample}_kocounts_normalized.gz"
-        out=config.diamond_output_directory + "_kocounts_normalized.gz"
+        out=config.ko_normalized_directory + "kocounts_normalized.gz"
     params:
         norm_method=config.norm_method,
         musicc_method=config.musicc_correction_method,
@@ -380,9 +385,9 @@ rule normalization:
 
 rule ko_functional_summary:
     input:
-        config.diamond_output_directory + "_kocounts_normalized.gz"
+        config.ko_normalized_directory + "kocounts_normalized.gz"
     output:
-        out=config.diamond_output_directory + "ko_functionalsummary.gz"
+        out=config.module_profiles_directory + "functionalsummary.gz"
     params:
         mapping_matrix=config.mapping_matrix,
         summary_method=config.summary_method,
@@ -397,7 +402,7 @@ rule ko_functional_summary:
 
 rule functional_summary_summary: 
     input:
-        config.diamond_output_directory + "ko_functionalsummary.gz"
+        config.module_profiles_directory + "functionalsummary.gz"
     output:
         config.summary_directory + "functional_summary_summary.txt"
     params:
