@@ -11,12 +11,14 @@ parser.add_argument("fastq1", help="The fastq file with the first half of the pa
 parser.add_argument("fastq2", help="The fastq file with read names that need to be altered.", metavar="Fastq 2")
 args = parser.parse_args()
 
+# Adrian: replace with your file_handling functions
 f1 = None
 if re.search("\.gz$", args.fastq1):
     f1 = gzip.open(args.fastq1, 'r')
 else:
     f1 = open(args.fastq1, 'r')
 
+# Adrian: replace with your file_handling functions
 f2 = None
 if re.search("\.gz$", args.fastq2):
     f2 = gzip.open(args.fastq2, 'r')
