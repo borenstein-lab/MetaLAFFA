@@ -14,7 +14,8 @@ delete_intermediates = False
 shell.suffix("; sleep 40")
 
 #SAMPLES = ["C68N1ACXX_7", "C82C3ACXX_1"]
-SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory)]))
+SAMPLES = ["C82C3ACXX_1"]
+#SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
 
 wildcard_constraints:
     sample="[A-Za-z0-9_]+",
@@ -22,11 +23,6 @@ wildcard_constraints:
 
 rule all:
     input:
-        #expand( config.output_directory + "{sample}.gz", sample = samples_all )
-        #expand( config.fastq_directory + "{sample}.S.fq.fastq.gz", sample = ["C68N1ACXX_7", "C82C3ACXX_1"] ),
-        #expand( "".join([config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]), sample = ["C68N1ACXX_7", "C82C3ACXX_1"], type = ["R1","R2","S"] )
-        #expand(config.diamond_output_directory + "{sample}_genecounts.gz", sample = ["C68N1ACXX_7", "C82C3ACXX_1"]),
-        #expand(config.diamond_output_directory + "{sample}_kocounts_normalized.gz", sample = ["C68N1ACXX_7", "C82C3ACXX_1"])
         config.module_profiles_directory + "functionalsummary.gz",
         #Summaries
         expand(config.summary_directory + "{sample}.{type}.host_filer_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
@@ -51,6 +47,8 @@ rule host_filter_duplicate:
         out_F_nonzip = output.R1.rstrip(".gz")
         out_R_nonzip = output.R2.rstrip(".gz")
         out_host_nonzip = output.host_marked.rstrip(".gz")
+        print(output.host_marked)
+        print(out_host_nonzip)
         shell( "src/host_filtering_wrapper.sh {input.R1} %s %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_host_nonzip, out_F_nonzip, out_R_nonzip) )
         shell( "gzip %s" %(out_F_nonzip) )
         shell( "gzip %s" %(out_R_nonzip) )
@@ -94,7 +92,7 @@ rule duplicate_filter_singleton:
     output:
         S=config.duplicate_filtered_directory + "{sample}.S.dupfilter.fastq.gz",
         metrics_output=config.duplicate_filtered_directory + "{sample}.S.metricout.fastq.gz",
-        duplicate_marked_reads=config.duplicate_filtered_directory + "{sample}.S.duplicatemarked.fastq.gz",
+        duplicate_marked=config.duplicate_filtered_directory + "{sample}.S.duplicatemarked.fastq.gz",
     params:
         cluster=default_cluster_params
     run:
@@ -102,7 +100,7 @@ rule duplicate_filter_singleton:
         out_metrics_nonzip = output.metrics_output.rstrip(".gz")
         out_duplicate_nonzip = output.duplicate_marked.rstrip(".gz")
         shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} %s %s %s " %(out_metrics_nonzip, out_duplicate_nonzip, out_nonzip) )
-        shell( "gzip %s" %(out_S_nonzip) )
+        shell( "gzip %s" %(out_nonzip) )
         shell( "gzip %s" %(out_metrics_nonzip) )
         shell( "gzip %s" %(out_duplicate_nonzip) )
         #Delete intermediate
@@ -117,20 +115,26 @@ rule duplicate_filter_paired:
     output:
         R1=config.duplicate_filtered_directory + "{sample}.R1.dupfilter.fastq.gz",
         R2=config.duplicate_filtered_directory + "{sample}.R2.dupfilter.fastq.gz",
+        metrics_output=config.duplicate_filtered_directory + "{sample}.R.metricout.fastq.gz",
+        duplicate_marked=config.duplicate_filtered_directory + "{sample}.R.duplicatemarked.fastq.gz",
     params:
         metrics_output="",
         duplicate_marked_reads="",
         cluster=default_cluster_params
     run:
-        out_F_nonzip = output.F.rstrip(".gz")
-        out_R_nonzip = output.R.rstrip(".gz")
-        shell( "src/duplicate_filtering_wrapper.sh {input.R1} {wildcard.sample} {params.metrics_output} {params.duplicate_marked_reads} %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_F_nonzip, out_R_nonzip) )
+        out_F_nonzip = output.R1.rstrip(".gz")
+        out_R_nonzip = output.R2.rstrip(".gz")
+        out_metrics_nonzip = output.metrics_output.rstrip(".gz")
+        out_duplicate_nonzip = output.duplicate_marked.rstrip(".gz")
+        shell( "src/duplicate_filtering_wrapper.sh {input.R1} {wildcards.sample} %s %s %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_metrics_nonzip, out_duplicate_nonzip,out_F_nonzip, out_R_nonzip) )
         shell( "gzip %s" %(out_F_nonzip) )
         shell( "gzip %s" %(out_R_nonzip) )
+        shell( "gzip %s" %(out_metrics_nonzip) )
+        shell( "gzip %s" %(out_duplicate_nonzip) )
         #Delete intermediate
         if delete_intermediates:
-            shell("rm -f {input.R}")
-            shell("rm -f {input.F}")
+            shell("rm -f {input.R1}")
+            shell("rm -f {input.R2}")
 
 rule duplicate_filter_summary:
     input:
@@ -334,7 +338,7 @@ rule ko_mapper:
         out=config.ko_counts_directory + "{sample}_kocounts.gz"
     params:
         counting_method=config.count_method,
-        cluster = "-cwd -l mfree=4G"
+        cluster=default_cluster_params
     run:
         out_nonzip = output.out.rstrip(".gz")
         shell( "src/count_kos.py {input} {params.counting_method} > %s" %(out_nonzip) )
