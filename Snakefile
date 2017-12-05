@@ -13,8 +13,8 @@ delete_intermediates = False
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
 shell.suffix("; sleep 40")
 
-#SAMPLES = ["C68N1ACXX_7", "C82C3ACXX_1"]
-SAMPLES = ["C82C3ACXX_1"]
+SAMPLES = ["C68N1ACXX_7", "C82C3ACXX_1"]
+#SAMPLES = ["C82C3ACXX_1"]
 #SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
 
 wildcard_constraints:
@@ -118,8 +118,6 @@ rule duplicate_filter_paired:
         metrics_output=config.duplicate_filtered_directory + "{sample}.R.metricout.fastq.gz",
         duplicate_marked=config.duplicate_filtered_directory + "{sample}.R.duplicatemarked.fastq.gz",
     params:
-        metrics_output="",
-        duplicate_marked_reads="",
         cluster=default_cluster_params
     run:
         out_F_nonzip = output.R1.rstrip(".gz")
@@ -228,7 +226,7 @@ rule merge_singletons:
 
 
 rule map_reads:
-    input: config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz"
+    input: config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz",
     output:
         zipped_output="".join( [config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]),
     params:
@@ -240,7 +238,17 @@ rule map_reads:
     benchmark:
         "".join([config.log_directory, "{sample}.{type}.", diamond_output_suffix, ".log"])
     run:
-        shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz")]) ),
+        #Test if the fastq is empty
+        c = 0
+        with gzip.open(input) as f:
+            for line in f:
+                c += 1
+                if c > 1:
+                    break
+        if c > 1:
+            shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
+        else:
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input.in}","--out", output.zipped_output.rstrip(".gz")]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
