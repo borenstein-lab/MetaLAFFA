@@ -13,6 +13,7 @@ module_profiles_directory="/net/borenstein/vol2/annotation_pipeline_testing/outp
 log_directory="/net/borenstein/vol2/annotation_pipeline_testing/logging/"
 output_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/"
 summary_directory="/net/borenstein/vol2/annotation_pipeline_testing/summaries/"
+samples_oi=None
 memory=220
 cpus=24
 block_size=36

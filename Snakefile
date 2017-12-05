@@ -4,23 +4,29 @@
 
 # snakemake -p -c "qsub {params.cluster}" -j 50
 
-# Major comments:
-# * We should standardize the marked read suffixes, for example currently there's "hostmarked_dup" and "R.duplicatemarked", if going with the former then "dup" should be something closer to paired rather that duplicate
-# * For the steps that include parameter choice from the config, shouldn't we have the parameters somehow specified in the file names so that we can request final outputs using different parameters without having to remove or move the previous final output file?
 
 import config,gzip,os
 
 diamond_output_suffix = "_".join([x for x in ["diamond", config.alignment_method, config.sensitivity, "top_percentage", str(config.top_percentage), "max_e_value", str(config.max_e_value)] if x])
-default_cluster_params = "-cwd -l mfree=20G" # I divided wrong, we probably want the default to be 10G
+hitfiltering_output_suffix = diamond_output_suffix + "_".join([x for x in ["best_n_hits", str(config.best_n_hits), "filtering_method", config.filtering_method] if x])
+genemapper_output_suffix = hitfiltering_output_suffix + "_".join([x for x in ["count_method", config.count_method] if x])
+normalization_output_suffix = genemapper_output_suffix + "_".join([x for x in ["norm_method", config.norm_method,"musicc_correction_method", config.musicc_correction_method] if x])
+functionalsummary_output_suffix = normalization_output_suffix + "_".join([x for x in ["mapping_matrix", config.mapping_matrix, "summary_method", config.summary_method] if x])
+
+default_cluster_params = "-cwd -l mfree=10G" 
 delete_intermediates = False
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
 shell.suffix("; sleep 40")
 
-# We'll need a way to specify running a subset of samples at a time, preferably something that can be specified either in the config or on the command line when you run Snakemake
-SAMPLES = ["C68N1ACXX_7", "C82C3ACXX_1"]
-#SAMPLES = ["C82C3ACXX_1"]
-#SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
+if config.samples_oi is None:
+    SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
+else:
+    SAMPLES = []
+    with open(config.samples_oi) as f:
+        for line in f:
+            line = line.rstrip("\n")
+            SAMPLES.append(line)
 
 wildcard_constraints:
     sample="[A-Za-z0-9_]+",
@@ -30,12 +36,13 @@ rule all:
     input:
         config.module_profiles_directory + "functionalsummary.gz",
         #Summaries
-        # Looks like we're missing targets for some filtering steps, but that isn't too much of a concern because there will be one final step to merge the summary files into a single master summary table that can be the input for all
-        expand(config.summary_directory + "{sample}.{type}.host_filer_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]), # Typo, "filer" -> filter"
-        expand(config.summary_directory + "{sample}.map_reads_summary.txt", sample = SAMPLES),
-        expand(config.summary_directory + "{sample}.hit_filtering_summary.txt", sample = SAMPLES),
-        expand(config.summary_directory + "{sample}.gene_mapper_summary.txt", sample = SAMPLES),
-        expand(config.summary_directory + "functional_summary_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "{sample}.{type}.host_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        expand(config.summary_directory + "{sample}.{type}.duplicate_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        expand(config.summary_directory + "{sample}.{type}.quality_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        expand(config.summary_directory + "{sample}." + diamond_output_suffix + ".map_reads_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt", sample = SAMPLES),
+        expand(config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"),
 
 
 
@@ -46,16 +53,13 @@ rule host_filter_duplicate:
     output:
         R1=config.host_filtered_directory + "{sample}.R1.hostfilter.fastq.gz",
         R2=config.host_filtered_directory + "{sample}.R2.hostfilter.fastq.gz",
-        host_marked=config.host_filtered_directory + "{sample}.hostmarked_dup.fastq.gz"
+        host_marked=config.host_filtered_directory + "{sample}.R.hostmarked.fastq.gz"
     params:
         cluster=default_cluster_params
     run:
         out_F_nonzip = output.R1.rstrip(".gz")
         out_R_nonzip = output.R2.rstrip(".gz")
         out_host_nonzip = output.host_marked.rstrip(".gz")
-        # Do we need these print statements, if not we could still make them optional with a verbosity setting somewhere (in the config?)
-        print(output.host_marked)
-        print(out_host_nonzip)
         shell( "src/host_filtering_wrapper.sh {input.R1} %s %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_host_nonzip, out_F_nonzip, out_R_nonzip) )
         shell( "gzip %s" %(out_F_nonzip) )
         shell( "gzip %s" %(out_R_nonzip) )
@@ -70,7 +74,7 @@ rule host_filter_singleton:
         S=config.fastq_directory + "{sample}.S.fastq.gz",
     output:
         S=config.host_filtered_directory + "{sample}.S.hostfilter.fastq.gz",
-        host_marked=config.host_filtered_directory + "{sample}.hostmarked_sig.fastq.gz"
+        host_marked=config.host_filtered_directory + "{sample}.S.hostmarked.fastq.gz"
     params:
         cluster=default_cluster_params
     run:
@@ -83,11 +87,11 @@ rule host_filter_singleton:
         if delete_intermediates:
             shell("rm -f {input.S}")
 
-rule host_filer_summary: # Typo, "filer" -> "filter"
+rule host_filter_summary:
     input:
         config.host_filtered_directory + "{sample}.{type}.hostfilter.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.host_filer_summary.txt" # Typo, "filer" -> "filter"
+        config.summary_directory + "{sample}.{type}.host_filter_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -145,7 +149,7 @@ rule duplicate_filter_summary:
     input:
         config.duplicate_filtered_directory + "{sample}.{type}.dupfilter.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.duplicate_filer_summary.txt" # Typo, "filer" -> "filter"
+        config.summary_directory + "{sample}.{type}.duplicate_filter_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -191,14 +195,14 @@ rule quality_filter_single:
 
 rule quality_filter_summary:
     input:
-        pre_R1=config.quality_filtered_directory + "{sample}.R1.dupfilter.fastq.gz",
-        pre_R2=config.quality_filtered_directory + "{sample}.R2.dupfilter.fastq.gz",
+        pre_R1=config.duplicate_filtered_directory + "{sample}.R1.dupfilter.fastq.gz",
+        pre_R2=config.duplicate_filtered_directory + "{sample}.R2.dupfilter.fastq.gz",
         post_R1=config.fastq_directory + "{sample}.R1.fq.fastq.gz",
         post_R2=config.fastq_directory + "{sample}.R2.fq.fastq.gz",
         new_singleton=config.quality_filtered_directory + "{sample}.S.fq.temp2.fastq.gz",
         filtered_singleton=config.quality_filtered_directory + "{sample}.S.fq.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.quality_filer_summary.txt" # Typo, "filer" -> "filter"
+        config.summary_directory + "{sample}.{type}.quality_filter_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -252,8 +256,7 @@ rule map_reads:
                 c += 1
                 if c > 1:
                     break
-        # Is this reversed? If c > 1, then there was a line in f, which means f was non-empty and we should run diamond?
-        if c > 1:
+        if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
             shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input.in}","--out", output.zipped_output.rstrip(".gz")]) ),
@@ -262,11 +265,20 @@ rule map_reads:
         if delete_intermediates:
             shell("rm -f {input}" )
 
+def combine_mapping_DetermineFiles(wildcards):
+    out = {}
+    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.R1.fastq.gz".format(wildcards=wildcards)):
+        out["R1"] = "".join([config.diamond_output_directory, "{wildcards.sample}.R1.",  diamond_output_suffix, ".gz"]).format(wildcards=wildcards)
+    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.R2.fastq.gz".format(wildcards=wildcards)):
+        out["R2"] = "".join([config.diamond_output_directory, "{wildcards.sample}.R2.",  diamond_output_suffix, ".gz"]).format(wildcards=wildcards)
+    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.S.fastq.gz".format(wildcards=wildcards)):
+        out["S"] = "".join([config.diamond_output_directory, "{wildcards.sample}.S.",  diamond_output_suffix, ".gz"]).format(wildcards=wildcards)
+    return out
 
 rule combine_mapping:
-    # This might require a comment explaining what's going on. As far as I can tell you're creating a list of inputs that include the R1, R2, and S files for a given sample. If that's correct, then does the rule work when one or more of those is missing, or can we assume they're present because of the map_reads rule which creates empty output files when the input is empty?
     input:
-        lambda wildcards: expand( "".join([config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]), sample = wildcards.sample, type = ["R1","R2","S"] )
+        #lambda wildcards: expand( "".join([config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]), sample = wildcards.sample, type = ["R1","R2","S"] )
+        unpack(combine_mapping_DetermineFiles)
     output:
         out=config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
     params:
@@ -285,7 +297,7 @@ rule map_reads_summary:
     input:
         config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
     output:
-        config.summary_directory + "{sample}.map_reads_summary.txt"
+        config.summary_directory + "{sample}." + diamond_output_suffix + ".map_reads_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -294,9 +306,8 @@ rule map_reads_summary:
 rule hit_filtering:
     input:
         config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
-    # The output filename should have some indication of the parameters used, right? That way we can generate versions using different parameters? And in that scenario, could you grab the params from the desired output file name?
     output:
-        out=config.diamond_filtered_directory + "{sample}_diamond_filtered.gz"
+        out=config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + ".diamond_filtered.gz"
     params:
         N=config.best_n_hits,
         filtering_method=config.filtering_method,
@@ -313,9 +324,9 @@ rule hit_filtering:
 
 rule hit_filtering_summary:
     input:
-        config.diamond_filtered_directory + "{sample}_diamond_filtered.gz"
+        config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + ".diamond_filtered.gz"
     output:
-        config.summary_directory + "{sample}.hit_filtering_summary.txt"
+        config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -323,12 +334,12 @@ rule hit_filtering_summary:
 
 rule gene_mapper:
     input:
-        config.diamond_filtered_directory + "{sample}_diamond_filtered.gz"
+        config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + ".diamond_filtered.gz"
     output:
-        out=config.gene_counts_directory + "{sample}_genecounts.gz"
+        out=config.gene_counts_directory + "{sample}." + genemapper_output_suffix + ".genecounts.gz"
     params:
         count_method=config.count_method,
-        cluster = "-cwd -l mfree=2G"
+        cluster=default_cluster_params
     benchmark:
         config.log_directory + "{sample}_genecounts.log"
     run:
@@ -341,9 +352,9 @@ rule gene_mapper:
 
 rule gene_mapper_summary:
     input:
-        config.gene_counts_directory + "{sample}_genecounts.gz"
+        config.gene_counts_directory + "{sample}." + genemapper_output_suffix + ".genecounts.gz"
     output:
-        config.summary_directory + "{sample}.gene_mapper_summary.txt"
+        config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -351,9 +362,9 @@ rule gene_mapper_summary:
 
 rule ko_mapper:
     input:
-        config.gene_counts_directory + "{sample}_genecounts.gz"
+        config.gene_counts_directory + "{sample}." + genemapper_output_suffix + ".genecounts.gz"
     output:
-        out=config.ko_counts_directory + "{sample}_kocounts.gz"
+        out=config.ko_counts_directory + "{sample}." + genemapper_output_suffix + ".kocounts.gz"
     params:
         counting_method=config.count_method,
         cluster=default_cluster_params
@@ -367,9 +378,9 @@ rule ko_mapper:
 
 rule ko_mapper_summary:
     input:
-        config.ko_counts_directory + "{sample}_kocounts.gz"
+        config.ko_counts_directory + "{sample}." + genemapper_output_suffix + ".kocounts.gz"
     output:
-        config.summary_directory + "{sample}.ko_mapper_summary.txt"
+        config.summary_directory + "{sample}." + genemapper_output_suffix + ".ko_mapper_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -377,9 +388,9 @@ rule ko_mapper_summary:
 
 rule merge_tables:
     input:
-        expand( config.ko_counts_directory + "{sample}_kocounts.gz", sample = SAMPLES)
+        expand( config.ko_counts_directory + "{sample}." + genemapper_output_suffix + ".kocounts.gz", sample = SAMPLES)
     output:
-        out=config.ko_counts_directory + "merge_kocounts.gz"
+        out=config.ko_counts_directory + "merge_kocounts." + genemapper_output_suffix + ".gz"
     params:
         cluster=default_cluster_params
     run:
@@ -389,9 +400,9 @@ rule merge_tables:
 
 rule normalization:
     input:
-        config.ko_counts_directory + "merge_kocounts.gz"
+        config.ko_counts_directory + "merge_kocounts." + genemapper_output_suffix + ".gz"
     output:
-        out=config.ko_normalized_directory + "kocounts_normalized.gz"
+        out=config.ko_normalized_directory + "kocounts_normalized." + normalization_output_suffix + ".gz"
     params:
         norm_method=config.norm_method,
         musicc_method=config.musicc_correction_method,
@@ -407,9 +418,9 @@ rule normalization:
 
 rule ko_functional_summary:
     input:
-        config.ko_normalized_directory + "kocounts_normalized.gz"
+        config.ko_normalized_directory + "kocounts_normalized." + normalization_output_suffix + ".gz"
     output:
-        out=config.module_profiles_directory + "functionalsummary.gz"
+        out=config.module_profiles_directory + "functionalsummary." + functionalsummary_output_suffix + ".gz"
     params:
         mapping_matrix=config.mapping_matrix,
         summary_method=config.summary_method,
@@ -424,9 +435,9 @@ rule ko_functional_summary:
 
 rule functional_summary_summary: 
     input:
-        config.module_profiles_directory + "functionalsummary.gz"
+        config.module_profiles_directory + "functionalsummary." + functionalsummary_output_suffix + ".gz"
     output:
-        config.summary_directory + "functional_summary_summary.txt"
+        config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"
     params:
         cluster=default_cluster_params
     shell:
