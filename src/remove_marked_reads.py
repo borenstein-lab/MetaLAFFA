@@ -9,6 +9,7 @@ parser.add_argument("marked", help="The file of marked reads to remove.", metava
 parser.add_argument("fastq", help="The fastq file to remove marked reads from.", metavar="Fastq")
 args = parser.parse_args()
 
+# Adrian: replace with your file_handling functions
 # Read in the marked reads
 marked_file = None
 if re.search("\.gz$", args.marked):
@@ -18,6 +19,7 @@ else:
 marked_reads = set()
 for line in marked_file:
     read_name = line.strip()
+    # Adrian: This tag is put on by fix_paired_fastq.py right? And if so dosen't the -2 position depend on how long the tag is?
     if read_name[-2] == '/':
         marked_reads.add(read_name[:-2])
     else:

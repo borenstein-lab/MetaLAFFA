@@ -24,6 +24,7 @@ while line != "":
                 print fields[NAME_FIELD] + args.suffix
             else:
                 print fields[NAME_FIELD]
+    # Adrian: Why are two lines being read in here?
     line = f.readline()
     line = f.readline()
 f.close()
