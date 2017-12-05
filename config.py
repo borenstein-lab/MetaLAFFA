@@ -1,3 +1,4 @@
+# I'll organize this after we've finalized the rest of the pipeline
 fastq_directory="/net/borenstein/vol2/annotation_pipeline_testing/data/"
 duplicate_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/duplicate_filtered/"
 host_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/host_filtered/"

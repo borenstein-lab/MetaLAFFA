@@ -4,15 +4,20 @@
 
 # snakemake -p -c "qsub {params.cluster}" -j 50
 
+# Major comments:
+# * We should standardize the marked read suffixes, for example currently there's "hostmarked_dup" and "R.duplicatemarked", if going with the former then "dup" should be something closer to paired rather that duplicate
+# * For the steps that include parameter choice from the config, shouldn't we have the parameters somehow specified in the file names so that we can request final outputs using different parameters without having to remove or move the previous final output file?
+
 import config,gzip,os
 
 diamond_output_suffix = "_".join([x for x in ["diamond", config.alignment_method, config.sensitivity, "top_percentage", str(config.top_percentage), "max_e_value", str(config.max_e_value)] if x])
-default_cluster_params = "-cwd -l mfree=20G"
+default_cluster_params = "-cwd -l mfree=20G" # I divided wrong, we probably want the default to be 10G
 delete_intermediates = False
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
 shell.suffix("; sleep 40")
 
+# We'll need a way to specify running a subset of samples at a time, preferably something that can be specified either in the config or on the command line when you run Snakemake
 SAMPLES = ["C68N1ACXX_7", "C82C3ACXX_1"]
 #SAMPLES = ["C82C3ACXX_1"]
 #SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
@@ -25,7 +30,8 @@ rule all:
     input:
         config.module_profiles_directory + "functionalsummary.gz",
         #Summaries
-        expand(config.summary_directory + "{sample}.{type}.host_filer_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        # Looks like we're missing targets for some filtering steps, but that isn't too much of a concern because there will be one final step to merge the summary files into a single master summary table that can be the input for all
+        expand(config.summary_directory + "{sample}.{type}.host_filer_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]), # Typo, "filer" -> filter"
         expand(config.summary_directory + "{sample}.map_reads_summary.txt", sample = SAMPLES),
         expand(config.summary_directory + "{sample}.hit_filtering_summary.txt", sample = SAMPLES),
         expand(config.summary_directory + "{sample}.gene_mapper_summary.txt", sample = SAMPLES),
@@ -47,13 +53,14 @@ rule host_filter_duplicate:
         out_F_nonzip = output.R1.rstrip(".gz")
         out_R_nonzip = output.R2.rstrip(".gz")
         out_host_nonzip = output.host_marked.rstrip(".gz")
+        # Do we need these print statements, if not we could still make them optional with a verbosity setting somewhere (in the config?)
         print(output.host_marked)
         print(out_host_nonzip)
         shell( "src/host_filtering_wrapper.sh {input.R1} %s %s --paired_fastq {input.R2} --paired_fastq_output %s" %(out_host_nonzip, out_F_nonzip, out_R_nonzip) )
         shell( "gzip %s" %(out_F_nonzip) )
         shell( "gzip %s" %(out_R_nonzip) )
         shell( "gzip %s" %(out_host_nonzip) )
-        #Delete intermediate
+        #Delete intermediate # Deleting the intermediates should also get rid of the marked read file
         if delete_intermediates:
             shell("rm -f {input.R1}")
             shell("rm -f {input.R2}")
@@ -72,15 +79,15 @@ rule host_filter_singleton:
         shell(" src/host_filtering_wrapper.sh {input.S} %s %s" %(out_host_nonzip, out_nonzip) )
         shell( "gzip %s" %(out_nonzip) )
         shell( "gzip %s" %(out_host_nonzip) )
-        #Delete intermediate
+        #Delete intermediate # Deleting the intermediates should also get rid of the marked read file
         if delete_intermediates:
             shell("rm -f {input.S}")
 
-rule host_filer_summary:
+rule host_filer_summary: # Typo, "filer" -> "filter"
     input:
         config.host_filtered_directory + "{sample}.{type}.hostfilter.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.host_filer_summary.txt"
+        config.summary_directory + "{sample}.{type}.host_filer_summary.txt" # Typo, "filer" -> "filter"
     params:
         cluster=default_cluster_params
     shell:
@@ -103,7 +110,7 @@ rule duplicate_filter_singleton:
         shell( "gzip %s" %(out_nonzip) )
         shell( "gzip %s" %(out_metrics_nonzip) )
         shell( "gzip %s" %(out_duplicate_nonzip) )
-        #Delete intermediate
+        #Delete intermediate # Deleting the intermediates should also get rid of the marked read file
         if delete_intermediates:
             shell("rm -f {input.S}")
 
@@ -129,7 +136,7 @@ rule duplicate_filter_paired:
         shell( "gzip %s" %(out_R_nonzip) )
         shell( "gzip %s" %(out_metrics_nonzip) )
         shell( "gzip %s" %(out_duplicate_nonzip) )
-        #Delete intermediate
+        #Delete intermediate # Deleting the intermediates should also get rid of the marked read file
         if delete_intermediates:
             shell("rm -f {input.R1}")
             shell("rm -f {input.R2}")
@@ -138,7 +145,7 @@ rule duplicate_filter_summary:
     input:
         config.duplicate_filtered_directory + "{sample}.{type}.dupfilter.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.duplicate_filer_summary.txt"
+        config.summary_directory + "{sample}.{type}.duplicate_filer_summary.txt" # Typo, "filer" -> "filter"
     params:
         cluster=default_cluster_params
     shell:
@@ -191,7 +198,7 @@ rule quality_filter_summary:
         new_singleton=config.quality_filtered_directory + "{sample}.S.fq.temp2.fastq.gz",
         filtered_singleton=config.quality_filtered_directory + "{sample}.S.fq.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.quality_filer_summary.txt"
+        config.summary_directory + "{sample}.{type}.quality_filer_summary.txt" # Typo, "filer" -> "filter"
     params:
         cluster=default_cluster_params
     shell:
@@ -245,6 +252,7 @@ rule map_reads:
                 c += 1
                 if c > 1:
                     break
+        # Is this reversed? If c > 1, then there was a line in f, which means f was non-empty and we should run diamond?
         if c > 1:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
@@ -256,6 +264,7 @@ rule map_reads:
 
 
 rule combine_mapping:
+    # This might require a comment explaining what's going on. As far as I can tell you're creating a list of inputs that include the R1, R2, and S files for a given sample. If that's correct, then does the rule work when one or more of those is missing, or can we assume they're present because of the map_reads rule which creates empty output files when the input is empty?
     input:
         lambda wildcards: expand( "".join([config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]), sample = wildcards.sample, type = ["R1","R2","S"] )
     output:
@@ -285,6 +294,7 @@ rule map_reads_summary:
 rule hit_filtering:
     input:
         config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
+    # The output filename should have some indication of the parameters used, right? That way we can generate versions using different parameters? And in that scenario, could you grab the params from the desired output file name?
     output:
         out=config.diamond_filtered_directory + "{sample}_diamond_filtered.gz"
     params:
