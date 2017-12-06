@@ -3,19 +3,15 @@
 # Date: 12/30/2014
 
 import argparse, re, gzip
+from file_handling import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("marked", help="The file of marked reads to remove.", metavar="Marked")
 parser.add_argument("fastq", help="The fastq file to remove marked reads from.", metavar="Fastq")
 args = parser.parse_args()
 
-# Adrian: replace with your file_handling functions
 # Read in the marked reads
-marked_file = None
-if re.search("\.gz$", args.marked):
-    marked_file = gzip.open(args.marked, 'r')
-else:
-    marked_file = open(args.marked, 'r')
+marked_file = custom_read(args.marked)
 marked_reads = set()
 for line in marked_file:
     read_name = line.strip()
