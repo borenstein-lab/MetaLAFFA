@@ -1,8 +1,8 @@
 # I'll organize this after we've finalized the rest of the pipeline
 fastq_directory="/net/borenstein/vol2/annotation_pipeline_testing/data/"
-duplicate_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/duplicate_filtered/"
-host_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/host_filtered/"
-quality_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/quality_filtered/"
+duplicate_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/duplicate_filtered/"
+host_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/host_filtered/"
+quality_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/quality_filtered/"
 diamond_output_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/blast_results/"
 diamond_filtered_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/filtered_blast_results/"
 gene_counts_directory="/net/borenstein/vol2/annotation_pipeline_testing/output/gene_profiles/"
