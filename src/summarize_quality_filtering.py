@@ -47,14 +47,41 @@ while line != "":
     line = f.readline()
 f.close()
 
-# Get the stats for the filtered R1 FASTQ file
-r1_read_count, r1_average_read_length, r1_average_base_quality = get_fastq_stats(args.filtered_r1_fastq)
+# Get the stats for the filtered R1 FASTQ file if it is not empty
+r1_read_count = "N/A"
+r1_average_read_length = "N/A"
+r1_average_base_quality = "N/A"
+f = custom_read(args.filtered_r1_fastq)
+empty = True
+for line in f:
+    empty = False
+    break
+if not empty:
+    r1_read_count, r1_average_read_length, r1_average_base_quality = get_fastq_stats(args.filtered_r1_fastq)
 
-# Get the stats for the filtered R2 FASTQ file
-r2_read_count, r2_average_read_length, r2_average_base_quality = get_fastq_stats(args.filtered_r2_fastq)
+# Get the stats for the filtered R2 FASTQ file if it is not empty
+r2_read_count = "N/A"
+r2_average_read_length = "N/A"
+r2_average_base_quality = "N/A"
+f = custom_read(args.filtered_r2_fastq)
+empty = True
+for line in f:
+    empty = False
+    break
+if not empty:
+    r2_read_count, r2_average_read_length, r2_average_base_quality = get_fastq_stats(args.filtered_r2_fastq)
 
-# Get the stats for the filtered singleton FASTQ file
-old_singleton_read_count, old_singleton_average_read_length, old_singleton_average_base_quality = get_fastq_stats(args.filtered_old_singleton_fastq)
+# Get the stats for the filtered singleton FASTQ file if it is not empty
+old_singleton_read_count = "N/A"
+old_singleton_average_read_length = "N/A"
+old_singleton_average_base_quality = "N/A"
+f = custom_read(args.filtered_old_singleton_fastq)
+empty = True
+for line in f:
+    empty = False
+    break
+if not empty:
+    old_singleton_read_count, old_singleton_average_read_length, old_singleton_average_base_quality = get_fastq_stats(args.filtered_old_singleton_fastq)
 
 # Parse the unfiltered R1 fastq to determine how many new singletons came from the R1 fastq and their read length and base quality stats
 r1_new_singleton_read_count = 0
@@ -114,7 +141,22 @@ while line != "":
     line = f.readline()
 f.close()
 
+# Calculate the summary stats for the new singletons if necessary
+r1_new_singleton_average_read_length = "N/A"
+r1_new_singleton_average_base_quality = "N/A"
+if r1_new_singleton_read_count > 0:
+    r1_new_singleton_average_read_length = float(r1_new_singleton_base_count)/float(r1_new_singleton_read_count)
+if r1_new_singleton_base_count > 0:
+    r1_new_singleton_average_base_quality = float(r1_new_singleton_total_quality_score)/float(r1_new_singleton_base_count)
+
+r2_new_singleton_average_read_length = "N/A"
+r2_new_singleton_average_base_quality = "N/A"
+if r2_new_singleton_read_count > 0:
+    r2_new_singleton_average_read_length = float(r2_new_singleton_base_count)/float(r2_new_singleton_read_count)
+if r2_new_singleton_base_count > 0:
+    r2_new_singleton_average_base_quality = float(r2_new_singleton_total_quality_score)/float(r2_new_singleton_base_count)
+
 # Print the quality filtering summary for this sample
-output.write("\t".join([args.filtered_r1_fastq, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(float(r1_new_singleton_base_count)/float(r1_new_singleton_read_count)), str(float(r1_new_singleton_total_quality_score)/float(r1_new_singleton_base_count))]) + "\n")
-output.write("\t".join([args.filtered_r2_fastq, str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(float(r2_new_singleton_base_count)/float(r2_new_singleton_read_count)), str(float(r2_new_singleton_total_quality_score)/float(r2_new_singleton_base_count))]) + "\n")
-output.write("\t".join([args.filtered_old_singleton_fastq, "0", "0", "0", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([args.filtered_r1_fastq, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([args.filtered_r2_fastq, str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([args.filtered_old_singleton_fastq, "N/A", "N/A", "N/A", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + "\n")
