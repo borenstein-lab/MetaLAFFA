@@ -34,7 +34,7 @@ wildcard_constraints:
 
 rule all:
     input:
-        config.module_profiles_directory + "functionalsummary.gz",
+        config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt",
         #Summaries
         expand(config.summary_directory + "{sample}.{type}.host_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
         expand(config.summary_directory + "{sample}.{type}.duplicate_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
@@ -102,18 +102,19 @@ rule duplicate_filter_singleton:
         S=config.host_filtered_directory + "{sample}.S.hostfilter.fastq.gz",
     output:
         S=config.duplicate_filtered_directory + "{sample}.S.dupfilter.fastq.gz",
-        metrics_output=config.duplicate_filtered_directory + "{sample}.S.metricout.fastq.gz",
-        duplicate_marked=config.duplicate_filtered_directory + "{sample}.S.duplicatemarked.fastq.gz",
+        #metrics_output=config.duplicate_filtered_directory + "{sample}.S.metricout.fastq.gz",
+        #duplicate_marked=config.duplicate_filtered_directory + "{sample}.S.duplicatemarked.fastq.gz",
     params:
         cluster=default_cluster_params
     run:
         out_nonzip = output.S.rstrip(".gz")
-        out_metrics_nonzip = output.metrics_output.rstrip(".gz")
-        out_duplicate_nonzip = output.duplicate_marked.rstrip(".gz")
-        shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} %s %s %s " %(out_metrics_nonzip, out_duplicate_nonzip, out_nonzip) )
+        #out_metrics_nonzip = output.metrics_output.rstrip(".gz")
+        #out_duplicate_nonzip = output.duplicate_marked.rstrip(".gz")
+        #shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} %s %s %s " %(out_metrics_nonzip, out_duplicate_nonzip, out_nonzip) )
+        shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} dummy1 dummy2 %s " %(out_nonzip) )
         shell( "gzip %s" %(out_nonzip) )
-        shell( "gzip %s" %(out_metrics_nonzip) )
-        shell( "gzip %s" %(out_duplicate_nonzip) )
+        #shell( "gzip %s" %(out_metrics_nonzip) )
+        #shell( "gzip %s" %(out_duplicate_nonzip) )
         #Delete intermediate # Deleting the intermediates should also get rid of the marked read file
         if delete_intermediates:
             shell("rm -f {input.S}")
@@ -153,7 +154,7 @@ rule duplicate_filter_summary:
     params:
         cluster=default_cluster_params
     shell:
-        "#src/summarize_duplicate_filtering.py {input} > {output}"
+        "src/summarize_duplicate_filtering.py {input} > {output}"
 
 rule quality_filter_duplicate:
     input:
@@ -251,7 +252,8 @@ rule map_reads:
     run:
         #Test if the fastq is empty
         c = 0
-        with gzip.open(input) as f:
+        print(input)
+        with gzip.open(input[0]) as f:
             for line in f:
                 c += 1
                 if c > 1:
@@ -259,7 +261,7 @@ rule map_reads:
         if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
-            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input.in}","--out", output.zipped_output.rstrip(".gz")]) ),
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz")]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
