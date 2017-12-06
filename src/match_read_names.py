@@ -3,6 +3,7 @@
 # Date: 12/5/2014
 
 import argparse, re, sys, gzip
+from file_handling import *
 
 NUM_LINES = 4
 
@@ -11,19 +12,9 @@ parser.add_argument("fastq1", help="The fastq file with the first half of the pa
 parser.add_argument("fastq2", help="The fastq file with read names that need to be altered.", metavar="Fastq 2")
 args = parser.parse_args()
 
-# Adrian: replace with your file_handling functions
-f1 = None
-if re.search("\.gz$", args.fastq1):
-    f1 = gzip.open(args.fastq1, 'r')
-else:
-    f1 = open(args.fastq1, 'r')
+f1 = custom_read(args.fastq1)
 
-# Adrian: replace with your file_handling functions
-f2 = None
-if re.search("\.gz$", args.fastq2):
-    f2 = gzip.open(args.fastq2, 'r')
-else:
-    f2 = open(args.fastq2, 'r')
+f2 = custom_read(args.fastq2)
 
 line1 = f1.readline()
 line2 = f2.readline()
