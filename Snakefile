@@ -11,10 +11,10 @@ diamond_output_suffix = "_".join([x for x in ["diamond", config.alignment_method
 hitfiltering_output_suffix = diamond_output_suffix + "_".join([x for x in ["best_n_hits", str(config.best_n_hits), "filtering_method", config.filtering_method] if x])
 genemapper_output_suffix = hitfiltering_output_suffix + "_".join([x for x in ["count_method", config.count_method] if x])
 normalization_output_suffix = genemapper_output_suffix + "_".join([x for x in ["norm_method", config.norm_method,"musicc_correction_method", config.musicc_correction_method] if x])
-functionalsummary_output_suffix = normalization_output_suffix + "_".join([x for x in ["mapping_matrix", config.mapping_matrix, "summary_method", config.summary_method] if x])
+functionalsummary_output_suffix = normalization_output_suffix + "_".join([x for x in ["mapping_matrix", os.path.basename(config.mapping_matrix), "summary_method", config.summary_method] if x])
 
 default_cluster_params = "-cwd -l mfree=10G" 
-delete_intermediates = False
+delete_intermediates = config.delete_intermediates
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
 shell.suffix("; sleep 40")
@@ -34,16 +34,26 @@ wildcard_constraints:
 
 rule all:
     input:
-        config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt",
+        #config.module_profiles_directory + "functionalsummary." + functionalsummary_output_suffix + ".gz",
+        #config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt",
+        config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
         #Summaries
-        expand(config.summary_directory + "{sample}.{type}.host_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        expand(config.summary_directory + "{sample}.{type}.duplicate_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        expand(config.summary_directory + "{sample}.{type}.quality_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        expand(config.summary_directory + "{sample}." + diamond_output_suffix + ".map_reads_summary.txt", sample = SAMPLES),
-        expand(config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt", sample = SAMPLES),
-        expand(config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt", sample = SAMPLES),
-        expand(config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"),
+        #expand(config.summary_directory + "{sample}.{type}.host_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        #expand(config.summary_directory + "{sample}.{type}.duplicate_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        #expand(config.summary_directory + "{sample}.{type}.quality_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        #expand(config.summary_directory + "{sample}.{type}" + diamond_output_suffix + ".map_reads_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
+        #expand(config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt", sample = SAMPLES),
+        #expand(config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt", sample = SAMPLES),
+        #expand(config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"),
 
+
+rule clean_all:
+   run:
+        shell( "rm -f -r %sblast_results/* && rm -f -r %sfiltered_blast_results/ && rm -f -r %sgene_profiles/* && rm -f -r %sko_profiles/* && rm -f -r %smodule_profiles/* && rm -f -r %snormalized_ko_profiles/* && rm -f -r %spathway_profiles/* && rm -f -r %sduplicate_filtered/ && rm -f -r %shost_filtered/ && rm -f -r %squality_filtered/" %(config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir ) )
+
+rule clean_sub:
+    run:
+        shell( "rm -f -r %sblast_results/* && rm -f -r %sfiltered_blast_results/ && rm -f -r %sgene_profiles/* && rm -f -r %sko_profiles/* && rm -f -r %smodule_profiles/* && rm -f -r %snormalized_ko_profiles/* && rm -f -r %spathway_profiles/*" %(config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir ) )
 
 
 rule host_filter_duplicate:
@@ -240,7 +250,7 @@ rule merge_singletons:
 rule map_reads:
     input: config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz",
     output:
-        zipped_output="".join( [config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]),
+        zipped_output="".join( [config.diamond_output_directory, diamond_output_suffix, "/{sample}.{type}.gz"]),
     params:
         memory=config.memory,
         cpus=config.cpus,
@@ -269,12 +279,12 @@ rule map_reads:
 
 def combine_mapping_DetermineFiles(wildcards):
     out = {}
-    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.R1.fastq.gz".format(wildcards=wildcards)):
-        out["R1"] = "".join([config.diamond_output_directory, "{wildcards.sample}.R1.",  diamond_output_suffix, ".gz"]).format(wildcards=wildcards)
-    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.R2.fastq.gz".format(wildcards=wildcards)):
-        out["R2"] = "".join([config.diamond_output_directory, "{wildcards.sample}.R2.",  diamond_output_suffix, ".gz"]).format(wildcards=wildcards)
-    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.S.fastq.gz".format(wildcards=wildcards)):
-        out["S"] = "".join([config.diamond_output_directory, "{wildcards.sample}.S.",  diamond_output_suffix, ".gz"]).format(wildcards=wildcards)
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R1.fq.fastq.gz".format(wildcards=wildcards)):
+        out["R1"] = "".join([config.diamond_output_directory, diamond_output_suffix, "/{wildcards.sample}.R1.gz"]).format(wildcards=wildcards)
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R2.fq.fastq.gz".format(wildcards=wildcards)):
+        out["R2"] = "".join([config.diamond_output_directory, diamond_output_suffix, "/{wildcards.sample}.R2.gz"]).format(wildcards=wildcards)
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.S.fq.fastq.gz".format(wildcards=wildcards)):
+        out["S"] = "".join([config.diamond_output_directory, diamond_output_suffix, "/{wildcards.sample}.S.gz"]).format(wildcards=wildcards)
     return out
 
 rule combine_mapping:
@@ -282,7 +292,7 @@ rule combine_mapping:
         #lambda wildcards: expand( "".join([config.diamond_output_directory, "{sample}.{type}.",  diamond_output_suffix, ".gz"]), sample = wildcards.sample, type = ["R1","R2","S"] )
         unpack(combine_mapping_DetermineFiles)
     output:
-        out=config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
+        out=config.diamond_output_directory + diamond_output_suffix + "/{sample}.gz"
     params:
         cluster = default_cluster_params
     benchmark:
@@ -297,9 +307,9 @@ rule combine_mapping:
 
 rule map_reads_summary:
     input:
-        config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
+        config.diamond_output_directory + "{sample}.{type}." + diamond_output_suffix + ".gz"
     output:
-        config.summary_directory + "{sample}." + diamond_output_suffix + ".map_reads_summary.txt"
+        config.summary_directory + "{sample}.{type}." + diamond_output_suffix + ".map_reads_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -307,9 +317,9 @@ rule map_reads_summary:
 
 rule hit_filtering:
     input:
-        config.diamond_output_directory + "{sample}." + diamond_output_suffix + ".gz"
+        config.diamond_output_directory + diamond_output_suffix + "/{sample}.gz"
     output:
-        out=config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + ".diamond_filtered.gz"
+        out=config.diamond_filtered_directory + hitfiltering_output_suffix + "/{sample}.diamond_filtered.gz"
     params:
         N=config.best_n_hits,
         filtering_method=config.filtering_method,
@@ -326,7 +336,7 @@ rule hit_filtering:
 
 rule hit_filtering_summary:
     input:
-        config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + ".diamond_filtered.gz"
+        config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + "/{sample}.diamond_filtered.gz"
     output:
         config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt"
     params:
@@ -336,9 +346,9 @@ rule hit_filtering_summary:
 
 rule gene_mapper:
     input:
-        config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + ".diamond_filtered.gz"
+        config.diamond_filtered_directory + hitfiltering_output_suffix + "/{sample}.diamond_filtered.gz"
     output:
-        out=config.gene_counts_directory + "{sample}." + genemapper_output_suffix + ".genecounts.gz"
+        out=config.gene_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     params:
         count_method=config.count_method,
         cluster=default_cluster_params
@@ -354,7 +364,7 @@ rule gene_mapper:
 
 rule gene_mapper_summary:
     input:
-        config.gene_counts_directory + "{sample}." + genemapper_output_suffix + ".genecounts.gz"
+        config.gene_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     output:
         config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt"
     params:
@@ -364,9 +374,9 @@ rule gene_mapper_summary:
 
 rule ko_mapper:
     input:
-        config.gene_counts_directory + "{sample}." + genemapper_output_suffix + ".genecounts.gz"
+        config.gene_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     output:
-        out=config.ko_counts_directory + "{sample}." + genemapper_output_suffix + ".kocounts.gz"
+        out=config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz"
     params:
         counting_method=config.count_method,
         cluster=default_cluster_params
@@ -380,7 +390,7 @@ rule ko_mapper:
 
 rule ko_mapper_summary:
     input:
-        config.ko_counts_directory + "{sample}." + genemapper_output_suffix + ".kocounts.gz"
+        config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz"
     output:
         config.summary_directory + "{sample}." + genemapper_output_suffix + ".ko_mapper_summary.txt"
     params:
@@ -390,9 +400,9 @@ rule ko_mapper_summary:
 
 rule merge_tables:
     input:
-        expand( config.ko_counts_directory + "{sample}." + genemapper_output_suffix + ".kocounts.gz", sample = SAMPLES)
+        expand( config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz", sample = SAMPLES)
     output:
-        out=config.ko_counts_directory + "merge_kocounts." + genemapper_output_suffix + ".gz"
+        out=config.ko_counts_directory + genemapper_output_suffix + "/merge_kocounts.gz"
     params:
         cluster=default_cluster_params
     run:
@@ -402,9 +412,9 @@ rule merge_tables:
 
 rule normalization:
     input:
-        config.ko_counts_directory + "merge_kocounts." + genemapper_output_suffix + ".gz"
+        config.ko_counts_directory + genemapper_output_suffix + "/merge_kocounts.gz"
     output:
-        out=config.ko_normalized_directory + "kocounts_normalized." + normalization_output_suffix + ".gz"
+        out=config.ko_normalized_directory + normalization_output_suffix + "/kocounts_normalized.gz"
     params:
         norm_method=config.norm_method,
         musicc_method=config.musicc_correction_method,
@@ -420,9 +430,9 @@ rule normalization:
 
 rule ko_functional_summary:
     input:
-        config.ko_normalized_directory + "kocounts_normalized." + normalization_output_suffix + ".gz"
+        config.ko_normalized_directory + normalization_output_suffix + "/kocounts_normalized.gz"
     output:
-        out=config.module_profiles_directory + "functionalsummary." + functionalsummary_output_suffix + ".gz"
+        out=config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
     params:
         mapping_matrix=config.mapping_matrix,
         summary_method=config.summary_method,
