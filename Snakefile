@@ -7,11 +7,18 @@
 
 import config,gzip,os
 
-diamond_output_suffix = "_".join([x for x in ["diamond", config.alignment_method, config.sensitivity, "top_percentage", str(config.top_percentage), "max_e_value", str(config.max_e_value)] if x])
-hitfiltering_output_suffix = diamond_output_suffix + "_".join([x for x in ["best_n_hits", str(config.best_n_hits), "filtering_method", config.filtering_method] if x])
-genemapper_output_suffix = hitfiltering_output_suffix + "_".join([x for x in ["count_method", config.count_method] if x])
-normalization_output_suffix = genemapper_output_suffix + "_".join([x for x in ["norm_method", config.norm_method,"musicc_correction_method", config.musicc_correction_method] if x])
-functionalsummary_output_suffix = normalization_output_suffix + "_".join([x for x in ["mapping_matrix", os.path.basename(config.mapping_matrix), "summary_method", config.summary_method] if x])
+if config.many_subdirectories:
+    #If you want subdirectories
+    join_char = "/"
+else:
+    #if you want long filenames
+    join_char = "_"
+
+diamond_output_suffix = join_char.join([x for x in ["diamond", config.alignment_method, config.sensitivity, "top_percentage", str(config.top_percentage), "max_e_value", str(config.max_e_value)] if x])
+hitfiltering_output_suffix = diamond_output_suffix + join_char.join([x for x in ["best_n_hits", str(config.best_n_hits), "filtering_method", config.filtering_method] if x])
+genemapper_output_suffix = hitfiltering_output_suffix + join_char.join([x for x in ["count_method", config.count_method] if x])
+normalization_output_suffix = genemapper_output_suffix + join_char.join([x for x in ["norm_method", config.norm_method,"musicc_correction_method", config.musicc_correction_method] if x])
+functionalsummary_output_suffix = normalization_output_suffix + join_char.join([x for x in ["mapping_matrix", os.path.basename(config.mapping_matrix), "summary_method", config.summary_method] if x])
 
 default_cluster_params = "-cwd -l mfree=10G" 
 delete_intermediates = config.delete_intermediates

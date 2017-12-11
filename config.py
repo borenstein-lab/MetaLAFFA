@@ -20,6 +20,7 @@ memory=220
 cpus=24
 block_size=36
 index_chunks=1
+many_subdirectories=True
 aligner="/net/borenstein/vol1/PROGRAMS/diamond"
 alignment_method="blastx"
 sensitivity=None
