@@ -14,11 +14,12 @@ else:
     #if you want long filenames
     join_char = "_"
 
-diamond_output_suffix = join_char.join([x for x in ["diamond", config.alignment_method, config.sensitivity, "top_percentage", str(config.top_percentage), "max_e_value", str(config.max_e_value)] if x])
-hitfiltering_output_suffix = diamond_output_suffix + join_char.join([x for x in ["best_n_hits", str(config.best_n_hits), "filtering_method", config.filtering_method] if x])
-genemapper_output_suffix = hitfiltering_output_suffix + join_char.join([x for x in ["count_method", config.count_method] if x])
-normalization_output_suffix = genemapper_output_suffix + join_char.join([x for x in ["norm_method", config.norm_method,"musicc_correction_method", config.musicc_correction_method] if x])
-functionalsummary_output_suffix = normalization_output_suffix + join_char.join([x for x in ["mapping_matrix", os.path.basename(config.mapping_matrix), "summary_method", config.summary_method] if x])
+
+diamond_output_suffix = join_char.join([x for x in ["diamond_%s_%s" %( config.alignment_method, config.sensitivity), "top_percentage_%s" %( str(config.top_percentage)), "max_e_value_%s" %(str(config.max_e_value)) ] if x])
+hitfiltering_output_suffix = diamond_output_suffix + join_char + join_char.join([x for x in ["best_n_hits_%s" %( str(config.best_n_hits) ), "filtering_method_%s" %( config.filtering_method) ] if x])
+genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["count_method_%s" %( config.count_method) ] if x])
+normalization_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["norm_method_%s" %( config.norm_method) ,"musicc_correction_method_%s" %( config.musicc_correction_method)] if x])
+functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["mapping_matrix_%s" %( os.path.basename(config.mapping_matrix) ), "summary_method_%s" %( config.summary_method)] if x])
 
 default_cluster_params = "-cwd -l mfree=10G" 
 delete_intermediates = config.delete_intermediates
@@ -257,7 +258,7 @@ rule merge_singletons:
 rule map_reads:
     input: config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz",
     output:
-        zipped_output="".join( [config.diamond_output_directory, diamond_output_suffix, "/{sample}.{type}.gz"]),
+        zipped_output=config.diamond_output_directory + diamond_output_suffix + "/{sample}.{type}.gz"
     params:
         memory=config.memory,
         cpus=config.cpus,
@@ -303,7 +304,7 @@ rule combine_mapping:
     params:
         cluster = default_cluster_params
     benchmark:
-        config.log_directory + "{sample}" + diamond_output_suffix + ".log"
+        config.log_directory + diamond_output_suffix + "/{sample}.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
         shell( "zcat {input} > %s" %( out_nonzip ) )
@@ -314,9 +315,9 @@ rule combine_mapping:
 
 rule map_reads_summary:
     input:
-        config.diamond_output_directory + "{sample}.{type}." + diamond_output_suffix + ".gz"
+        config.diamond_output_directory + diamond_output_suffix + "/{sample}.{type}.gz"
     output:
-        config.summary_directory + "{sample}.{type}." + diamond_output_suffix + ".map_reads_summary.txt"
+        config.summary_directory + diamond_output_suffix + "/{sample}.{type}.map_reads_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -343,9 +344,9 @@ rule hit_filtering:
 
 rule hit_filtering_summary:
     input:
-        config.diamond_filtered_directory + "{sample}." + hitfiltering_output_suffix + "/{sample}.diamond_filtered.gz"
+        config.diamond_filtered_directory + hitfiltering_output_suffix + "/{sample}.diamond_filtered.gz"
     output:
-        config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt"
+        config.summary_directory + hitfiltering_output_suffix + "/{sample}.hit_filtering_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -373,7 +374,7 @@ rule gene_mapper_summary:
     input:
         config.gene_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     output:
-        config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt"
+        config.summary_directory + genemapper_output_suffix + "/{sample}.gene_mapper_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -399,7 +400,7 @@ rule ko_mapper_summary:
     input:
         config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz"
     output:
-        config.summary_directory + "{sample}." + genemapper_output_suffix + ".ko_mapper_summary.txt"
+        config.summary_directory +  genemapper_output_suffix + "/{sample}.ko_mapper_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
