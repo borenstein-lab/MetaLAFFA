@@ -3,8 +3,6 @@
 # Author: Alex Eng
 # Date: 11/30/2017
 
-FUNCTION_COLUMN_HEADER = "Function"
-
 # Check why the path is being overwritten, but for now we make it look in our lab-controlled python lib directory
 import sys
 sys.path = ['', '/net/borenstein/vol1/PROGRAMS/python2/lib/python27.zip', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/plat-linux2', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-tk', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-old', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-dynload', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/site-packages']
@@ -15,6 +13,7 @@ parser = argparse.ArgumentParser(description="Summarizes KO profiles to a higher
 parser.add_argument("ko_profiles", help="The table of KO profiles to summarize")
 parser.add_argument("summary_method", choices=["fractional", "whole"], help="The method to use to map KOs to the higher functional level")
 parser.add_argument("mapping_matrix", help="The matrix that maps KOs to the higher functional levels they belong to")
+parser.add_argument("functional_level", help="The name of the functional level KOs are being mapped to")
 parser.add_argument("--output", "-o", default=None, help="File to write output to (default: print to standard output)")
 args = parser.parse_args()
 
@@ -42,7 +41,7 @@ output_table = mapping_matrix.dot(ko_profiles)
 output_table = output_table[(output_table.T != 0).any()]
 
 # Print the output
-output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = FUNCTION_COLUMN_HEADER)
+output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = args.functional_level)
 
 # If no output file was specified, then we print the table to standard output
 if args.output == None:
