@@ -75,7 +75,8 @@ for line in f:
 	elif e_val > curr_best_e_val and (args.filtering_method == "best_N_hits" or (args.filtering_method == "best_N_kos" and gene_hit in ko_genes)) and curr_num_hits < args.number:
 		curr_read_hits.append("\t".join([read_name, gene_hit, str(e_val)]))
 		curr_num_hits += 1
-    #Adrian add an else: fail condition for if the args.filtering_method is invalid
+
+    # An else is unnecessary here regarding invalid filtering methods because that will be caught by argparse
 
 # Don't forget to print any info for the last read
 for hit in curr_read_hits:

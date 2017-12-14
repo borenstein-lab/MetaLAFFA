@@ -6,7 +6,7 @@
 # Bash wrapper script to run MarkDuplicates for filtering out duplicate reads from fastq files
 #
 # Usage:
-# duplicate_filtering_wrapper.sh [--extract_duplicates extract_duplicates] [--fastq_to_sam fastq_to_sam] [--fix_paired_fastq fix_paired_fastq] [-h] [--java java] [--marked_read_remover marked_read_remover] [--paired_fastq paired_fastq] [--paired_fastq_output paired_fastq_output] [--picard picard] [--quality_format quality_format] [--samtools samtools] [--sort_order sort_order] fastq sample_name metric_file marked_reads output
+# duplicate_filtering_wrapper.sh [--duplicate_marker duplicate_marker] [--extract_duplicates extract_duplicates] [--fastq_to_sam fastq_to_sam] [--fix_paired_fastq fix_paired_fastq] [-h] [--java java] [--marked_read_remover marked_read_remover] [--paired_fastq paired_fastq] [--paired_fastq_output paired_fastq_output] [--quality_format quality_format] [--samtools samtools] [--sort_order sort_order] fastq sample_name metric_file marked_reads output
 #
 # Arguments:
 # fastq                                     : FASTQ file of reads to filter
@@ -16,6 +16,7 @@
 # output                                    : Output file for filtered FASTQ file
 #
 # Options:
+# -- duplicate_marker duplicate_marker      : Location of the program to mark duplicates in a SAM file (default: /net/borenstein/vol1/PROGRAMS/DPWG_ProcessingTools/EstimateLibraryComplexity.jar)
 # --extract_duplicates extract_duplicates   : Location of duplicate extraction program (default: src/extract_duplicates.py)
 # --fastq_to_sam fastq_to_sam               : Location of fastq_to_sam program (default: /net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar)
 # --fix_paired_fastq fix_paired_fastq       : Location of program to fix paired fastq files for conversion to sam format (default: src/fix_paired_fastq.py)
@@ -24,7 +25,6 @@
 # --marked_read_remover marked_read_remover : Location of marked read removing program (default: src/remove_marked_reads.py)
 # --paired_fastq paired_fastq               : FASTQ file of paired reads
 # --paired_fastq_output paired_fastq_output : Output file for filtered paired FASTQ file
-# --picard picard                           : Location of the PICARD jar (default: /net/borenstein/vol1/PROGRAMS/picard-tools-2.15.0/picard.jar)
 # --quality_format quality_format           : Quality format for SAM file (default: Standard)
 # --samtools samtools                       : Location of samtools program (default: /net/gs/vol3/software/modules-sw/samtools/0.1.8/Linux/RHEL6/x86_64/bin/samtools)
 # --sort_order sort_order                   : Sort order for SAM file (default: coordinate)
@@ -35,6 +35,7 @@ sample_name=""
 metric_file=""
 marked_reads=""
 output=""
+duplicate_marker=/net/borenstein/vol1/PROGRAMS/DPWG_ProcessingTools/EstimateLibraryComplexity.jar
 extract_duplicates=src/extract_duplicates.py
 fastq_to_sam=/net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar
 fix_paired_fastq=src/fix_paired_fastq.py
@@ -42,7 +43,6 @@ java=/net/borenstein/vol1/PROGRAMS/java/jre1.8.0_151/bin/java
 marked_read_remover=src/remove_marked_reads.py
 paired_fastq=""
 paired_fastq_output=""
-picard=/net/borenstein/vol1/PROGRAMS/picard-tools-2.15.0/picard.jar
 quality_format=Standard
 samtools=/net/gs/vol3/software/modules-sw/samtools/0.1.8/Linux/RHEL6/x86_64/bin/samtools
 sort_order=coordinate
@@ -53,6 +53,16 @@ while [[ $# > 0 ]]
 do
     key="$1"
     case $key in
+        --duplicate_marker)
+            if [ -e $2 ]
+            then
+                duplicate_marker=$2
+                shift
+            else
+                (>&2 echo "The specified file for duplicate_marker does not exist (${2})")
+                exit 1
+            fi
+            ;;
         --extract_duplicates)
             if [ -e $2 ]
             then
@@ -95,6 +105,7 @@ do
             printf "%-42s%s\n" "output" ": Output file for filtered reads"
             printf "\n"
             printf "%s\n" "Options:"
+            printf "%-42s%s\n" "--duplicate_marker duplicate_marker" ": Location of the program to mark duplicates in a SAM file (default: /net/borenstein/vol1/PROGRAMS/DPWG_ProcessingTools/EstimateLibraryComplexity.jar)"
             printf "%-42s%s\n" "--extract_duplicates extract_duplicates" ": Location of duplicate extraction program (default: src/extract_duplicates.py)"
             printf "%-42s%s\n" "--fastq_to_sam fastq_to_sam" ": Location of fastq_to_sam program (default: /net/gs/vol3/software/modules-sw/picard/1.111/Linux/RHEL6/x86_64/FastqToSam.jar)"
             printf "%-42s%s\n" "--fix_paired_fastq fix_paired_fastq" ": Location of program to fix paired fastq files for conversion to sam format (default: src/fix_paired_fastq.py)"
@@ -103,7 +114,6 @@ do
             printf "%-42s%s\n" "--marked_read_remover marked_read_remover" ": Location of marked read removing program (default: src/remove_marked_reads.py)"
             printf "%-42s%s\n" "--paired_fastq paired_fastq" ": FASTQ file of paired reads"
             printf "%-42s%s\n" "--paired_fastq_output paired_fastq_output" ": Output file for filtered paired reads"
-            printf "%-42s%s\n" "--picard picard" ": Location of the PICARD jar (default: /net/borenstein/vol1/PROGRAMS/picard-tools-2.15.0/picard.jar)"
             printf "%-42s%s\n" "--quality_format" ": Quality format for SAM file (default: Standard)"
             printf "%-42s%s\n" "--samtools samtools" ": Location of samtools program (default: /net/gs/vol3/software/modules-sw/samtools/0.1.8/Linux/RHEL6/x86_64/bin/samtools)"
             printf "%-42s%s\n" "--sort_order sort_order" ": Sort order for SAM file (default: coordinate)"
@@ -140,16 +150,6 @@ do
             fi
             ;;
         --paired_fastq_output) paired_fastq_output=$2; shift;;
-        --picard)
-            if [ -e $2 ]
-            then
-                picard=$2
-                shift
-            else
-                (>&2 echo "The specified file for picard does not exist (${2})")
-                exit 1
-            fi
-            ;;
         --quality_format) quality_format=$2; shift;;
         --samtools)
             if [ -e $2 ]
@@ -204,15 +204,11 @@ else
     fi
 
     # Fix the paired read files for conversion to SAM format
-    $fix_paired_fastq $fastq 1 > ${fastq}.fixed
-    $fix_paired_fastq $paired_fastq 2 > ${paired_fastq}.fixed
-
     # Convert the paired read files to SAM format
-    $java -jar $fastq_to_sam F1=${fastq}.fixed F2=${paired_fastq}.fixed O=${fastq}.paired.sam V=$quality_format SO=$sort_order SM=$sample_name
-    rm ${fastq}.fixed ${paired_fastq}.fixed
+    $java -jar $fastq_to_sam F1=$fastq F2=$paired_fastq O=${fastq}.paired.sam V=$quality_format SO=$sort_order SM=$sample_name
 
     # Run MarkDuplicates
-    $java -jar $picard MarkDuplicates I=${fastq}.paired.sam O=${fastq}.elc_output M=$metric_file
+    $java -jar $duplicate_marker I=${fastq}.paired.sam O=${fastq}.elc_output M=$metric_file
     rm ${fastq}.paired.sam
 
     # Convert the MarkDuplicates output to a parse-able format
@@ -220,7 +216,7 @@ else
     rm ${fastq}.elc_output
 
     # Extract the reads that were marked as duplicates
-    $extract_duplicates ${fastq}.samview -s /1 > $marked_reads
+    $extract_duplicates ${fastq}.samview > $marked_reads
     rm ${fastq}.samview
 
     # Filter the input paired read files

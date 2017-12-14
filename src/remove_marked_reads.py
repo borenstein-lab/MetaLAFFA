@@ -15,11 +15,11 @@ marked_file = custom_read(args.marked)
 marked_reads = set()
 for line in marked_file:
     read_name = line.strip()
-    # Adrian: This tag is put on by fix_paired_fastq.py right? And if so dosen't the -2 position depend on how long the tag is?
-    if read_name[-2] == '/':
-        marked_reads.add(read_name[:-2])
-    else:
-        marked_reads.add(read_name)
+    # Remove the part of the read name identifying which end of a read pair it is from if present
+    end_identifier_match = re.search("/[^/]*$", read_name)
+    if end_identifier_match:
+        read_name = read_name[:end_identifier_match.start()]
+    marked_reads.add(read_name)
 marked_file.close()
 
 fastq = None
@@ -30,8 +30,10 @@ else:
 line = fastq.readline()
 while line != "":
     read_name = line.strip().split()[0][1:]
-    if read_name[-2] == '/':
-        read_name = read_name[:-2]
+    # Remove the part of the read name identifying which end of a read pair it is from if present
+    end_identifier_match = re.search("/[^/]*$", read_name)
+    if end_identifier_match:
+        read_name = read_name[:end_identifier_match.start()]
     if read_name in marked_reads:
         line = fastq.readline()
         line = fastq.readline()

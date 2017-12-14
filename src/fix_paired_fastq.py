@@ -18,12 +18,13 @@ line = f.readline()
 count = 0
 while line != "":
     if count == 0:
-        if re.search("/[0-9]+", line.strip()):
-            print(line.strip()[:-1] + args.tag)
-        elif line.strip()[-1] == '/':
-            print(line.strip() + args.tag)
+        split_line = line.strip().split()
+        if re.search("/[0-9]+", split_line[0]):
+            print(split_line[0][:-1] + args.tag)
+        elif split_line[0][-1] == '/':
+            print(split_line[0] + args.tag)
         else:
-            print(line.strip() + '/' + args.tag)
+            print(split_line[0] + '/' + args.tag)
     else:
         print(line.strip())
     count += 1

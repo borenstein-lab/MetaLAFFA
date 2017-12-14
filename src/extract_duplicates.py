@@ -17,6 +17,8 @@ f = open(args.samview, 'r')
 line = f.readline()
 while line != "":
     fields = line.strip().split('\t')
+
+    # Grab the duplicate flag
     flag = bin(int(fields[FLAG_FIELD]))
     if len(flag) >= 13:
         if flag[DUP_FLAG] == "1":
@@ -24,7 +26,8 @@ while line != "":
                 print fields[NAME_FIELD] + args.suffix
             else:
                 print fields[NAME_FIELD]
-    # Adrian: Why are two lines being read in here?
+
+    # Skip the next line, which is the paired read, and move to the next read
     line = f.readline()
     line = f.readline()
 f.close()
