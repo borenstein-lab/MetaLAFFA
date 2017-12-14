@@ -4,7 +4,7 @@
 # Date: 11/30/2017
 
 SAMPLE_NAME_COLUMN_HEADER = "sample_file"
-FUNCTION_COUNT_COLUMN_HEADER = "number_of_functions"
+FUNCTION_COUNT_COLUMN_HEADER_SUFFIX = "_count"
 
 # Check why the path is being overwritten, but for now we make it look in our lab-controlled python lib directory
 import sys
@@ -20,6 +20,9 @@ args = parser.parse_args()
 # Read the profiles
 profiles = pandas.read_table(args.profiles, sep = "\t", header = 0, index_col = 0)
 
+# Get the name of the functional level that was summarized to
+functional_level = profiles.index.name
+
 # Count the number of non-zeros in each column (number of the higher level functions found in each sample)
 output_table = profiles.astype(bool).sum(axis=0).to_frame()
 
@@ -27,7 +30,7 @@ output_table = profiles.astype(bool).sum(axis=0).to_frame()
 output_table.index = [os.path.basename(x) for x in list(output_table.index)]
 
 # Set name of function count column
-output_table.columns = [FUNCTION_COUNT_COLUMN_HEADER]
+output_table.columns = [functional_level + FUNCTION_COUNT_COLUMN_HEADER_SUFFIX]
 
 # Print the output
 output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = SAMPLE_NAME_COLUMN_HEADER)
