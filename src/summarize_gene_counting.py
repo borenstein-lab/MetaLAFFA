@@ -2,7 +2,7 @@
 # Author: Alex Eng
 # Date: 11/30/2017
 
-import argparse,sys
+import argparse,sys,os.path
 from file_handling import *
 from future import *
 
@@ -37,5 +37,5 @@ for filename in args.gene_profile_files:
         gene_count += 1
 
     # Print the gene counting summary for this file
-    output.write("\t".join([filename, str(gene_count)]) + "\n")
+    output.write("\t".join([os.path.basename(filename), str(gene_count)]) + "\n")
 output.close()

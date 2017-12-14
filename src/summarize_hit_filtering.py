@@ -2,7 +2,7 @@
 # Author: Alex Eng
 # Date: 11/30/2017
 
-import argparse,sys
+import argparse,sys,os.path
 from file_handling import *
 from future import *
 
@@ -48,4 +48,4 @@ for filename in args.blast_output_files:
             matched_reads.add(read_name)
 
     # Print the mapping summary for this blast output file
-    output.write("\t".join([filename, str(matched_read_count), str(match_count), str(total_e_value/match_count)]) + "\n")
+    output.write("\t".join([os.path.basename(filename), str(matched_read_count), str(match_count), str(total_e_value/match_count)]) + "\n")

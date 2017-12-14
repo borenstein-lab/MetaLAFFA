@@ -2,7 +2,7 @@
 # Author: Alex Eng
 # Date: 11/30/2017
 
-import argparse,sys
+import argparse,sys,os.path
 from file_handling import *
 from future import *
 
@@ -37,5 +37,5 @@ for filename in args.KO_profile_files:
         KO_count += 1
 
     # Print the KO counting summary for this file
-    output.write("\t".join([filename, str(KO_count)]) + "\n")
+    output.write("\t".join([os.path.basename(filename), str(KO_count)]) + "\n")
 output.close()

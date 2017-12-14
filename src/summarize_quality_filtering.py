@@ -6,7 +6,7 @@ NUM_LINES_PER_READ = 4
 READ_NAME_LINE = 0
 QUALITY_LINE = 3
 
-import argparse,sys
+import argparse,sys,os.path
 from file_handling import *
 from fastq_summarizing import *
 from future import *
@@ -157,6 +157,6 @@ if r2_new_singleton_base_count > 0:
     r2_new_singleton_average_base_quality = float(r2_new_singleton_total_quality_score)/float(r2_new_singleton_base_count)
 
 # Print the quality filtering summary for this sample
-output.write("\t".join([args.filtered_r1_fastq, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + "\n")
-output.write("\t".join([args.filtered_r2_fastq, str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality)]) + "\n")
-output.write("\t".join([args.filtered_old_singleton_fastq, "N/A", "N/A", "N/A", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([os.path.basename(args.filtered_r1_fastq), str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([os.path.basename(args.filtered_r2_fastq), str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([os.path.basename(args.filtered_old_singleton_fastq), "N/A", "N/A", "N/A", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + "\n")

@@ -4,7 +4,7 @@
 
 NUM_LINES_PER_READ = 4
 
-import argparse,sys
+import argparse,sys,os.path
 from fastq_summarizing import *
 from future import *
 
@@ -29,5 +29,5 @@ for filename in args.filtered_fastqs:
     read_count, average_read_length, average_base_quality = get_fastq_stats(filename)
 
     # Print the host filtering summary for this file
-    output.write("\t".join([filename, str(read_count), str(average_read_length), str(average_base_quality)]) + "\n")
+    output.write("\t".join([os.path.basename(filename), str(read_count), str(average_read_length), str(average_base_quality)]) + "\n")
 output.close()
