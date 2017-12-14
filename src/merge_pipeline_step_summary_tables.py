@@ -26,7 +26,7 @@ parser.add_argument("mapping_summary", help="The table summarizing the mapping s
 parser.add_argument("blast_hit_filtering_summary", help="The table summarizing the blast hit filtering step")
 parser.add_argument("gene_counting_summary", help="The table summarizing the gene counting step")
 parser.add_argument("ko_counting_summary", help="The table summarizing the ko counting step")
-parser.add_argument("functional_level_summarization_summary", help="The table summarizing the functional level summarization step")
+parser.add_argument("functional_level_summarization_summaries", nargs="*", help="The tables summarizing any functional level summarization steps")
 parser.add_argument("--output", "-o", default=None, help="File to write output to (default: print to standard output)")
 args = parser.parse_args()
 
@@ -321,21 +321,24 @@ ko_counting_summary = ko_counting_summary.drop(columns=["ko_profile_file"])
 # Merge the ko counting summary table into the master table
 summary_table = pandas.concat([summary_table, ko_counting_summary], axis=1)
 
-############################# Incorporate functional level summarization summary #############################
-# Read the functional level summarization summary table
-functional_level_summarization_summary = pandas.read_table(args.functional_level_summarization_summary, sep="\t", header=0)
+############################ Incorporate functional level summarization summaries ############################
+# Process the summary table for each functional level summarization performed
+for filename in args.functional_level_summarization_summaries:
 
-# Add a column indicating the sample name for each file
-functional_level_summarization_summary[SAMPLE_COLUMN_HEADER] = functional_level_summarization_summary["sample_file"].apply(get_sample)
+	# Read the functional level summarization summary tables
+	functional_level_summarization_summary = pandas.read_table(filename, sep="\t", header=0)
 
-# Set the index to be the sample
-functional_level_summarization_summary = functional_level_summarization_summary.set_index(SAMPLE_COLUMN_HEADER)
+	# Add a column indicating the sample name for each file
+	functional_level_summarization_summary[SAMPLE_COLUMN_HEADER] = functional_level_summarization_summary["sample_file"].apply(get_sample)
 
-# Remove the file name column
-functional_level_summarization_summary = functional_level_summarization_summary.drop(columns=["sample_file"])
+	# Set the index to be the sample
+	functional_level_summarization_summary = functional_level_summarization_summary.set_index(SAMPLE_COLUMN_HEADER)
 
-# Merge the functional level summarization summary table into the master table
-summary_table = pandas.concat([summary_table, functional_level_summarization_summary], axis=1)
+	# Remove the file name column
+	functional_level_summarization_summary = functional_level_summarization_summary.drop(columns=["sample_file"])
+
+	# Merge the functional level summarization summary table into the master table
+	summary_table = pandas.concat([summary_table, functional_level_summarization_summary], axis=1)
 
 ############################################## Write the output ##############################################
 # Print the output
