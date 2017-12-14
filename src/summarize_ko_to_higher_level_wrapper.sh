@@ -12,6 +12,7 @@
 # ko_profiles                   : KO profile table to summarize to a higher functional level
 # summary_method                : Method to use to summarize the KO profiles (fractional, whole)
 # mapping_matrix                : Matrix mapping KOs to higher functional summary level
+# functional_level				: Name of the functional level being summarized to
 # output                        : Output file for higher-level functional profiles
 #
 # Options:
@@ -25,6 +26,7 @@ SUMMARY_METHODS=(fractional whole)
 ko_profiles=""
 summary_method=""
 mapping_matrix=""
+functional_level=""
 output=""
 simple_mapper=src/summarize_ko_to_higher_level.py
 
@@ -52,6 +54,7 @@ do
 			printf "%-30s%s\n" "ko_profiles" ": KO profile table to summarize to a higher functional level"
 			printf "%-30s%s\n" "summary_method" ": Method to use to summarize the KO profiles (fractional, whole)"
 			printf "%-30s%s\n" "mapping_matrix" ": Matrix mapping KOs to higher functional summary level"
+			printf "%-30s%s\n" "functional_level" ": Name of the functional level being summarized to"
 			printf "%-30s%s\n" "output" ": Output file for higher-level functional profiles"
 			printf "\n"
 			printf "%s\n" "Options:"
@@ -75,7 +78,8 @@ fi
 ko_profiles=${position_args[0]}
 summary_method=${position_args[1]}
 mapping_matrix=${position_args[2]}
-output=${position_args[3]}
+functional_level=${position_args[3]}
+output=${position_args[4]}
 
 # Check if the required ko profiles file exists
 if [ ! -e $ko_profiles ]
@@ -110,8 +114,8 @@ fi
 case $summary_method in
 
 	# If fractional, we use the simple mapping program with the fractional mapping setting
-	fractional) $simple_mapper $ko_profiles $summary_method $mapping_matrix > $output;;
+	fractional) $simple_mapper $ko_profiles $summary_method $mapping_matrix $functional_level > $output;;
 
     # If whole, we use the simple mapping program with the whole mapping setting
-    whole) $simple_mapper $ko_profiles $summary_method $mapping_matrix > $output;;
+    whole) $simple_mapper $ko_profiles $summary_method $mapping_matrix $functional_level > $output;;
 esac
