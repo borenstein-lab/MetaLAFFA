@@ -226,7 +226,7 @@ if args.quality_filtering_summary:
 	# We first get the total quality score of all bases per file (bases * average_base_quality), add them together, then divide by the number of bases
 	summary_table["overall_post_quality_filtering_paired_average_base_quality"] = ((summary_table_for_calculation["r1_post_quality_filtering_paired_reads"] * summary_table_for_calculation["r1_post_quality_filtering_paired_average_read_length"] * summary_table_for_calculation["r1_post_quality_filtering_paired_average_base_quality"]) + (summary_table_for_calculation["r2_post_quality_filtering_paired_reads"] * summary_table_for_calculation["r2_post_quality_filtering_paired_average_read_length"] * summary_table_for_calculation["r2_post_quality_filtering_paired_average_base_quality"]))/(summary_table["total_post_quality_filtering_paired_reads"] * summary_table["overall_post_quality_filtering_paired_average_read_length"])
 	summary_table["overall_post_quality_filtering_singleton_average_base_quality"] = ((summary_table_for_calculation["r1_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["r1_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["r1_post_quality_filtering_singleton_average_base_quality"]) + (summary_table_for_calculation["r2_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["r2_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["r2_post_quality_filtering_singleton_average_base_quality"]) + (summary_table_for_calculation["singleton_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["singleton_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["singleton_post_quality_filtering_singleton_average_base_quality"]))/(summary_table["total_post_quality_filtering_singleton_reads"] * summary_table["overall_post_quality_filtering_singleton_average_read_length"])
-	summary_table["overall_post_quality_filtering_average_base_quality"] = ((summary_table_for_calculation["r1_post_quality_paired_filtering_reads"] * summary_table_for_calculation["r1_post_quality_filtering_paired_average_read_length"] * summary_table_for_calculation["r1_post_quality_filtering_paired_average_base_quality"]) + (summary_table_for_calculation["r1_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["r1_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["r1_post_quality_filtering_singleton_average_base_quality"]) + (summary_table_for_calculation["r2_post_quality_paired_filtering_reads"] * summary_table_for_calculation["r2_post_quality_filtering_paired_average_read_length"] * summary_table_for_calculation["r2_post_quality_filtering_paired_average_base_quality"]) + (summary_table_for_calculation["r2_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["r2_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["r2_post_quality_filtering_singleton_average_base_quality"]) + (summary_table_for_calculation["singleton_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["singleton_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["singleton_post_quality_filtering_singleton_average_base_quality"]))/(summary_table["total_post_quality_filtering_reads"] * summary_table["overall_post_quality_filtering_average_read_length"])
+	summary_table["overall_post_quality_filtering_average_base_quality"] = ((summary_table_for_calculation["r1_post_quality_filtering_paired_reads"] * summary_table_for_calculation["r1_post_quality_filtering_paired_average_read_length"] * summary_table_for_calculation["r1_post_quality_filtering_paired_average_base_quality"]) + (summary_table_for_calculation["r1_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["r1_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["r1_post_quality_filtering_singleton_average_base_quality"]) + (summary_table_for_calculation["r2_post_quality_filtering_paired_reads"] * summary_table_for_calculation["r2_post_quality_filtering_paired_average_read_length"] * summary_table_for_calculation["r2_post_quality_filtering_paired_average_base_quality"]) + (summary_table_for_calculation["r2_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["r2_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["r2_post_quality_filtering_singleton_average_base_quality"]) + (summary_table_for_calculation["singleton_post_quality_filtering_singleton_reads"] * summary_table_for_calculation["singleton_post_quality_filtering_singleton_average_read_length"] * summary_table_for_calculation["singleton_post_quality_filtering_singleton_average_base_quality"]))/(summary_table["total_post_quality_filtering_reads"] * summary_table["overall_post_quality_filtering_average_read_length"])
 
 ######################################### Incorporate mapping summary #########################################
 # Read the mapping summary table
@@ -235,43 +235,14 @@ mapping_summary = pandas.read_table(args.mapping_summary, sep="\t", header=0)
 # Add a column indicating the sample name for each file
 mapping_summary[SAMPLE_COLUMN_HEADER] = mapping_summary["blast_output_file"].apply(get_sample)
 
-# Add a column indicating which file type (R1, R2, Singleton) each file is
-mapping_summary["file_type"] = mapping_summary["blast_output_file"].apply(get_file_type)
+# Set the index to be the sample
+mapping_summary = mapping_summary.set_index(SAMPLE_COLUMN_HEADER)
 
-# Grab the subset summary data for each file type for each sample
-r1_mapping_summary = mapping_summary[mapping_summary["file_type"] == "R1"]
-r2_mapping_summary = mapping_summary[mapping_summary["file_type"] == "R2"]
-singleton_mapping_summary = mapping_summary[mapping_summary["file_type"] == "S"]
-
-# Set the index for each subset table to be the sample
-r1_mapping_summary = r1_mapping_summary.set_index(SAMPLE_COLUMN_HEADER)
-r2_mapping_summary = r2_mapping_summary.set_index(SAMPLE_COLUMN_HEADER)
-singleton_mapping_summary = singleton_mapping_summary.set_index(SAMPLE_COLUMN_HEADER)
-
-# Rename file data columns to indicate the source file type
-r1_mapping_summary = r1_mapping_summary.rename(index=str, columns={"matched_reads":"r1_matched_reads", "matches":"r1_matches", "average_e_value":"r1_average_e_value"})
-r2_mapping_summary = r2_mapping_summary.rename(index=str, columns={"matched_reads":"r2_matched_reads", "matches":"r2_matches", "average_e_value":"r2_average_e_value"})
-singleton_mapping_summary = singleton_mapping_summary.rename(index=str, columns={"matched_reads":"singleton_post_mapping_reads", "matches":"singleton_post_mapping_average_read_length", "average_e_value":"singleton_post_mapping_average_base_quality"})
-
-# Remove file name and file type columns
-r1_mapping_summary = r1_mapping_summary.drop(columns=["blast_output_file", "file_type"])
-r2_mapping_summary = r2_mapping_summary.drop(columns=["blast_output_file", "file_type"])
-singleton_mapping_summary = singleton_mapping_summary.drop(columns=["blast_output_file", "file_type"])
+# Remove file name column
+mapping_summary = mapping_summary.drop(columns=["blast_output_file"])
 
 # Merge the mapping summary tables into the master table
-summary_table = pandas.concat([summary_table, r1_mapping_summary, r2_mapping_summary, singleton_mapping_summary], axis=1)
-
-# Calculate the number of matched reads, matches, and average e value across all files for a single sample
-summary_table_for_calculation = summary_table.fillna(0)
-
-# Total matched reads is just the sum of matched reads from each file
-summary_table["total_matched_reads"] = summary_table_for_calculation["r1_matched_reads"] + summary_table_for_calculation["r2_matched_reads"] + summary_table_for_calculation["singleton_matched_reads"]
-
-# Total matches is just the sum of matches from each file
-summary_table["total_matches"] = summary_table_for_calculation["r1_matches"] + summary_table_for_calculation["r2_matches"] + summary_table_for_calculation["singleton_matches"]
-
-# We first get the total e value per file (matches * average_e_value), add them together, then divide by the total number of matches
-summary_table["overall_average_e_value"] = ((summary_table_for_calculation["r1_matches"] * summary_table_for_calculation["r1_average_e_value"]) + (summary_table_for_calculation["r2_matches"] * summary_table_for_calculation["r2_average_e_value"]) + (summary_table_for_calculation["singleton_matches"] * summary_table_for_calculation["singleton_average_e_value"]))/summary_table["total_matches"]
+summary_table = pandas.concat([summary_table, mapping_summary], axis=1)
 
 ################################### Incorporate blast hit filtering summary ###################################
 # Read the blast hit filtering summary table
@@ -313,13 +284,13 @@ summary_table = pandas.concat([summary_table, gene_counting_summary], axis=1)
 ko_counting_summary = pandas.read_table(args.ko_counting_summary, sep="\t", header=0)
 
 # Add a column indicating the sample name for each file
-ko_counting_summary[SAMPLE_COLUMN_HEADER] = ko_counting_summary["ko_profile_file"].apply(get_sample)
+ko_counting_summary[SAMPLE_COLUMN_HEADER] = ko_counting_summary["KO_profile_file"].apply(get_sample)
 
 # Set the index to be the sample
 ko_counting_summary = ko_counting_summary.set_index(SAMPLE_COLUMN_HEADER)
 
 # Remove the file name column
-ko_counting_summary = ko_counting_summary.drop(columns=["ko_profile_file"])
+ko_counting_summary = ko_counting_summary.drop(columns=["KO_profile_file"])
 
 # Merge the ko counting summary table into the master table
 summary_table = pandas.concat([summary_table, ko_counting_summary], axis=1)
@@ -332,7 +303,7 @@ for filename in args.functional_level_summarization_summaries:
 	functional_level_summarization_summary = pandas.read_table(filename, sep="\t", header=0)
 
 	# Add a column indicating the sample name for each file
-	functional_level_summarization_summary[SAMPLE_COLUMN_HEADER] = functional_level_summarization_summary["sample_file"].apply(get_sample)
+	functional_level_summarization_summary[SAMPLE_COLUMN_HEADER] = functional_level_summarization_summary["sample_file"]
 
 	# Set the index to be the sample
 	functional_level_summarization_summary = functional_level_summarization_summary.set_index(SAMPLE_COLUMN_HEADER)
