@@ -19,7 +19,7 @@ diamond_output_suffix = join_char.join([x for x in ["diamond_%s_%s" %( config.al
 hitfiltering_output_suffix = diamond_output_suffix + join_char + join_char.join([x for x in ["best_n_hits_%s" %( str(config.best_n_hits) ), "filtering_method_%s" %( config.filtering_method) ] if x])
 genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["count_method_%s" %( config.count_method) ] if x])
 normalization_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["norm_method_%s" %( config.norm_method) ,"musicc_correction_method_%s" %( config.musicc_correction_method)] if x])
-functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["mapping_matrix_%s" %( os.path.basename(config.mapping_matrix) ), "summary_method_%s" %( config.summary_method)] if x])
+functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["mapping_matrix_%s" %( os.path.basename(config.mapping_matrix) ), "summary_method_%s" %( config.summary_method), "functional_level_%s" %(config.functional_level) ] if x])
 
 default_cluster_params = "-cwd -l mfree=10G" 
 delete_intermediates = config.delete_intermediates
@@ -44,15 +44,11 @@ rule all:
     input:
         #config.module_profiles_directory + "functionalsummary." + functionalsummary_output_suffix + ".gz",
         #config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt",
-        config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
+        #config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
+        #config.summary_directory +  genemapper_output_suffix + "/ko_mapper_summary.txt"
+        #config.summary_directory + "duplicate_filter_summary.txt"
         #Summaries
-        #expand(config.summary_directory + "{sample}.{type}.host_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        #expand(config.summary_directory + "{sample}.{type}.duplicate_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        #expand(config.summary_directory + "{sample}.{type}.quality_filter_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        #expand(config.summary_directory + "{sample}.{type}" + diamond_output_suffix + ".map_reads_summary.txt", sample = SAMPLES, type = ["R1","R2","S"]),
-        #expand(config.summary_directory + "{sample}." + hitfiltering_output_suffix + ".hit_filtering_summary.txt", sample = SAMPLES),
-        #expand(config.summary_directory + "{sample}." + genemapper_output_suffix + ".gene_mapper_summary.txt", sample = SAMPLES),
-        #expand(config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"),
+        config.summary_directory + "Summaries_All.txt"
 
 
 rule clean_all:
@@ -62,6 +58,52 @@ rule clean_all:
 rule clean_sub:
     run:
         shell( "rm -f -r %sblast_results/* && rm -f -r %sfiltered_blast_results/ && rm -f -r %sgene_profiles/* && rm -f -r %sko_profiles/* && rm -f -r %smodule_profiles/* && rm -f -r %snormalized_ko_profiles/* && rm -f -r %spathway_profiles/*" %(config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir,config.output_dir ) )
+
+
+rule fastq_summary:
+    input:
+        config.fastq_directory + "{sample}.{type}.fastq.gz",
+    output:
+        config.summary_directory + "{sample}.{type}.fastq_summary.txt",
+    params:
+        cluster=default_cluster_params
+    shell:
+        "src/summarize_input_fastq.py {input} > {output}"
+
+def fastq_summary_combine1_DetermineFiles(wildcards):
+    out = {}
+    if os.path.isfile( config.fastq_directory + "{wildcards.sample}.R1.fastq.gz".format(wildcards=wildcards)):
+        out["R1"] = config.summary_directory + "{wildcards.sample}.R1.fastq_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.R2.fastq.gz".format(wildcards=wildcards)):
+        out["R2"] = config.summary_directory + "{wildcards.sample}.R2.fastq_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.S.fastq.gz".format(wildcards=wildcards)):
+        out["S"] = config.summary_directory + "{wildcards.sample}.S.fastq_summary.txt".format(wildcards=wildcards)
+    return out
+
+rule fastq_summary_combine1:
+    input:
+        unpack(fastq_summary_combine1_DetermineFiles)
+    output:
+        config.summary_directory + "{sample}.fastq_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        shell("head -1 %s > %s" %(input[0], output ) )
+        for i in range(len(input)):
+            shell("tail -n +2 %s >> %s" %(input[i], output))
+        shell("rm -f {input}")
+
+rule fastq_summary_combine2:
+    input:
+        expand( config.summary_directory + "{sample}.fastq_summary.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + "fastq_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+        shell("rm -f {input}")
+
 
 
 rule host_filter_duplicate:
@@ -109,34 +151,60 @@ rule host_filter_summary:
     input:
         config.host_filtered_directory + "{sample}.{type}.hostfilter.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.host_filter_summary.txt"
+        config.summary_directory + "{sample}.{type}.hostfilter_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
         "src/summarize_host_filtering.py {input} > {output}"
+
+def host_filter_summary_combine1_DetermineFiles(wildcards):
+    out = {}
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.R1.hostfilter.fastq.gz".format(wildcards=wildcards)):
+        out["R1"] = config.summary_directory + "{wildcards.sample}.R1.hostfilter_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.R2.hostfilter.fastq.gz".format(wildcards=wildcards)):
+        out["R2"] = config.summary_directory + "{wildcards.sample}.R2.hostfilter_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.S.hostfilter.fastq.gz".format(wildcards=wildcards)):
+        out["S"] = config.summary_directory + "{wildcards.sample}.S.hostfilter_summary.txt".format(wildcards=wildcards)
+    return out
+
+rule host_filter_summary_combine1:
+    input:
+        unpack(host_filter_summary_combine1_DetermineFiles)
+    output:
+        config.summary_directory + "{sample}.hostfilter_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        shell("head -1 %s > %s" %(input[0], output ) )
+        for i in range(len(input)):
+            shell("tail -n +2 %s >> %s" %(input[i], output))
+        shell("rm -f {input}")
+
+rule host_filter_summary_combine2:
+    input:
+        expand( config.summary_directory + "{sample}.hostfilter_summary.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + "hostfilter_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+        shell("rm -f {input}")
 
 rule duplicate_filter_singleton:
     input:
         S=config.host_filtered_directory + "{sample}.S.hostfilter.fastq.gz",
     output:
         S=config.duplicate_filtered_directory + "{sample}.S.dupfilter.fastq.gz",
-        #metrics_output=config.duplicate_filtered_directory + "{sample}.S.metricout.fastq.gz",
-        #duplicate_marked=config.duplicate_filtered_directory + "{sample}.S.duplicatemarked.fastq.gz",
     params:
         cluster=default_cluster_params
     run:
         out_nonzip = output.S.rstrip(".gz")
-        #out_metrics_nonzip = output.metrics_output.rstrip(".gz")
-        #out_duplicate_nonzip = output.duplicate_marked.rstrip(".gz")
-        #shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} %s %s %s " %(out_metrics_nonzip, out_duplicate_nonzip, out_nonzip) )
         shell(" src/duplicate_filtering_wrapper.sh {input.S} {wildcards.sample} dummy1 dummy2 %s " %(out_nonzip) )
         shell( "gzip %s" %(out_nonzip) )
-        #shell( "gzip %s" %(out_metrics_nonzip) )
-        #shell( "gzip %s" %(out_duplicate_nonzip) )
         #Delete intermediate # Deleting the intermediates should also get rid of the marked read file
         if delete_intermediates:
             shell("rm -f {input.S}")
-
 
 rule duplicate_filter_paired:
     input:
@@ -173,6 +241,41 @@ rule duplicate_filter_summary:
         cluster=default_cluster_params
     shell:
         "src/summarize_duplicate_filtering.py {input} > {output}"
+
+def duplicate_filter_summary_combine1_DetermineFiles(wildcards):
+    out = {}
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.R1.dupfilter.fastq.gz".format(wildcards=wildcards)):
+        out["R1"] = config.summary_directory + "{wildcards.sample}.R1.duplicate_filter_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.R2.dupfilter.fastq.gz".format(wildcards=wildcards)):
+        out["R2"] = config.summary_directory + "{wildcards.sample}.R2.duplicate_filter_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.host_filtered_directory + "{wildcards.sample}.S.dupfilter.fastq.gz".format(wildcards=wildcards)):
+        out["S"] = config.summary_directory + "{wildcards.sample}.S.duplicate_filter_summary.txt".format(wildcards=wildcards)
+    return out
+
+rule duplicate_filter_summary_combine1:
+    input:
+        unpack(duplicate_filter_summary_combine1_DetermineFiles)
+    output:
+        config.summary_directory + "{sample}.duplicate_filter_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        shell("head -1 %s > %s" %(input[0], output ) )
+        for i in range(len(input)):
+            shell("tail -n +2 %s >> %s" %(input[i], output))
+        shell("rm -f {input}")
+
+rule duplicate_filter_summary_combine2:
+    input:
+        expand( config.summary_directory + "{sample}.duplicate_filter_summary.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + "duplicate_filter_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+        shell("rm -f {input}")
+
 
 rule quality_filter_duplicate:
     input:
@@ -216,18 +319,26 @@ rule quality_filter_summary:
     input:
         pre_R1=config.duplicate_filtered_directory + "{sample}.R1.dupfilter.fastq.gz",
         pre_R2=config.duplicate_filtered_directory + "{sample}.R2.dupfilter.fastq.gz",
-        post_R1=config.fastq_directory + "{sample}.R1.fq.fastq.gz",
-        post_R2=config.fastq_directory + "{sample}.R2.fq.fastq.gz",
+        post_R1=config.quality_filtered_directory + "{sample}.R1.fq.fastq.gz",
+        post_R2=config.quality_filtered_directory + "{sample}.R2.fq.fastq.gz",
         new_singleton=config.quality_filtered_directory + "{sample}.S.fq.temp2.fastq.gz",
         filtered_singleton=config.quality_filtered_directory + "{sample}.S.fq.fastq.gz"
     output:
-        config.summary_directory + "{sample}.{type}.quality_filter_summary.txt"
+        config.summary_directory + "{sample}.quality_filter_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
         "src/summarize_quality_filtering.py {input.pre_R1} {input.pre_R2} {input.post_R1} {input.post_R2} {input.new_singleton} {input.filtered_singleton} > {output}"
 
-
+rule quality_filter_summary_combine:
+    input:
+        expand( config.summary_directory + "{sample}.quality_filter_summary.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + "quality_filter_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
 
 def merge_singletons_DetermineFiles(wildcards):
     out = {}
@@ -252,7 +363,6 @@ rule merge_singletons:
         if delete_intermediates:
             shell("rm -f %s" %(config.fastq_directory + "{wildcards.sample}.S.fq.temp2.fastq.gz") )
             shell("rm -f %s" %(config.fastq_directory + "{wildcards.sample}.S.fq.temp.fastq.gz") )
-
 
 
 rule map_reads:
@@ -287,11 +397,11 @@ rule map_reads:
 
 def combine_mapping_DetermineFiles(wildcards):
     out = {}
-    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R1.fq.fastq.gz".format(wildcards=wildcards)):
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R1.fq.fastq.gz".format(wildcards=wildcards)) | os.path.isfile( config.fastq_directory + "{wildcards.sample}.R1.fastq.gz".format(wildcards=wildcards)):
         out["R1"] = "".join([config.diamond_output_directory, diamond_output_suffix, "/{wildcards.sample}.R1.gz"]).format(wildcards=wildcards)
-    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R2.fq.fastq.gz".format(wildcards=wildcards)):
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R2.fq.fastq.gz".format(wildcards=wildcards)) | os.path.isfile( config.fastq_directory + "{wildcards.sample}.R2.fastq.gz".format(wildcards=wildcards)):
         out["R2"] = "".join([config.diamond_output_directory, diamond_output_suffix, "/{wildcards.sample}.R2.gz"]).format(wildcards=wildcards)
-    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.S.fq.fastq.gz".format(wildcards=wildcards)):
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.S.fq.fastq.gz".format(wildcards=wildcards)) | os.path.isfile( config.fastq_directory + "{wildcards.sample}.S.fastq.gz".format(wildcards=wildcards)):
         out["S"] = "".join([config.diamond_output_directory, diamond_output_suffix, "/{wildcards.sample}.S.gz"]).format(wildcards=wildcards)
     return out
 
@@ -315,13 +425,24 @@ rule combine_mapping:
 
 rule map_reads_summary:
     input:
-        config.diamond_output_directory + diamond_output_suffix + "/{sample}.{type}.gz"
+        config.diamond_output_directory + diamond_output_suffix + "/{sample}.gz"
     output:
-        config.summary_directory + diamond_output_suffix + "/{sample}.{type}.map_reads_summary.txt"
+        config.summary_directory + diamond_output_suffix + "/{sample}.map_reads_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
         "src/summarize_diamond.py {input} > {output}"
+
+rule map_reads_summary_combine:
+    input:
+        expand( config.summary_directory + diamond_output_suffix + "/{sample}.map_reads_summary.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + diamond_output_suffix + "/map_reads_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+
 
 rule hit_filtering:
     input:
@@ -352,6 +473,17 @@ rule hit_filtering_summary:
     shell:
         "src/summarize_hit_filtering.py {input} > {output}"
 
+rule hit_filtering_summary_combine:
+    input:
+        expand( config.summary_directory + hitfiltering_output_suffix + "/{sample}.hit_filtering_summary.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + hitfiltering_output_suffix + "/hit_filtering_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+
+
 rule gene_mapper:
     input:
         config.diamond_filtered_directory + hitfiltering_output_suffix + "/{sample}.diamond_filtered.gz"
@@ -380,6 +512,16 @@ rule gene_mapper_summary:
     shell:
         "src/summarize_gene_counting.py {input} > {output}"
 
+rule gene_mapper_summary_combine:
+    input:
+        expand( config.summary_directory + genemapper_output_suffix + "/{sample}.gene_mapper_summary.txt", sample = SAMPLES)
+    output:
+        config.summary_directory +  genemapper_output_suffix + "/gene_mapper_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+
 rule ko_mapper:
     input:
         config.gene_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
@@ -404,7 +546,22 @@ rule ko_mapper_summary:
     params:
         cluster=default_cluster_params
     shell:
-        "src/summarize_ko_counting.py {single_sample_ko_abundances} > {output}"
+        "src/summarize_ko_counting.py {input} > {output}"
+
+def combine_files(input, output):
+    shell("head -1 %s > %s" %(input[0], output ) )
+    for i in range(len(input)):
+        shell("tail -n +2 %s >> %s" %(input[i], output))
+
+rule ko_mapper_summary_combine:
+    input:
+        expand( config.summary_directory +  genemapper_output_suffix + "/{sample}.ko_mapper_summary.txt", sample = SAMPLES)
+    output:
+        config.summary_directory +  genemapper_output_suffix + "/ko_mapper_summary.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
 
 rule merge_tables:
     input:
@@ -444,10 +601,11 @@ rule ko_functional_summary:
     params:
         mapping_matrix=config.mapping_matrix,
         summary_method=config.summary_method,
-        cluster=default_cluster_params
+        cluster=default_cluster_params,
+        functional_level=config.functional_level
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell( "src/summarize_ko_to_higher_level_wrapper.sh {input} {params.summary_method} {params.mapping_matrix} %s" %(out_nonzip) )
+        shell( "src/summarize_ko_to_higher_level_wrapper.sh {input} {params.summary_method} {params.mapping_matrix} {params.functional_level} %s" %(out_nonzip) )
         shell("gzip %s" %(out_nonzip) )
         #Delete intermediate
         if delete_intermediates:
@@ -455,10 +613,35 @@ rule ko_functional_summary:
 
 rule functional_summary_summary: 
     input:
-        config.module_profiles_directory + "functionalsummary." + functionalsummary_output_suffix + ".gz"
+        config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
     output:
         config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"
     params:
         cluster=default_cluster_params
     shell:
         "src/summarize_summarizing_ko_to_higher_level.py {input} > {output}"
+
+
+def AllSummaries_DetermineFiles(wildcards):
+    out = {}
+    if os.path.isfile( config.fastq_directory + "%s.R1.fastq.gz" %(SAMPLES[0])) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0]) ) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0])):
+        out["input_summary"] = config.summary_directory + "fastq_summary.txt"
+        out["host_filtering_summary"] = config.summary_directory + "hostfilter_summary.txt"
+        out["duplicate_filtering_summary"] = config.summary_directory + "duplicate_filter_summary.txt"
+        out["quality_filtering_summary"] = config.summary_directory + "quality_filter_summary.txt"
+    out["mapping_summary"] = config.summary_directory + diamond_output_suffix + "/map_reads_summary.txt"
+    out["blast_hit_filtering_summary"] = config.summary_directory + hitfiltering_output_suffix + "/hit_filtering_summary.txt"
+    out["gene_counting_summary"] = config.summary_directory + genemapper_output_suffix + "/gene_mapper_summary.txt"
+    out["ko_counting_summary"] = config.summary_directory +  genemapper_output_suffix + "/ko_mapper_summary.txt"
+    out["functional_level_summarization_summaries"] = config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"
+    return out
+
+rule AllSummaries:
+    input:
+        unpack(AllSummaries_DetermineFiles)
+    output:
+        config.summary_directory + "Summaries_All.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        shell("src/merge_pipeline_step_summary_tables.py {input.input_summary} --host_filtering_summary {input.host_filtering_summary} --duplicate_filtering_summary {input.duplicate_filtering_summary} --quality_filtering_summary {input.quality_filtering_summary} {input.mapping_summary} {input.blast_hit_filtering_summary} {input.gene_counting_summary} {input.ko_counting_summary} {input.functional_level_summarization_summaries} > {output}")
