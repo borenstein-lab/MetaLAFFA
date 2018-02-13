@@ -2,7 +2,7 @@
 # Author: Adrian Verster
 # December 2017
 
-# snakemake -p -c "qsub {params.cluster}" -j 50
+# snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
 
 
 import config,gzip,os
@@ -29,7 +29,8 @@ else:
 # MEV diamond max_e_value
 # BNH hit filtering best_n_hits
 # FM hit filtering filtering_method
-# CM gene mapper count_method
+# CMG gene mapper count_method_gene
+# CMK ko mapper count_method_ko
 # NM normalization norm_method
 # MCM normalization musicc_correction_method
 # MM functionalsummary mapping matrix
@@ -38,14 +39,15 @@ else:
 
 diamond_output_suffix = join_char.join([x for x in ["D_%s_S_%s" %( config.alignment_method, config.sensitivity), "TP_%s" %( str(config.top_percentage)), "MEV_%s" %(str(config.max_e_value)) ] if x])
 hitfiltering_output_suffix = diamond_output_suffix + join_char + join_char.join([x for x in ["BNH_%s" %( str(config.best_n_hits) ), "FM_%s" %( config.filtering_method) ] if x])
-genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["CM_%s" %( config.count_method) ] if x])
-normalization_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["NM_%s" %( config.norm_method) ,"MCM_%s" %( config.musicc_correction_method)] if x])
+genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["CMG_%s" %( config.count_method_gene) ] if x])
+komapper_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["CMK_%s" %(config.count_method_ko)] if x])
+normalization_output_suffix = komapper_output_suffix + join_char + join_char.join([x for x in ["NM_%s" %( config.norm_method) ,"MCM_%s" %( config.musicc_correction_method)] if x])
 functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["MM_%s" %( os.path.basename(config.mapping_matrix) ), "SM_%s" %( config.summary_method), "FL_%s" %(config.functional_level) ] if x])
 default_cluster_params = "-cwd -l mfree=10G" 
 delete_intermediates = config.delete_intermediates
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
-shell.suffix("; sleep 40")
+#shell.suffix("; sleep 40")
 
 if config.samples_oi is None:
     SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
@@ -374,6 +376,53 @@ rule quality_filter_summary_combine:
     run:
         combine_files(input, output)
 
+
+rule quality_filte_basic:
+    input:
+        config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz",
+    output:
+        config.summary_directory + "{sample}.{type}.fq.fastq_summary.txt",
+    params:
+        cluster=default_cluster_params
+    shell:
+        "src/summarize_input_fastq.py {input} > {output}"
+
+
+def quality_filter_summary_basic_DetermineFiles(wildcards):
+    out = {}
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R1.fq.fastq.gz".format(wildcards=wildcards)):
+        out["R1"] = config.summary_directory + "{wildcards.sample}.R1.fq.fastq_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.R2.fq.fastq.gz".format(wildcards=wildcards)):
+        out["R2"] = config.summary_directory + "{wildcards.sample}.R2.fq.fastq_summary.txt".format(wildcards=wildcards)
+    if os.path.isfile( config.quality_filtered_directory + "{wildcards.sample}.S.fq.fastq.gz".format(wildcards=wildcards)):
+        out["S"] = config.summary_directory + "{wildcards.sample}.S.fq.fastq_summary.txt".format(wildcards=wildcards)
+    return out
+
+rule quality_filter_summary_basic:
+    input:
+        unpack(quality_filter_summary_basic_DetermineFiles)
+    output:
+        config.summary_directory + "{sample}.quality_filter_summary_basic.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        shell("head -1 %s > %s" %(input[0], output ) )
+        for i in range(len(input)):
+            shell("tail -n +2 %s >> %s" %(input[i], output))
+        shell("rm -f {input}")
+
+
+rule quality_filter_summary_basic_combine:
+    input:
+        expand( config.summary_directory + "{sample}.quality_filter_summary_basic.txt", sample = SAMPLES )
+    output:
+        config.summary_directory + "quality_filter_summary_basic.txt"
+    params:
+        cluster=default_cluster_params
+    run:
+        combine_files(input, output)
+
+
 def merge_singletons_DetermineFiles(wildcards):
     out = {}
     if os.path.isfile( config.fastq_directory + "{wildcards.sample}.R1.fastq.gz".format(wildcards=wildcards)):
@@ -525,7 +574,7 @@ rule gene_mapper:
     output:
         out=config.diamond_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     params:
-        count_method=config.count_method,
+        count_method=config.count_method_gene,
         cluster=default_cluster_params
     benchmark:
         config.log_directory + "gene_mapper.{sample}.log"
@@ -561,9 +610,9 @@ rule ko_mapper:
     input:
         config.diamond_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     output:
-        out=config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz"
+        out=config.ko_counts_directory + komapper_output_suffix + "/{sample}.kocounts.gz"
     params:
-        counting_method=config.count_method,
+        counting_method=config.count_method_ko,
         cluster=default_cluster_params
     benchmark:
         config.log_directory + "ko_mapper.{sample}.log"
@@ -577,9 +626,9 @@ rule ko_mapper:
 
 rule ko_mapper_summary:
     input:
-        config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz"
+        config.ko_counts_directory + komapper_output_suffix + "/{sample}.kocounts.gz"
     output:
-        config.summary_directory +  genemapper_output_suffix + "/{sample}.ko_mapper_summary.txt"
+        config.summary_directory +  komapper_output_suffix + "/{sample}.ko_mapper_summary.txt"
     params:
         cluster=default_cluster_params
     shell:
@@ -592,9 +641,9 @@ def combine_files(input, output):
 
 rule ko_mapper_summary_combine:
     input:
-        expand( config.summary_directory +  genemapper_output_suffix + "/{sample}.ko_mapper_summary.txt", sample = SAMPLES)
+        expand( config.summary_directory +  komapper_output_suffix + "/{sample}.ko_mapper_summary.txt", sample = SAMPLES)
     output:
-        config.summary_directory +  genemapper_output_suffix + "/ko_mapper_summary.txt"
+        config.summary_directory +  komapper_output_suffix + "/ko_mapper_summary.txt"
     params:
         cluster=default_cluster_params
     run:
@@ -602,9 +651,9 @@ rule ko_mapper_summary_combine:
 
 rule merge_tables:
     input:
-        expand( config.ko_counts_directory + genemapper_output_suffix + "/{sample}.kocounts.gz", sample = SAMPLES)
+        expand( config.ko_counts_directory + komapper_output_suffix + "/{sample}.kocounts.gz", sample = SAMPLES)
     output:
-        out=config.ko_counts_directory + genemapper_output_suffix + "/merge_kocounts.gz"
+        out=config.ko_counts_directory + komapper_output_suffix + "/merge_kocounts.gz"
     params:
         cluster=default_cluster_params
     benchmark:
@@ -616,7 +665,7 @@ rule merge_tables:
 
 rule normalization:
     input:
-        config.ko_counts_directory + genemapper_output_suffix + "/merge_kocounts.gz"
+        config.ko_counts_directory + komapper_output_suffix + "/merge_kocounts.gz"
     output:
         out=config.ko_normalized_directory + normalization_output_suffix + "/kocounts_normalized.gz"
     params:
@@ -673,10 +722,12 @@ def AllSummaries_DetermineFiles(wildcards):
         out["host_filtering_summary"] = config.summary_directory + "hostfilter_summary.txt"
         out["duplicate_filtering_summary"] = config.summary_directory + "duplicate_filter_summary.txt"
         out["quality_filtering_summary"] = config.summary_directory + "quality_filter_summary.txt"
+    else:
+        out["input_summary"] = config.summary_directory + "quality_filter_summary_basic.txt"
     out["mapping_summary"] = config.summary_directory + diamond_output_suffix + "/map_reads_summary.txt"
     out["blast_hit_filtering_summary"] = config.summary_directory + hitfiltering_output_suffix + "/hit_filtering_summary.txt"
     out["gene_counting_summary"] = config.summary_directory + genemapper_output_suffix + "/gene_mapper_summary.txt"
-    out["ko_counting_summary"] = config.summary_directory +  genemapper_output_suffix + "/ko_mapper_summary.txt"
+    out["ko_counting_summary"] = config.summary_directory +  komapper_output_suffix + "/ko_mapper_summary.txt"
     #out["functional_level_summarization_summaries"] = config.summary_directory + "functional_summary_summary." + functionalsummary_output_suffix + ".txt"
     out["functional_level_summarization_summaries"] = config.summary_directory + functionalsummary_output_suffix + "/functional_summary_summary.txt"
     return out
@@ -689,4 +740,7 @@ rule AllSummaries:
     params:
         cluster=default_cluster_params
     run:
-        shell("src/merge_pipeline_step_summary_tables.py {input.input_summary} --host_filtering_summary {input.host_filtering_summary} --duplicate_filtering_summary {input.duplicate_filtering_summary} --quality_filtering_summary {input.quality_filtering_summary} {input.mapping_summary} {input.blast_hit_filtering_summary} {input.gene_counting_summary} {input.ko_counting_summary} {input.functional_level_summarization_summaries} > {output}")
+        if os.path.isfile( config.fastq_directory + "%s.R1.fastq.gz" %(SAMPLES[0])) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0]) ) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0])): 
+            shell("src/merge_pipeline_step_summary_tables.py {input.input_summary} --host_filtering_summary {input.host_filtering_summary} --duplicate_filtering_summary {input.duplicate_filtering_summary} --quality_filtering_summary {input.quality_filtering_summary} {input.mapping_summary} {input.blast_hit_filtering_summary} {input.gene_counting_summary} {input.ko_counting_summary} {input.functional_level_summarization_summaries} > {output}")
+        else:
+            shell("src/merge_pipeline_step_summary_tables.py {input.input_summary} {input.mapping_summary} {input.blast_hit_filtering_summary} {input.gene_counting_summary} {input.ko_counting_summary} {input.functional_level_summarization_summaries} > {output}")

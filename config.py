@@ -1,6 +1,6 @@
 # Input and output directories. All other directories are contained within these
 output_dir="/net/borenstein/vol2/annotation_pipeline_testing/output/"
-fastq_directory="/net/borenstein/vol2/annotation_pipeline_testing/data/"
+fastq_directory="/net/borenstein/vol2/annotation_pipeline_testing/data_test/"
 
 #If you want the output split into nested subdiretories based on the different paramters. If False, then there is a single output directory with all the parameters concatenated together
 many_subdirectories=False
@@ -24,7 +24,8 @@ max_e_value=0.001
 db="/net/borenstein/vol1/DATA_DIAMONDDBs/KEGG/KEGG_7_15_2013/KEGG_gene_peptides.dmnd"
 
 #Gene mapping options
-count_method="fractional" #fractional or whole
+count_method_gene="fractional" #fractional or whole
+count_method_ko="fractional" #fractional or whole
 
 #Hit filtering options
 best_n_hits=10
