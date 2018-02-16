@@ -36,7 +36,7 @@ if args.normalization == "length":
 
 	for line in f:
 		split_line = line.strip().split()
-		gene_lengths[split_line[0]] = int(split_line[1])
+		gene_lengths[split_line[0]] = float(split_line[2])
 	f.close()
 
 # Initialize the variables used for keeping track of information while looping through each blast hit to calculate gene abundances
@@ -100,7 +100,7 @@ if len(curr_read_hits) > 0:
 # Normalize abundances by gene length if specified
 if args.normalization == "length":
 	for gene in gene_abundances:
-		gene_abundances[gene] /= gene_lengths[gene]
+		gene_abundances[gene] /= float(gene_lengths[gene])
 
 # Write the output table (two columns, gene name and gene abundance in the sample)
 output.write("\t".join([GENE_COLUMN_HEADER, args.sample_name]) + "\n")
