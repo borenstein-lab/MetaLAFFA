@@ -464,7 +464,7 @@ rule map_reads:
         memory=config.memory,
         cpus=config.cpus,
         threads=config.cpus * 2,
-        sensitivity=config.sensitivity
+        sensitivity=config.sensitivity,
         cluster = "-l mfree=10G -l h_rt=24:00:00 -cwd -pe serial 24 -q borenstein-short.q"
     threads: config.cpus * 2
     benchmark:
