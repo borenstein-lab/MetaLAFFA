@@ -50,13 +50,21 @@ delete_intermediates = config.delete_intermediates
 #shell.suffix("; sleep 40")
 
 if config.samples_oi is None:
-    SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
+    if len(os.listdir(config.fastq_directory)) > 0:
+        SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
+    elif len(os.listdir(config.quality_filtered_directory))
+        SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.quality_filtered_directory) if x.split(".")[0] != ""]))
+    else:
+        sys.exit("No samples in either the config.fastq_directory or the config.quality_filtered_directory")
 else:
     SAMPLES = []
     with open(config.samples_oi) as f:
         for line in f:
             line = line.rstrip("\n")
             SAMPLES.append(line)
+
+#Only unique SAMPLES
+SAMPLES = list(set(SAMPLES))
 
 wildcard_constraints:
     sample="[A-Za-z0-9_]+",
@@ -377,7 +385,7 @@ rule quality_filter_summary_combine:
         combine_files(input, output)
 
 
-rule quality_filte_basic:
+rule quality_filter_summary_basic:
     input:
         config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz",
     output:
@@ -456,6 +464,7 @@ rule map_reads:
         memory=config.memory,
         cpus=config.cpus,
         threads=config.cpus * 2,
+        sensitivity=config.sensitivity
         cluster = "-l mfree=10G -l h_rt=24:00:00 -cwd -pe serial 24 -q borenstein-short.q"
     threads: config.cpus * 2
     benchmark:
@@ -473,7 +482,7 @@ rule map_reads:
         if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
-            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz")]) ),
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz"), sensitivity ]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
