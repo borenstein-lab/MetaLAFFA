@@ -52,7 +52,7 @@ delete_intermediates = config.delete_intermediates
 if config.samples_oi is None:
     if len(os.listdir(config.fastq_directory)) > 0:
         SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.fastq_directory) if x.split(".")[0] != ""]))
-    elif len(os.listdir(config.quality_filtered_directory))
+    elif len(os.listdir(config.quality_filtered_directory)):
         SAMPLES = list(set([x.split(".")[0] for x in os.listdir(config.quality_filtered_directory) if x.split(".")[0] != ""]))
     else:
         sys.exit("No samples in either the config.fastq_directory or the config.quality_filtered_directory")
@@ -482,7 +482,7 @@ rule map_reads:
         if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
-            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz"), sensitivity ]) ),
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz"), params.sensitivity ]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
