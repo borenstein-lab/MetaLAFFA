@@ -1,6 +1,6 @@
 # Input and output directories. All other directories are contained within these
-output_dir="/net/borenstein/vol2/annotation_pipeline_testing/output/"
-fastq_directory="/net/borenstein/vol2/annotation_pipeline_testing/data_test/"
+output_dir="output/"
+fastq_directory="data/"
 
 #If you want the output split into nested subdiretories based on the different paramters. If False, then there is a single output directory with all the parameters concatenated together
 many_subdirectories=False
