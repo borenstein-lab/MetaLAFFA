@@ -385,7 +385,7 @@ rule quality_filter_summary_combine:
         combine_files(input, output)
 
 
-rule quality_filter_summary_basic:
+rule quality_filter_summary_script:
     input:
         config.quality_filtered_directory + "{sample}.{type}.fq.fastq.gz",
     output:
@@ -469,7 +469,7 @@ rule map_reads:
     threads: config.cpus * 2
     benchmark:
         #"".join([config.log_directory, "map_reads.{sample}.{type}.", diamond_output_suffix, ".log"])
-        "".join([config.log_directory, "map_reads.{sample}.{type}.log"])
+        config.log_directory + diamond_output_suffix + "/map_reads.{sample}.{type}.log"
     run:
         #Test if the fastq is empty
         c = 0
