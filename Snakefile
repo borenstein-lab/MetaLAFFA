@@ -27,6 +27,7 @@ else:
 # S diamond sensitivity
 # TP diamond top_percentage
 # MEV diamond max_e_value
+# DB diamond database
 # BNH hit filtering best_n_hits
 # FM hit filtering filtering_method
 # CMG gene mapper count_method_gene
@@ -37,7 +38,8 @@ else:
 # SM functionalsummary summary method
 # FL functionalsummary functional level
 
-diamond_output_suffix = join_char.join([x for x in ["D_%s_S_%s" %( config.alignment_method, config.sensitivity), "TP_%s" %( str(config.top_percentage)), "MEV_%s" %(str(config.max_e_value)) ] if x])
+db_name = os.path.basename(config.db).split(".")[0].replace("_","-")
+diamond_output_suffix = join_char.join([x for x in ["D_%s_S_%s" %( config.alignment_method, config.sensitivity), "TP_%s" %( str(config.top_percentage)), "MEV_%s" %(str(config.max_e_value)), "DB_%s" %(db_name) ] if x])
 hitfiltering_output_suffix = diamond_output_suffix + join_char + join_char.join([x for x in ["BNH_%s" %( str(config.best_n_hits) ), "FM_%s" %( config.filtering_method) ] if x])
 genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["CMG_%s" %( config.count_method_gene) ] if x])
 komapper_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["CMK_%s" %(config.count_method_ko)] if x])
@@ -465,6 +467,7 @@ rule map_reads:
         cpus=config.cpus,
         threads=config.cpus * 2,
         sensitivity=config.sensitivity,
+        db=config.db,
         cluster = "-l mfree=10G -l h_rt=24:00:00 -cwd -pe serial 24 -q borenstein-short.q"
     threads: config.cpus * 2
     benchmark:
@@ -482,7 +485,7 @@ rule map_reads:
         if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
-            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", config.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz"), params.sensitivity ]) ),
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", params.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz"), params.sensitivity ]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
