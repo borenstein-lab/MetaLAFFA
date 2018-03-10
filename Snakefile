@@ -38,13 +38,13 @@ else:
 # SM functionalsummary summary method
 # FL functionalsummary functional level
 
-db_name = config.kegg_version + "-" + taxon
+db_name = config.kegg_version + "-" + config.taxon
 diamond_output_suffix = join_char.join([x for x in ["D_%s_S_%s" %( config.alignment_method, config.sensitivity), "TP_%s" %( str(config.top_percentage)), "MEV_%s" %(str(config.max_e_value)), "DB_%s" %(db_name) ] if x])
 hitfiltering_output_suffix = diamond_output_suffix + join_char + join_char.join([x for x in ["BNH_%s" %( str(config.best_n_hits) ), "FM_%s" %( config.filtering_method) ] if x])
 genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["CMG_%s" %( config.count_method_gene) ] if x])
 komapper_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["CMK_%s" %(config.count_method_ko)] if x])
 normalization_output_suffix = komapper_output_suffix + join_char + join_char.join([x for x in ["NM_%s" %( config.norm_method) ,"MCM_%s" %( config.musicc_correction_method)] if x])
-functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["MM_%s" %( os.path.basename(config.mapping_matrix) ), "SM_%s" %( config.summary_method), "FL_%s" %(config.functional_level) ] if x])
+functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["MM_%s" %( db_name ), "SM_%s" %( config.summary_method), "FL_%s" %(config.summary_level) ] if x])
 default_cluster_params = "-cwd -l mfree=10G" 
 delete_intermediates = config.delete_intermediates
 
@@ -707,7 +707,7 @@ rule ko_functional_summary:
         summary_method=config.summary_method,
         summary_level=config.summary_level,
         taxon=config.taxon,
-        kegg_version=config.kegg_verion,
+        kegg_version=config.kegg_version,
         cluster=default_cluster_params,
     benchmark:
         config.log_directory + "ko_functional_summary.log"
