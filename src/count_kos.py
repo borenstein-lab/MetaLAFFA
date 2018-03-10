@@ -13,7 +13,8 @@ from future import *
 parser = argparse.ArgumentParser(description="Calculates KO abundances based on gene abundances")
 parser.add_argument("gene_abundance_file", help="Gene abundance file to calculate KO abundances from")
 parser.add_argument("counting_method", choices=["fractional", "whole"], help="The counting method to use")
-parser.add_argument("--gene_to_ko_mapping", "-g", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/KEGG_2013_07_15/genes/ko/ko_genes.list", help="File mapping genes to KOs")
+parser.add_argument("kegg_version", help="Version (year_month_date) of KEGG to use for counting kos")
+parser.add_argument("--path_to_kegg", "-p", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/", help="Path to KEGG reference data")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")
 args=parser.parse_args()
 
@@ -26,7 +27,7 @@ if args.output:
 gene_to_ko_mapping = {}
 
 # Add each ko that appears in the file to the set of kos associated with the indicated gene
-f = custom_read(args.gene_to_ko_mapping)
+f = custom_read(args.path_to_kegg + "KEGG_" + args.kegg_version + "/genes/ko/ko_genes.list")
 for line in f:
 	split_line = line.strip().split()
 	ko = split_line[0]

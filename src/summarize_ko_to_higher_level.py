@@ -12,14 +12,16 @@ from future import *
 parser = argparse.ArgumentParser(description="Summarizes KO profiles to a higher functional level")
 parser.add_argument("ko_profiles", help="The table of KO profiles to summarize")
 parser.add_argument("summary_method", choices=["fractional", "whole"], help="The method to use to map KOs to the higher functional level")
-parser.add_argument("mapping_matrix", help="The matrix that maps KOs to the higher functional levels they belong to")
-parser.add_argument("functional_level", help="The name of the functional level KOs are being mapped to")
+parser.add_argument("summary_level", help="The functional level (e.g. module, pathway) to map KOs to")
+parser.add_argument("taxon", help="Mapping will only occur to functions at the indicated higher level that appear in the specified taxon (e.g. bacteria, prokaryotes)")
+parser.add_argument("kegg_version", help="Version (year_month_date) of KEGG to use for mapping KOs")
+parser.add_argument("--path_to_kegg", "-p", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/", help="Path to KEGG reference data")
 parser.add_argument("--output", "-o", default=None, help="File to write output to (default: print to standard output)")
 args = parser.parse_args()
 
 # Read the KO profiles and mapping matrix
 ko_profiles = pandas.read_table(args.ko_profiles, sep = "\t", header = 0, index_col = 0)
-mapping_matrix = pandas.read_table(args.mapping_matrix, sep="\t", header=0, index_col = 0)
+mapping_matrix = pandas.read_table(args.path_to_kegg + "KEGG_" + args.kegg_version + "/KEGG_PARSED_" + args.kegg_version + "/ko_to_" + args.summary_level + "_" + args.taxon + ".tab", sep="\t", header=0, index_col = 0)
 
 # Filter and sort the mapping matrix
 mapping_matrix = mapping_matrix.reindex(list(ko_profiles.index))
@@ -41,7 +43,7 @@ output_table = mapping_matrix.dot(ko_profiles)
 output_table = output_table[(output_table.T != 0).any()]
 
 # Print the output
-output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = args.functional_level)
+output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = args.summary_level + args.taxon)
 
 # If no output file was specified, then we print the table to standard output
 if args.output == None:

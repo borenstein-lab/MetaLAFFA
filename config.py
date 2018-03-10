@@ -9,6 +9,11 @@ samples_oi=None
 #Do you want to delete the intermediate files to save on disk space?
 delete_intermediates=False
 
+# KEGG parameters
+kegg_db_path="/net/borenstein/vol1/DATA_DIAMONDDBs/KEGG/KEGG_"
+kegg_version="2018_02_23" # 2013_07_15 or 2018_02_23
+taxon="prokaryotes" # currently either bacteria for 2013_07_15 or prokaryotes for 2018_02_23
+
 #Diamond Executable
 aligner="/net/borenstein/vol1/PROGRAMS/diamond"
 #Diamond computation options
@@ -36,9 +41,8 @@ norm_method="musicc"
 musicc_correction_method="use_generic" # use_generic or learn_model
 
 #ko functional summary options
-mapping_matrix="/net/borenstein/vol1/DATA_REFERENCE/KEGG/KEGG_2013_07_15/KEGG_PARSED_2013_07_15/KOvsPATHWAY_BACTERIAL_KEGG_2013_07_15"
 summary_method="fractional" # fractional or whole
-functional_level="module" # module, pathway, bacterial_module, or bacterial_pathway
+summary_level="pathway" # module or pathway
 
 #Output directories
 host_filtered_directory=output_dir + "1_host_filtered/"

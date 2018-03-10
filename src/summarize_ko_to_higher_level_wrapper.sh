@@ -6,13 +6,14 @@
 # Bash wrapper script to summarize KO profiles to higher levels (e.g. module, pathway, etc.)
 #
 # Usage:
-# summarize_ko_to_higher_level_wrapper.sh [--simple_mapper --simple_mapper] [-h] ko_profiles summary_method mapping_matrix output
+# summarize_ko_to_higher_level_wrapper.sh [--simple_mapper simple_mapper] [-h] ko_profiles summary_method summary_level taxon kegg_version output
 #
 # Arguments:
 # ko_profiles                   : KO profile table to summarize to a higher functional level
 # summary_method                : Method to use to summarize the KO profiles (fractional, whole)
-# mapping_matrix                : Matrix mapping KOs to higher functional summary level
-# functional_level				: Name of the functional level being summarized to
+# summary_level					: Functional level to summarize KOs to
+# taxon							: KOs will only be mapped to the higher level functional categories that exist in this taxon
+# kegg_version					: Version (year_month_date) of KEGG to use for mapping KOs
 # output                        : Output file for higher-level functional profiles
 #
 # Options:
@@ -25,8 +26,9 @@ SUMMARY_METHODS=(fractional whole)
 # Initialize variables that need to be set for summarizing
 ko_profiles=""
 summary_method=""
-mapping_matrix=""
-functional_level=""
+summary_level=""
+taxon=""
+kegg_version=""
 output=""
 simple_mapper=src/summarize_ko_to_higher_level.py
 
@@ -49,12 +51,13 @@ do
 		-h)
 			printf "%s\n\n" "Bash wrapper script to summarize KO profiles to higher levels (e.g. module, pathway, etc.)"
 			printf "%s\n" "Usage:"
-			printf "%s\n\n" "summarize_ko_to_higher_level_wrapper.sh [--simple_mapper --simple_mapper] [-h] ko_profiles summary_method mapping_matrix output"
+			printf "%s\n\n" "summarize_ko_to_higher_level_wrapper.sh [--simple_mapper --simple_mapper] [-h] ko_profiles summary_method summary_level taxon kegg_version output"
 			printf "%s\n" "Arguments:"
 			printf "%-30s%s\n" "ko_profiles" ": KO profile table to summarize to a higher functional level"
 			printf "%-30s%s\n" "summary_method" ": Method to use to summarize the KO profiles (fractional, whole)"
-			printf "%-30s%s\n" "mapping_matrix" ": Matrix mapping KOs to higher functional summary level"
-			printf "%-30s%s\n" "functional_level" ": Name of the functional level being summarized to"
+			printf "%-30s%s\n" "summary_level" ": Functional level to summarize KOs to"
+			printf "%-30s%s\n" "taxon" ": KOs will only be mapped to the higher level functional categories that exist in this taxon"
+			printf "%-30s%s\n" "kegg_version" ": Version (year_month_date) of KEGG to use for mapping KOs"
 			printf "%-30s%s\n" "output" ": Output file for higher-level functional profiles"
 			printf "\n"
 			printf "%s\n" "Options:"
@@ -68,7 +71,7 @@ shift
 done
 
 # Check if there are enough required positional arguments
-if [ ${#position_args[@]} -lt 4 ]
+if [ ${#position_args[@]} -lt 6 ]
 then
 	(>&2 echo "Missing one or more required arguments")
 	exit 1
@@ -77,9 +80,10 @@ fi
 # Set positional argument variables
 ko_profiles=${position_args[0]}
 summary_method=${position_args[1]}
-mapping_matrix=${position_args[2]}
-functional_level=${position_args[3]}
-output=${position_args[4]}
+summary_level=${position_args[2]}
+taxon=${position_args[3]}
+kegg_version=${position_args[4]}
+output=${position_args[5]}
 
 # Check if the required ko profiles file exists
 if [ ! -e $ko_profiles ]
@@ -104,9 +108,9 @@ then
 fi
 
 # Check if the mapping matrix exists
-if [ ! -e $mapping_matrix ]
+if [ ! -e /net/borenstein/vol1/DATA_REFERENCE/KEGG/KEGG_${kegg_version}/KEGG_PARSED_${kegg_version}/ko_to_${summary_level}_${taxon}.tab ]
 then
-    (>&2 echo "The specified mapping matrix is not recognized (${mapping_matrix})")
+    (>&2 echo "The implied mapping matrix is not recognized (/net/borenstein/vol1/DATA_REFERENCE/KEGG/KEGG_${kegg_version}/KEGG_PARSED_${kegg_version}/ko_to_${summary_level}_${taxon}.tab)")
     exit 1
 fi
 
@@ -114,8 +118,8 @@ fi
 case $summary_method in
 
 	# If fractional, we use the simple mapping program with the fractional mapping setting
-	fractional) $simple_mapper $ko_profiles $summary_method $mapping_matrix $functional_level > $output;;
+	fractional) $simple_mapper $ko_profiles $summary_method $summary_level $taxon $kegg_version > $output;;
 
     # If whole, we use the simple mapping program with the whole mapping setting
-    whole) $simple_mapper $ko_profiles $summary_method $mapping_matrix $functional_level > $output;;
+    whole) $simple_mapper $ko_profiles $summary_method $summary_level $taxon $kegg_version > $output;;
 esac

@@ -38,7 +38,7 @@ else:
 # SM functionalsummary summary method
 # FL functionalsummary functional level
 
-db_name = os.path.basename(config.db).split(".")[0].replace("_","-")
+db_name = config.kegg_version + "-" + taxon
 diamond_output_suffix = join_char.join([x for x in ["D_%s_S_%s" %( config.alignment_method, config.sensitivity), "TP_%s" %( str(config.top_percentage)), "MEV_%s" %(str(config.max_e_value)), "DB_%s" %(db_name) ] if x])
 hitfiltering_output_suffix = diamond_output_suffix + join_char + join_char.join([x for x in ["BNH_%s" %( str(config.best_n_hits) ), "FM_%s" %( config.filtering_method) ] if x])
 genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.join([x for x in ["CMG_%s" %( config.count_method_gene) ] if x])
@@ -467,7 +467,7 @@ rule map_reads:
         cpus=config.cpus,
         threads=config.cpus * 2,
         sensitivity=config.sensitivity,
-        db=config.db,
+        db=config.kegg_db_path + config.kegg_version + "/KEGG_" + config.kegg_version + "_" + config.taxon + ".dmnd",
         cluster = "-l mfree=10G -l h_rt=24:00:00 -cwd -pe serial 24 -q borenstein-short.q"
     threads: config.cpus * 2
     benchmark:
@@ -548,12 +548,13 @@ rule hit_filtering:
     params:
         N=config.best_n_hits,
         filtering_method=config.filtering_method,
+        kegg_version=config.filtering_method,
         cluster = default_cluster_params
     benchmark:
         "".join([config.log_directory, "diamond_filtered.{sample}.log"])
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell("src/filter_hits.py {input} {params.filtering_method} -n {params.N} > %s " %(out_nonzip))
+        shell("src/filter_hits.py {input} {params.filtering_method} {params.kegg_version} -n {params.N} > %s " %(out_nonzip))
         shell("gzip %s" %(out_nonzip) )
         #Delete intermediate
         if delete_intermediates:
@@ -587,12 +588,13 @@ rule gene_mapper:
         out=config.diamond_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     params:
         count_method=config.count_method_gene,
+        kegg_version=config.kegg_version,
         cluster=default_cluster_params
     benchmark:
         config.log_directory + "gene_mapper.{sample}.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell("src/count_genes.py {input} {wildcards.sample} {params.count_method} --normalization length > %s" %(out_nonzip) )
+        shell("src/count_genes.py {input} {wildcards.sample} {params.count_method} {params.kegg_version} --normalization length > %s" %(out_nonzip) )
         shell("gzip %s" %(out_nonzip) )
         #Delete intermediate
         if delete_intermediates:
@@ -625,12 +627,13 @@ rule ko_mapper:
         out=config.ko_counts_directory + komapper_output_suffix + "/{sample}.kocounts.gz"
     params:
         counting_method=config.count_method_ko,
+        kegg_version=config.kegg_version,
         cluster=default_cluster_params
     benchmark:
         config.log_directory + "ko_mapper.{sample}.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell( "src/count_kos.py {input} {params.counting_method} > %s" %(out_nonzip) )
+        shell( "src/count_kos.py {input} {params.counting_method} {params.kegg_version} > %s" %(out_nonzip) )
         shell("gzip %s" %(out_nonzip) )
         #Delete intermediate
         if delete_intermediates:
@@ -701,15 +704,16 @@ rule ko_functional_summary:
     output:
         out=config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
     params:
-        mapping_matrix=config.mapping_matrix,
         summary_method=config.summary_method,
+        summary_level=config.summary_level,
+        taxon=config.taxon,
+        kegg_version=config.kegg_verion,
         cluster=default_cluster_params,
-        functional_level=config.functional_level
     benchmark:
         config.log_directory + "ko_functional_summary.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell( "src/summarize_ko_to_higher_level_wrapper.sh {input} {params.summary_method} {params.mapping_matrix} {params.functional_level} %s" %(out_nonzip) )
+        shell( "src/summarize_ko_to_higher_level_wrapper.sh {input} {params.summary_method} {params.summary_level} {params.taxon} {params.kegg_version} %s" %(out_nonzip) )
         shell("gzip %s" %(out_nonzip) )
         #Delete intermediate
         if delete_intermediates:
