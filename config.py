@@ -26,7 +26,6 @@ alignment_method="blastx"
 sensitivity="" #Empty string for default (fast),  --sensitive or --more-sensitive to enable those options
 top_percentage=1
 max_e_value=0.001
-db="/net/borenstein/vol1/DATA_DIAMONDDBs/KEGG/KEGG_2013_07_15/KEGG_2013_07_15_bacterial.dmnd"
 
 #Gene mapping options
 count_method_gene="fractional" #fractional or whole
