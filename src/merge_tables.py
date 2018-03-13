@@ -4,6 +4,7 @@
 # Date: 11/30/2017
 
 import sys
+sys.path = ['', '/net/borenstein/vol1/PROGRAMS/python2/lib/python27.zip', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/plat-linux2', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-tk', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-old', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/lib-dynload', '/net/borenstein/vol1/PROGRAMS/python2/lib/python2.7/site-packages']
 import pandas as pd
 
 if __name__ == "__main__":
