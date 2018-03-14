@@ -26,7 +26,7 @@ MUSICC_CORRECTION_METHODS=(use_generic learn_model)
 ko_profiles=""
 normalization_method=""
 output=""
-musiccf_env=/net/borenstein/vol1/PROGRAMS/virtualenv-15.1.0/musicc_env/
+musicc_env=/net/borenstein/vol1/PROGRAMS/virtualenv-15.1.0/musicc_env/
 musicc_correct=""
 
 # Parse arguments
