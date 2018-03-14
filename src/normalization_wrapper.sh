@@ -15,7 +15,7 @@
 #
 # Options:
 # -h								: Print this help information and exit
-# --musicc musicc					: Path to MUSiCC program (default: /net/borenstein/vol1/PROGRAMS/MUSiCC/miniconda2/bin/run_musicc.py)
+# --musicc_env musicc_env					: Path to MUSiCC virtual environment (default: /net/borenstein/vol1/PROGRAMS/virtualenv-15.1.0/musicc_env/)
 # --musicc_correct musicc_correct	: MUSiCC abundance correction method to use (use_generic, learn_model)
 
 # Setting constants
@@ -26,7 +26,7 @@ MUSICC_CORRECTION_METHODS=(use_generic learn_model)
 ko_profiles=""
 normalization_method=""
 output=""
-musicc=/net/borenstein/vol1/PROGRAMS/MUSiCC/miniconda2/bin/run_musicc.py
+musiccf_env=/net/borenstein/vol1/PROGRAMS/virtualenv-15.1.0/musicc_env/
 musicc_correct=""
 
 # Parse arguments
@@ -46,14 +46,14 @@ do
 			printf "\n"
 			printf "%s\n" "Options:"
 			printf "%-32s%s\n" "-h" ": Print this help information and exit"
-			printf "%-32s%s\n" "--musicc musicc" ": Path to MUSiCC program (default: /net/borenstein/vol1/PROGRAMS/MUSiCC/miniconda2/bin/run_musicc.py)"
+			printf "%-32s%s\n" "--musicc_env musicc_env" ": Path to MUSiCC virtual environment (default: /net/borenstein/vol1/PROGRAMS/virtualenv-15.1.0/musicc_env/)"
 			printf "%-32s%s\n" "--msuicc_correct msuicc_correct" ": MUSiCC abundance correction method to use (use_generic, learn_model)"
 			exit
 			;;
-		--musicc)
+		--musicc_env)
 			if [ -e $2 ]
 			then
-				musicc=$2
+				musicc_env=$2
 				shift
 			else
 				(>&2 echo "The specified file for musicc does not exist (${2})")
@@ -131,6 +131,7 @@ case $normalization_method in
 		fi
 
 		# Run MUSiCC
-		$musicc -n -c $musicc_correct -o $output $ko_profiles
+		source ${musicc_env}/bin/activate
+		run_musicc.py -n -c $musicc_correct -o $output $ko_profiles
 		;;
 esac
