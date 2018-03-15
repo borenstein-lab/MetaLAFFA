@@ -5,7 +5,7 @@
 # snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
 
 
-import config,gzip,os
+  import config,gzip,os
 
 if config.many_subdirectories:
     #If you want subdirectories
@@ -45,7 +45,7 @@ genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.jo
 komapper_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["CMK_%s" %(config.count_method_ko)] if x])
 normalization_output_suffix = komapper_output_suffix + join_char + join_char.join([x for x in ["NM_%s" %( config.norm_method) ,"MCM_%s" %( config.musicc_correction_method)] if x])
 functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["MM_%s" %( db_name ), "SM_%s" %( config.summary_method), "FL_%s" %(config.summary_level) ] if x])
-default_cluster_params = "-cwd -l mfree=10G" 
+default_cluster_params = "-cwd -l mfree=10G,h_rt=24:0:0" 
 delete_intermediates = config.delete_intermediates
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
@@ -256,7 +256,7 @@ rule duplicate_filter_paired:
         metrics_output=config.duplicate_filtered_directory + "{sample}.R.metricout.fastq.gz",
         duplicate_marked=config.duplicate_filtered_directory + "{sample}.R.duplicatemarked.fastq.gz",
     params:
-        cluster="-cwd -l mfree=32G"
+        cluster="-cwd -l mfree=32G,h_rt=24:0:0"
     benchmark:
         "".join([config.log_directory, "duplicate_filter_paired.{sample}.log"])
     run:
@@ -328,7 +328,7 @@ rule quality_filter_paired:
         R=config.quality_filtered_directory + "{sample}.R2.fq.fastq.gz",
         S=config.quality_filtered_directory + "{sample}.S.fq.temp2.fastq.gz"
     params:
-        cluster="-cwd -l mfree=24G"
+        cluster="-cwd -l mfree=24G,h_rt=24:0:0"
     benchmark:
         "".join([config.log_directory, "quality_filter_paired.{sample}.log"])
     run:
@@ -350,7 +350,7 @@ rule quality_filter_singleton:
     output:
         S=config.quality_filtered_directory + "{sample}.S.fq.temp.fastq.gz"
     params:
-        cluster="-cwd -l mfree=24G"
+        cluster="-cwd -l mfree=24G,h_rt=24:0:0"
     benchmark:
         "".join([config.log_directory, "quality_filter_singleton.{sample}.log"])
     run:
@@ -468,7 +468,7 @@ rule map_reads:
         threads=config.cpus * 2,
         sensitivity=config.sensitivity,
         db=config.kegg_db_path + config.kegg_version + "/KEGG_" + config.kegg_version + "_" + config.taxon + ".dmnd",
-        cluster = "-l mfree=10G -l h_rt=24:00:00 -cwd -pe serial 24 -q borenstein-short.q"
+        cluster = "-l mfree=%iG -l h_rt=24:00:00 -cwd -pe serial %i -q borenstein-short.q" %(config.memory / config.cpus,config.cpus)
     threads: config.cpus * 2
     benchmark:
         #"".join([config.log_directory, "map_reads.{sample}.{type}.", diamond_output_suffix, ".log"])
