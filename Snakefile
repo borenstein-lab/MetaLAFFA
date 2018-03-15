@@ -5,7 +5,7 @@
 # snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
 
 
-  import config,gzip,os
+import config,gzip,os
 
 if config.many_subdirectories:
     #If you want subdirectories
