@@ -43,7 +43,7 @@ output_table = mapping_matrix.dot(ko_profiles)
 output_table = output_table[(output_table.T != 0).any()]
 
 # Print the output
-output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = args.summary_level + args.taxon)
+output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label = args.summary_level + "_" +  args.taxon)
 
 # If no output file was specified, then we print the table to standard output
 if args.output == None:
