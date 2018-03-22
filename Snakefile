@@ -466,6 +466,8 @@ rule map_reads:
         memory=config.memory,
         cpus=config.cpus,
         threads=config.cpus * 2,
+	top_percentage=config.top_percentage,
+	max_e_value=config.max_e_value,
         sensitivity=config.sensitivity,
         db=config.kegg_db_path + config.kegg_version + "/KEGG_" + config.kegg_version + "_" + config.taxon + ".dmnd",
         cluster = "-l mfree=%iG -l h_rt=24:00:00 -cwd -pe serial %i -q borenstein-short.q" %(config.memory / config.cpus,config.cpus)
@@ -485,7 +487,7 @@ rule map_reads:
         if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
-            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", params.db, "--query", "{input}","--out", output.zipped_output.rstrip(".gz"), params.sensitivity ]) ),
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", params.db, "--query", "{input}", "--out", output.zipped_output.rstrip(".gz"), "--top", params.top_percentage, "--evalue", params.max_e_value, params.sensitivity ]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
