@@ -487,7 +487,7 @@ rule map_reads:
         if c == 0:
             shell( "touch %s" %(output.zipped_output.rstrip(".gz") ))
         else:
-            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", params.db, "--query", "{input}", "--out", output.zipped_output.rstrip(".gz"), "--top", params.top_percentage, "--evalue", params.max_e_value, params.sensitivity ]) ),
+            shell( " ".join([ "/net/borenstein/vol1/PROGRAMS/diamond", "blastx", "--block-size", str(config.block_size), "--index-chunks", str(config.index_chunks), "--threads", str(params.threads), "--db", params.db, "--query", "{input}", "--out", output.zipped_output.rstrip(".gz"), "--top", str(params.top_percentage), "--evalue", str(params.max_e_value), params.sensitivity ]) ),
         shell( " ".join([ "gzip", output.zipped_output.rstrip(".gz") ]) )
         #Delete intermediate
         if delete_intermediates:
