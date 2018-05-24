@@ -2,7 +2,7 @@
 # Author: Adrian Verster
 # December 2017
 
-# snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
+# snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60 -R y
 
 
 import config,gzip,os
