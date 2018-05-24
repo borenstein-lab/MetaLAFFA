@@ -2,7 +2,7 @@
 # Author: Adrian Verster
 # December 2017
 
-# snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60 -R y
+# snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
 
 
 import config,gzip,os
@@ -45,7 +45,7 @@ genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.jo
 komapper_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["CMK_%s" %(config.count_method_ko)] if x])
 normalization_output_suffix = komapper_output_suffix + join_char + join_char.join([x for x in ["NM_%s" %( config.norm_method) ,"MCM_%s" %( config.musicc_correction_method)] if x])
 functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["MM_%s" %( db_name ), "SM_%s" %( config.summary_method), "FL_%s" %(config.summary_level) ] if x])
-default_cluster_params = "-cwd -l mfree=10G,h_rt=24:0:0" 
+default_cluster_params = "-cwd -l mfree=10G,h_rt=24:0:0 -R y" 
 delete_intermediates = config.delete_intermediates
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
