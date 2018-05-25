@@ -256,7 +256,7 @@ rule duplicate_filter_paired:
         metrics_output=config.duplicate_filtered_directory + "{sample}.R.metricout.fastq.gz",
         duplicate_marked=config.duplicate_filtered_directory + "{sample}.R.duplicatemarked.fastq.gz",
     params:
-        cluster="-cwd -l mfree=32G,h_rt=24:0:0"
+        cluster="-cwd -l mfree=32G,h_rt=24:0:0 -R y"
     benchmark:
         "".join([config.log_directory, "duplicate_filter_paired.{sample}.log"])
     run:
@@ -328,7 +328,7 @@ rule quality_filter_paired:
         R=config.quality_filtered_directory + "{sample}.R2.fq.fastq.gz",
         S=config.quality_filtered_directory + "{sample}.S.fq.temp2.fastq.gz"
     params:
-        cluster="-cwd -l mfree=24G,h_rt=24:0:0"
+        cluster="-cwd -l mfree=24G,h_rt=24:0:0 -R y"
     benchmark:
         "".join([config.log_directory, "quality_filter_paired.{sample}.log"])
     run:
@@ -350,7 +350,7 @@ rule quality_filter_singleton:
     output:
         S=config.quality_filtered_directory + "{sample}.S.fq.temp.fastq.gz"
     params:
-        cluster="-cwd -l mfree=24G,h_rt=24:0:0"
+        cluster="-cwd -l mfree=24G,h_rt=24:0:0 -R y"
     benchmark:
         "".join([config.log_directory, "quality_filter_singleton.{sample}.log"])
     run:
@@ -470,7 +470,7 @@ rule map_reads:
 	max_e_value=config.max_e_value,
         sensitivity=config.sensitivity,
         db=config.kegg_db_path + config.kegg_version + "/KEGG_" + config.kegg_version + "_" + config.taxon + ".dmnd",
-        cluster = "-l mfree=%iG -l h_rt=24:00:00 -cwd -pe serial %i -q borenstein-short.q" %(config.memory / config.cpus,config.cpus)
+        cluster = "-l mfree=%iG -l h_rt=24:00:00 -cwd -pe serial %i -q borenstein-short.q -R y" %(config.memory / config.cpus,config.cpus)
     threads: config.cpus * 2
     benchmark:
         #"".join([config.log_directory, "map_reads.{sample}.{type}.", diamond_output_suffix, ".log"])
