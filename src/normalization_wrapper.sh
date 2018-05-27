@@ -103,8 +103,8 @@ fi
 # Perform normalization based on the method chosen
 case $normalization_method in
 
-	# If none, we don't perform any normalization and just copy the input to the output
-	none) cp $ko_profiles $output;;
+	# If none, we don't perform any normalization and just write the input to the output
+	none) zcat $ko_profiles > $output;;
 
 	# If musicc, then we run MUSiCC
 	musicc)
