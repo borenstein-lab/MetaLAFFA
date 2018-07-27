@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(description="Calculates gene abundances based o
 parser.add_argument("filtered_blast_output_file", help="Filtered blast output file to calculate gene abundances from")
 parser.add_argument("sample_name", help="Name of sample to use as column header for output gene abundances")
 parser.add_argument("counting_method", choices=["fractional", "whole"], help="The counting method to use")
+parser.add_argument("taxon", help="If length normalization is performed, they will be normalized based on lengths of genes of organisms belonging to the specified taxon (e.g. bacteria, prokaryotes)")
 parser.add_argument("kegg_version", help="Version (year_month_date) of KEGG to use for counting genes")
 parser.add_argument("--normalization", "-n", choices=["length", "none"], default="length", help="The way gene abundances are normalized")
 parser.add_argument("--path_to_kegg", "-p", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/", help="Path to KEGG reference data")
@@ -30,7 +31,7 @@ gene_lengths = {}
 if args.normalization == "length":
 
 	# Add each gene (first column) mapped to its length (second column)
-	f = custom_read(args.path_to_kegg + "KEGG_" + args.kegg_version + "/KEGG_PARSED_" + args.kegg_version + "/Gene_Lengths.txt.gz")
+	f = custom_read(args.path_to_kegg + "KEGG_" + args.kegg_version + "/KEGG_PARSED_" + args.kegg_version + "/gene_lengths_" + args.taxon + ".txt.gz")
 
 	# Skip the first line
 	f.readline()
