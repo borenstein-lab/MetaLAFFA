@@ -509,7 +509,7 @@ rule combine_mapping:
     output:
         out=config.diamond_output_directory + diamond_output_suffix + "/{sample}.gz"
     params:
-	cluster = "-cwd -l mfree=10G -l disk_free=%iG-l h_rt=24:00:00 -R y" %(config.combine_disk_free)
+        cluster = "-cwd -l mfree=10G -l disk_free=%iG-l h_rt=24:00:00 -R y" %(config.combine_disk_free)
     benchmark:
         #config.log_directory + diamond_output_suffix + "/{sample}.log"
         config.log_directory + "combine_mapping.{sample}.log"
@@ -552,7 +552,7 @@ rule hit_filtering:
         N=config.best_n_hits,
         filtering_method=config.filtering_method,
         kegg_version=config.filtering_method,
-	cluster = "-cwd -l mfree=10G -l disk_free=%iG -l h_rt=24:00:00 -R y" %(config.hit_filtering_disk_free)
+        cluster = "-cwd -l mfree=10G -l disk_free=%iG -l h_rt=24:00:00 -R y" %(config.hit_filtering_disk_free)
     benchmark:
         "".join([config.log_directory, "diamond_filtered.{sample}.log"])
     run:
