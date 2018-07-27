@@ -45,7 +45,7 @@ genemapper_output_suffix = hitfiltering_output_suffix + join_char + join_char.jo
 komapper_output_suffix = genemapper_output_suffix + join_char + join_char.join([x for x in ["CMK_%s" %(config.count_method_ko)] if x])
 normalization_output_suffix = komapper_output_suffix + join_char + join_char.join([x for x in ["NM_%s" %( config.norm_method) ,"MCM_%s" %( config.musicc_correction_method)] if x])
 functionalsummary_output_suffix = normalization_output_suffix + join_char + join_char.join([x for x in ["MM_%s" %( db_name ), "SM_%s" %( config.summary_method), "FL_%s" %(config.summary_level) ] if x])
-default_cluster_params = "-cwd -l mfree=10G,h_rt=24:0:0 -R y" 
+default_cluster_params = "-cwd -l mfree=10G,h_rt=24:0:0 -R y"
 delete_intermediates = config.delete_intermediates
 
 #Without this line snakemake will sometimes fail a job because it fails to detect the output file due to latency
@@ -444,7 +444,7 @@ def merge_singletons_DetermineFiles(wildcards):
 rule merge_singletons:
     input:
         unpack(merge_singletons_DetermineFiles)
-    output: 
+    output:
         out=config.quality_filtered_directory + "{sample}.S.fq.fastq.gz"
     params:
         cluster=default_cluster_params
@@ -679,7 +679,9 @@ rule merge_tables:
         config.log_directory + "merge_tables.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell( "src/merge_tables.py {input} > %s" %(out_nonzip) )
+        shell("cp %s %s" %(input[1], out_nonzip))
+        for i in input[2:]:
+            shell("src/merge_tables.py %s %s > %s" %(out_nonzip, input[i], out_nonzip))
         shell("gzip %s" %(out_nonzip) )
 
 rule normalization:
@@ -723,7 +725,7 @@ rule ko_functional_summary:
         if delete_intermediates:
             shell("rm -f {input}" )
 
-rule functional_summary_summary: 
+rule functional_summary_summary:
     input:
         config.module_profiles_directory + functionalsummary_output_suffix + "/functionalsummary.gz"
     output:
@@ -760,7 +762,7 @@ rule AllSummaries:
     params:
         cluster=default_cluster_params
     run:
-        if os.path.isfile( config.fastq_directory + "%s.R1.fastq.gz" %(SAMPLES[0])) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0]) ) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0])): 
+        if os.path.isfile( config.fastq_directory + "%s.R1.fastq.gz" %(SAMPLES[0])) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0]) ) | os.path.isfile( config.fastq_directory + "%s.fq.fastq.gz" %(SAMPLES[0])):
             shell("src/merge_pipeline_step_summary_tables.py {input.input_summary} --host_filtering_summary {input.host_filtering_summary} --duplicate_filtering_summary {input.duplicate_filtering_summary} --quality_filtering_summary {input.quality_filtering_summary} {input.mapping_summary} {input.blast_hit_filtering_summary} {input.gene_counting_summary} {input.ko_counting_summary} {input.functional_level_summarization_summaries} > {output}")
         else:
             shell("src/merge_pipeline_step_summary_tables.py {input.input_summary} {input.mapping_summary} {input.blast_hit_filtering_summary} {input.gene_counting_summary} {input.ko_counting_summary} {input.functional_level_summarization_summaries} > {output}")
