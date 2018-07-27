@@ -681,7 +681,7 @@ rule merge_tables:
         out_nonzip = output.out.rstrip(".gz")
         shell("cp %s %s" %(input[1], out_nonzip))
         for i in input[2:]:
-            shell("src/merge_tables.py %s %s > %s" %(out_nonzip, input[i], out_nonzip))
+            shell("src/merge_tables.py %s %s > %s" %(out_nonzip, i, out_nonzip))
         shell("gzip %s" %(out_nonzip) )
 
 rule normalization:
