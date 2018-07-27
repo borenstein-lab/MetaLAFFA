@@ -1,6 +1,7 @@
-# Input and output directories. All other directories are contained within these
+# Input, output, and tmp directories. All other directories are contained within these
 output_dir="output/"
 fastq_directory="data/"
+tmp_dir="/tmp/"
 
 #If you want the output split into nested subdiretories based on the different paramters. If False, then there is a single output directory with all the parameters concatenated together
 many_subdirectories=False
@@ -26,6 +27,12 @@ alignment_method="blastx"
 sensitivity="" #Empty string for default (fast),  --sensitive or --more-sensitive to enable those options
 top_percentage=1
 max_e_value=0.001
+
+# Hit combining options
+combine_disk_free=250
+
+# Hit filtering options
+hit_filtering_disk_free=200
 
 #Gene mapping options
 count_method_gene="fractional" #fractional or whole

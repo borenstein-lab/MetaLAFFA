@@ -509,14 +509,15 @@ rule combine_mapping:
     output:
         out=config.diamond_output_directory + diamond_output_suffix + "/{sample}.gz"
     params:
-        cluster = default_cluster_params
+	cluster = "-cwd -l mfree=10G -l disk_free=%iG-l h_rt=24:00:00 -R y" %(config.combine_disk_free)
     benchmark:
         #config.log_directory + diamond_output_suffix + "/{sample}.log"
         config.log_directory + "combine_mapping.{sample}.log"
     run:
-        out_nonzip = output.out.rstrip(".gz")
+        out_nonzip = config.tmp_dir + os.path.basename(output.out).rstrip(".gz")
         shell( "zcat {input} > %s" %( out_nonzip ) )
         shell( "gzip %s" %( out_nonzip ) )
+	shell( "mv %s {output.out}" %( out_nonzip + ".gz" ) )
         #Delete intermediate
         if delete_intermediates:
             shell("rm -f {input}" )
@@ -551,13 +552,14 @@ rule hit_filtering:
         N=config.best_n_hits,
         filtering_method=config.filtering_method,
         kegg_version=config.filtering_method,
-        cluster = default_cluster_params
+	cluster = "-cwd -l mfree=10G -l disk_free=%iG -l h_rt=24:00:00 -R y" %(config.hit_filtering_disk_free)
     benchmark:
         "".join([config.log_directory, "diamond_filtered.{sample}.log"])
     run:
-        out_nonzip = output.out.rstrip(".gz")
+        out_nonzip = config.tmp_dir + os.path.basename(output.out).rstrip(".gz")
         shell("src/filter_hits.py {input} {params.filtering_method} {params.kegg_version} -n {params.N} > %s " %(out_nonzip))
         shell("gzip %s" %(out_nonzip) )
+	shell( "mv %s {output.out}" %( out_nonzip + ".gz" ) )
         #Delete intermediate
         if delete_intermediates:
             shell("rm -f {input}" )
