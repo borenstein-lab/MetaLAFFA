@@ -509,7 +509,7 @@ rule combine_mapping:
     output:
         out=config.diamond_output_directory + diamond_output_suffix + "/{sample}.gz"
     params:
-        cluster = "-cwd -l mfree=10G -l disk_free=%iG-l h_rt=24:00:00 -R y" %(config.combine_disk_free)
+        cluster = "-cwd -l mfree=10G -l disk_free=%iG -l h_rt=24:00:00 -R y" %(config.combine_disk_free)
     benchmark:
         #config.log_directory + diamond_output_suffix + "/{sample}.log"
         config.log_directory + "combine_mapping.{sample}.log"
@@ -679,10 +679,11 @@ rule merge_tables:
         config.log_directory + "merge_tables.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell("cp %s %s" %(input[1], out_nonzip))
+        shell("cp %s %s" %(input[1], output.out))
         for i in input[2:]:
-            shell("src/merge_tables.py %s %s > %s" %(out_nonzip, i, out_nonzip))
-        shell("gzip %s" %(out_nonzip) )
+            shell("src/merge_tables.py %s %s > %s" %(output.out, i, out_nonzip))
+            shell("rm %s" %(output.out))
+            shell("gzip %s" %(out_nonzip) )
 
 rule normalization:
     input:
