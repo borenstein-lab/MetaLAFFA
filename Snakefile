@@ -592,13 +592,14 @@ rule gene_mapper:
         out=config.diamond_counts_directory + genemapper_output_suffix + "/{sample}.genecounts.gz"
     params:
         count_method=config.count_method_gene,
+	taxon=config.taxon,
         kegg_version=config.kegg_version,
         cluster=default_cluster_params
     benchmark:
         config.log_directory + "gene_mapper.{sample}.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell("src/count_genes.py {input} {wildcards.sample} {params.count_method} {params.kegg_version} --normalization length > %s" %(out_nonzip) )
+        shell("src/count_genes.py {input} {wildcards.sample} {params.count_method} {params.taxon} {params.kegg_version} --normalization length > %s" %(out_nonzip) )
         shell("gzip %s" %(out_nonzip) )
         #Delete intermediate
         if delete_intermediates:
