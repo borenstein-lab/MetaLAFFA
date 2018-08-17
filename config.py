@@ -9,6 +9,8 @@ many_subdirectories=False
 samples_oi=None
 #Do you want to delete the intermediate files to save on disk space?
 delete_intermediates=False
+# What is the maximum number of command line arguments to use at a time
+max_args=500
 
 # KEGG parameters
 kegg_db_path="/net/borenstein/vol1/DATA_DIAMONDDBs/KEGG/KEGG_"
