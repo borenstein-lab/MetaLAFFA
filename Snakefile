@@ -675,14 +675,18 @@ rule merge_tables:
     output:
         out=config.ko_counts_directory + komapper_output_suffix + "/merge_kocounts.gz"
     params:
-        cluster=default_cluster_params
+        cluster=default_cluster_params,
+	max_args=config.max_args
     benchmark:
         config.log_directory + "merge_tables.log"
     run:
         out_nonzip = output.out.rstrip(".gz")
-        shell("cp %s %s" %(input[1], output.out))
-        for i in input[2:]:
-            shell("src/merge_tables.py %s %s > %s" %(output.out, i, out_nonzip))
+        shell("cp %s %s" %(input[0], output.out))
+	for i in range(1, len(input), params.max_args):
+	    last_arg = i + max_args
+	    if (last_arg > len(input)):
+	        last_arg = len(input)
+            shell("src/merge_tables.py %s %s > %s" %(output.out, " ".join(input[i, last_arg], out_nonzip))
             shell("rm %s" %(output.out))
             shell("gzip %s" %(out_nonzip) )
 
