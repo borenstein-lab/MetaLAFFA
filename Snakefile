@@ -683,10 +683,10 @@ rule merge_tables:
         out_nonzip = output.out.rstrip(".gz")
         shell("cp %s %s" %(input[0], output.out))
 	for i in range(1, len(input), params.max_args):
-	    last_arg = i + max_args
+            last_arg = i + params.max_args
 	    if (last_arg > len(input)):
-	        last_arg = len(input)
-            shell("src/merge_tables.py %s %s > %s" %(output.out, " ".join(input[i, last_arg], out_nonzip))
+                last_arg = len(input)
+            shell("src/merge_tables.py %s %s > %s" %(output.out, " ".join(input[i:last_arg]), out_nonzip))
             shell("rm %s" %(output.out))
             shell("gzip %s" %(out_nonzip) )
 
