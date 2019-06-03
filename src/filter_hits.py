@@ -11,7 +11,7 @@ from future import *
 parser = argparse.ArgumentParser(description="Filters blast hits based on the selected criterion")
 parser.add_argument("blast_output_file", help="blast output file to filter")
 parser.add_argument("filtering_method", choices=["best_hit", "best_ko", "best_N_hits", "best_N_kos"], help="The filtering criterion to use")
-parser.add_argument("kegg_version", help="Version (year_month_date) of KEGG to use for filtering hits")
+parser.add_argument("db_version", help="Version (year_month_date) of KEGG to use for filtering hits")
 parser.add_argument("--number", "-n", type=int, default=20, help="The number of best hits or kos to use")
 parser.add_argument("--path_to_kegg", "-p", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/", help="Path to KEGG reference data")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")

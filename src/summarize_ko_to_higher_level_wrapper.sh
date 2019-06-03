@@ -6,14 +6,14 @@
 # Bash wrapper script to summarize KO profiles to higher levels (e.g. module, pathway, etc.)
 #
 # Usage:
-# summarize_ko_to_higher_level_wrapper.sh [--simple_mapper simple_mapper] [-h] ko_profiles summary_method summary_level taxon kegg_version output
+# summarize_ko_to_higher_level_wrapper.sh [--simple_mapper simple_mapper] [-h] ko_profiles summary_method summary_level taxon db_version output
 #
 # Arguments:
 # ko_profiles                   : KO profile table to summarize to a higher functional level
 # summary_method                : Method to use to summarize the KO profiles (fractional, whole)
 # summary_level					: Functional level to summarize KOs to
 # taxon							: KOs will only be mapped to the higher level functional categories that exist in this taxon
-# kegg_version					: Version (year_month_date) of KEGG to use for mapping KOs
+# db_version					: Version (year_month_date) of KEGG to use for mapping KOs
 # output                        : Output file for higher-level functional profiles
 #
 # Options:
@@ -51,13 +51,13 @@ do
 		-h)
 			printf "%s\n\n" "Bash wrapper script to summarize KO profiles to higher levels (e.g. module, pathway, etc.)"
 			printf "%s\n" "Usage:"
-			printf "%s\n\n" "summarize_ko_to_higher_level_wrapper.sh [--simple_mapper --simple_mapper] [-h] ko_profiles summary_method summary_level taxon kegg_version output"
+			printf "%s\n\n" "summarize_ko_to_higher_level_wrapper.sh [--simple_mapper --simple_mapper] [-h] ko_profiles summary_method summary_level taxon db_version output"
 			printf "%s\n" "Arguments:"
 			printf "%-30s%s\n" "ko_profiles" ": KO profile table to summarize to a higher functional level"
 			printf "%-30s%s\n" "summary_method" ": Method to use to summarize the KO profiles (fractional, whole)"
 			printf "%-30s%s\n" "summary_level" ": Functional level to summarize KOs to"
 			printf "%-30s%s\n" "taxon" ": KOs will only be mapped to the higher level functional categories that exist in this taxon"
-			printf "%-30s%s\n" "kegg_version" ": Version (year_month_date) of KEGG to use for mapping KOs"
+			printf "%-30s%s\n" "db_version" ": Version (year_month_date) of KEGG to use for mapping KOs"
 			printf "%-30s%s\n" "output" ": Output file for higher-level functional profiles"
 			printf "\n"
 			printf "%s\n" "Options:"

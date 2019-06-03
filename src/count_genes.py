@@ -15,7 +15,7 @@ parser.add_argument("filtered_blast_output_file", help="Filtered blast output fi
 parser.add_argument("sample_name", help="Name of sample to use as column header for output gene abundances")
 parser.add_argument("counting_method", choices=["fractional", "whole"], help="The counting method to use")
 parser.add_argument("taxon", help="If length normalization is performed, they will be normalized based on lengths of genes of organisms belonging to the specified taxon (e.g. bacteria, prokaryotes)")
-parser.add_argument("kegg_version", help="Version (year_month_date) of KEGG to use for counting genes")
+parser.add_argument("db_version", help="Version (year_month_date) of KEGG to use for counting genes")
 parser.add_argument("--normalization", "-n", choices=["length", "none"], default="length", help="The way gene abundances are normalized")
 parser.add_argument("--path_to_kegg", "-p", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/", help="Path to KEGG reference data")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")

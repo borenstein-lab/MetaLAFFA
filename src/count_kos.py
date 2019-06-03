@@ -13,7 +13,7 @@ from future import *
 parser = argparse.ArgumentParser(description="Calculates KO abundances based on gene abundances")
 parser.add_argument("gene_abundance_file", help="Gene abundance file to calculate KO abundances from")
 parser.add_argument("counting_method", choices=["fractional", "whole"], help="The counting method to use")
-parser.add_argument("kegg_version", help="Version (year_month_date) of KEGG to use for counting kos")
+parser.add_argument("db_version", help="Version (year_month_date) of KEGG to use for counting kos")
 parser.add_argument("--path_to_kegg", "-p", default="/net/borenstein/vol1/DATA_REFERENCE/KEGG/", help="Path to KEGG reference data")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")
 args=parser.parse_args()
