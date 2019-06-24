@@ -1,15 +1,12 @@
-#!/net/borenstein/vol1/PROGRAMS/python2/bin/python
-# Author: Alex Eng
-# Date: 11/30/2017
+import argparse
+import sys
+import os
+from file_handling_lib import *
+from fastq_summary_lib import *
 
 NUM_LINES_PER_READ = 4
 READ_NAME_LINE = 0
 QUALITY_LINE = 3
-
-import argparse,sys,os.path
-from file_handling import *
-from fastq_summarizing import *
-from future import *
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Summarizes quality read filtering")
@@ -20,6 +17,7 @@ parser.add_argument("filtered_r2_fastq", help="Filtered R2 fastq file for which 
 parser.add_argument("filtered_new_singleton_fastq", help="Filtered fastq file of new singleton reads for which to summarize quality filtering")
 parser.add_argument("filtered_old_singleton_fastq", help="Filtered fastq file of old singleton reads for which to summarize quality filtering")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")
+parser.add_argument("--use_sample", "-s", action="store_true", help="Should summary stats be associated with the sample ID instead of the FASTQ file name?")
 args = parser.parse_args()
 
 # Set output stream
@@ -27,8 +25,13 @@ output = sys.stdout
 if args.output:
     output = open(args.output, "w")
 
+id_name = "fastq"
+# If we are given a sample ID, we associate this summary with the sample ID
+if args.use_sample:
+    id_name = "sample"
+
 # Print the column names for the quality filtering summary file
-output.write("\t".join(["filtered_fastq_file", "post_quality_filtering_paired_reads", "post_quality_filtering_paired_average_read_length", "post_quality_filtering_paired_average_base_quality", "post_quality_filtering_singleton_reads", "post_quality_filtering_singleton_average_read_length", "post_quality_filtering_singleton_average_base_quality"]) + "\n")
+output.write("\t".join([id_name, "post_quality_filtering_paired_reads", "post_quality_filtering_paired_average_read_length", "post_quality_filtering_paired_average_base_quality", "post_quality_filtering_singleton_reads", "post_quality_filtering_singleton_average_read_length", "post_quality_filtering_singleton_average_base_quality"]) + "\n")
 
 # Parse the new singleton file to get the read names of the new singletons
 new_singletons = set()
@@ -156,7 +159,13 @@ if r2_new_singleton_read_count > 0:
 if r2_new_singleton_base_count > 0:
     r2_new_singleton_average_base_quality = float(r2_new_singleton_total_quality_score)/float(r2_new_singleton_base_count)
 
+row_id = os.path.basename(args.fastq)
+
+# If we are using the sample ID, replace that as the row ID
+if args.use_sample:
+    row_id = re.search("^([^.])\\.", os.path.basename(args.fastq)).group(1)
+
 # Print the quality filtering summary for this sample
-output.write("\t".join([os.path.basename(args.filtered_r1_fastq), str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + "\n")
-output.write("\t".join([os.path.basename(args.filtered_r2_fastq), str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality)]) + "\n")
-output.write("\t".join([os.path.basename(args.filtered_old_singleton_fastq), "N/A", "N/A", "N/A", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + "\n")
+output.write("\t".join([row_id, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + os.linesep)
+output.write("\t".join([os.path.basename(args.filtered_r2_fastq), str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality)]) + os.linesep)
+output.write("\t".join([os.path.basename(args.filtered_old_singleton_fastq), "N/A", "N/A", "N/A", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + os.linesep)
