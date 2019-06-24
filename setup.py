@@ -7,6 +7,7 @@ import config.steps.host_filter
 import config.steps.map_reads_to_genes
 
 parser = argparse.ArgumentParser(description="Setup script for installing third party tools and downloading default databases.")
+parser.add_argument("--no_snakemake", "-ns", action="store_true", help="If used, do not install Snakemake locally. Note that Snakemake is required for pipeline operation, so only use this option if you have already installed Snakemake.")
 parser.add_argument("--no_blast", "-nbl", action="store_true", help="If used, do not download and install it in the pipeline directory for host filtering.")
 parser.add_argument("--no_bmtagger", "-nbm", action="store_true", help="If used, do not download BMTagger and install it in the pipeline directory for host filtering.")
 parser.add_argument("--no_human_reference", "-nh", action="store_true", help="If used, do not download the human reference provided with BMTagger (hs37).")
@@ -18,7 +19,26 @@ parser.add_argument("--no_musicc", "-nmu", action="store_true", help="If used, d
 
 args = parser.parse_args()
 
+# Create any directories required for setup steps
+if not args.no_blast or not args.no_bmtagger or not args.no_markduplicates or not args.no_trimmomatic or not args.no_diamond:
+    if not os.path.isdir(fo.source_directory):
+        os.makedirs(fo.source_directory)
+
+if not args.no_human_reference or not args.no_uniprot:
+    if not os.path.isdir(fo.database_directory):
+        os.makedirs(fo.database_directory)
+
+if not args.no_human_reference:
+    if not os.path.isdir(fo.bitmask_directory):
+        os.makedirs(fo.bitmask_directory)
+    if not os.path.isdir(fo.srprism_directory):
+        os.makedirs(fo.srprism_directory)
+
+if not args.no_snakemake:
+    subprocess.run(["pip3", "install", "--user", "snakemake"])
+
 if not args.no_blast:
+
     subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast+-2.9.0-src.tar.gz", "-P", fo.source_directory])
     subprocess.run(["tar", "-zxf", "ncbi-blast+-2.9.0-src.tar.gz"], cwd=fo.source_directory)
     subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.9.0+-src/c++/")
@@ -38,7 +58,7 @@ if not args.no_bmtagger:
     subprocess.run(["./configure"], cwd=fo.source_directory + "srprism/gnuac/")
     subprocess.run(["make"], cwd=fo.source_directory + "srprism/gnuac/")
 
-if not args.no_bmtagger and not args.no_human_reference:
+if not args.no_human_reference:
     subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/hs37.fa", "-P", fo.database_directory])
     subprocess.run([config.steps.host_filter.resource_params["bmtool"], "-d", fo.database_directory + "hs37.fa", "-o", fo.bitmask_directory + "hs37.bitmask", "-A", "0", "-w", "18"])
     subprocess.run([config.steps.host_filter.resource_params["srprism"], "mkindex", "-i", fo.database_directory + "hs37.fa", "-o", fo.srprism_directory + "hs37.srprism", "-M", "7168"])
