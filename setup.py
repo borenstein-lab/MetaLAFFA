@@ -38,11 +38,11 @@ if not args.no_snakemake:
     subprocess.run(["pip3", "install", "--user", "snakemake"])
 
 if not args.no_blast:
+    subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-src.tar.gz", "-P", fo.source_directory])
+    subprocess.run(["tar", "-zxf", "ncbi-blast-2.2.31+-src.tar.gz"], cwd=fo.source_directory)
+    subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/")
+    subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/build/")
 
-    subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast+-2.9.0-src.tar.gz", "-P", fo.source_directory])
-    subprocess.run(["tar", "-zxf", "ncbi-blast+-2.9.0-src.tar.gz"], cwd=fo.source_directory)
-    subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.9.0+-src/c++/")
-    subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.9.0+-src/c++/ReleaseMT/build/")
 
 if not args.no_bmtagger:
 
