@@ -60,6 +60,11 @@ summary_directory = output_directory + "summaries/"
 Output subdirectory for pipeline step summary files.
 """
 
+source_directory = "src/"
+"""
+Directory for scripts and third-party tools used in the pipeline.
+"""
+
 tmp_dir = "/tmp/"
 """
 Directory containing temporary intermediate files. These tend to be large uncompressed intermediate files that we need to compress before saving, if we are saving intermediate files.
