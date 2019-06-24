@@ -1,0 +1,54 @@
+# Summarize input FASTQ stats
+fastq_summary:INPUT
+*fastq_summary_combine:fastq_summary
+
+# Remove reads that belong to the host organism
+host_filter:INPUT
+host_filter_summary:host_filter
+*host_filter_summary_combine:host_filter_summary
+
+# Remove duplicate reads
+duplicate_filter:host_filter
+duplicate_filter_summary:duplicate_filter
+*duplicate_filter_summary_combine:duplicate_filter_summary
+
+# Filter reads based on quality
+quality_filter:duplicate_filter
+quality_filter_summary:duplicate_filter,quality_filter
+*quality_filter_summary_combine:quality_filter_summary
+quality_filter_fastq_summary:quality_filter
+*quality_filter_fastq_summary_combine:quality_filter_fastq_summary
+
+# Map reads to annotated sequence database
+map_reads_to_genes:quality_filter
+map_reads_to_genes_summary:map_reads_to_genes
+*map_reads_to_genes_summary_combine:map_reads_to_genes_summary
+
+# Filter mapping hits based on quality of hits
+hit_filter:map_reads_to_genes
+hit_filter_summary:hit_filter
+*hit_filter_summary_combine:hit_filter_summary
+hit_filter_combine:hit_filter
+
+# Map read hits to gene annotations
+gene_map:hit_filter_combine
+gene_map_summary:gene_map
+*gene_map_summary_combine:gene_map_summary
+
+# Map genes to functional ortholog designations
+ortholog_map:gene_map
+ortholog_map_summary:ortholog_map
+*ortholog_map_summary_combine:ortholog_map_summary
+$ortholog_map_combine:ortholog_map
+
+# Correct ortholog counts
+ortholog_abundance_correction:ortholog_map_combine
+
+# Aggregate ortholog abundances into higher-level functional categorizations
+$ortholog_aggregation:ortholog_abundance_correction
+ortholog_aggregation_summary:ortholog_aggregation
+*ortholog_aggregation_summary_combine:ortholog_aggregation_summary
+
+# Combine summaries from each pipeline step into single overall summary table
+$summary_combine:SUMMARIES
+
