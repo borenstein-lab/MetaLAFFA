@@ -1,9 +1,7 @@
-#!/net/borenstein/vol1/PROGRAMS/python2/bin/python
-# Author: AlexE
-# Date: 12/30/2014
-
-import argparse, re, gzip
-from file_handling import *
+import argparse
+import re
+import gzip
+from file_handling_lib import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("marked", help="The file of marked reads to remove.", metavar="Marked")
@@ -22,11 +20,7 @@ for line in marked_file:
     marked_reads.add(read_name)
 marked_file.close()
 
-fastq = None
-if re.search("\.gz$", args.fastq):
-    fastq = gzip.open(args.fastq, 'r')
-else:
-    fastq = open(args.fastq, 'r')
+fastq = custom_read(args.fastq)
 line = fastq.readline()
 while line != "":
     read_name = line.strip().split()[0][1:]
@@ -39,12 +33,12 @@ while line != "":
         line = fastq.readline()
         line = fastq.readline()
     else:
-        print line.strip()
+        print(line.strip())
         line = fastq.readline()
-        print line.strip()
+        print(line.strip())
         line = fastq.readline()
-        print line.strip()
+        print(line.strip())
         line = fastq.readline()
-        print line.strip()
+        print(line.strip())
     line = fastq.readline()
 fastq.close()

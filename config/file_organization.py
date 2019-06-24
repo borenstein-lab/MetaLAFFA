@@ -5,67 +5,57 @@ File organization parameters
 This configuration submodule contains parameters related to organization of the pipeline file structure.
 """
 
-fastq_directory = "data/"
+initial_data_directory = "data/"
 """
 Directory containing the input FASTQ files. The default assumes that you have created a local directory called *data/* where the FASTQs are located.
 """
 
-output_dir = "output/"
+output_directory = "output/"
 """
 Directory containing intermediate and final output files. This directory will be created when the pipeline is run for the first time.
 """
 
-host_filtered_fastq_directory = output_dir + "1_host_filtered/"
+benchmark_dir = "benchmark/"
 """
-Output subdirectory for host filtering FASTQs.
-"""
-
-duplicate_filtered_fastq_directory = output_dir + "2_duplicate_filtered/"
-"""
-Output subdirectory for duplicate filtered FASTQs.
+Directory containing benchmarking files. This directory will be created when the pipeline is run for the first time.
 """
 
-quality_filtered_fastq_directory = output_dir + "3_quality_filtered/"
+bitmask_directory = "bitmasks/"
 """
-Output subdirectory for quality filtered FASTQs.
-"""
-
-alignment_directory = output_dir + "4_blast_results/"
-"""
-Output subdirectory for read alignments.
+Directory containing database bitmaps
 """
 
-filtered_alignment_directory = output_dir + "5_filtered_blast_results/"
+database_directory = "databases/"
 """
-Output subdirectory for filtered read alignments.
-"""
-
-gene_profile_directory = output_dir + "6_gene_profiles/"
-"""
-Output subdirectory for gene profiles.
+Directory containing databases to map reads to
 """
 
-ortholog_profile_directory = output_dir + "7_ko_profiles/"
+srprism_directory = "indices/"
 """
-Output subdirectory for ortholog profiles.
-"""
-
-normalized_ortholog_profile_directory = output_dir + "8_normalized_ko_profiles/"
-"""
-Output subdirectory for normalized ortholog profiles.
+Directory containing indices for srprism
 """
 
-summarized_profile_directory = output_dir + "9_module_profiles/"
+gene_normalization_directory = "gene_normalization_files/"
 """
-Output subdirectory for functional profiles summarized to a higher functional classification level.
+Directory containing gene count normalization files
 """
 
-log_directory = output_dir + "logging/"
+gene_to_ortholog_directory = "gene_to_ortholog_maps/"
+"""
+Directory containing gene-to-ortholog mapping files
+"""
+
+ortholog_to_grouping_directory = "ortholog_to_grouping_maps/"
+"""
+Directory containing ortholog-to-grouping mapping files for aggregating ortholog abundances into functional groups
+"""
+
+log_directory = output_directory + "logging/"
 """
 Output subdirectory for pipeline log files.
 """
 
-summary_directory = output_dir + "summaries/"
+summary_directory = output_directory + "summaries/"
 """
 Output subdirectory for pipeline step summary files.
 """
@@ -75,7 +65,14 @@ tmp_dir = "/tmp/"
 Directory containing temporary intermediate files. These tend to be large uncompressed intermediate files that we need to compress before saving, if we are saving intermediate files.
 """
 
-nested_subdirectories = False
+nested_subdirectories = True
 """
 Whether provenance for the output for each step should be tracked in a nested subdirectory structure with subdirectory titles indicating parameters for previous processing steps, or whether previous processing step parameters should be encoded in the name of the output file. This can be used when the filesystem has limits on file name length.
 """
+
+provenance_separator = "_"
+"""
+The character to use when separating steps in the pipeline in filenames, which are used to track provenance. If nested subdirectories are used, this is automatically changed to a "/" character to change the single filename into nested subdirectories.
+"""
+if nested_subdirectories:
+    provenance_separator = "/"
