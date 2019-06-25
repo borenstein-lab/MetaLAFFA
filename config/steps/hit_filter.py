@@ -29,7 +29,9 @@ output_list = [
 List defining the pipeline step's output structure.
 """
 
-cluster_params = {}
+cluster_params = {
+    "options": "-cwd -R y -l disk_free=200G"  # Because hit filtering is not RAM intensive, but still generates large output before compression, reserve disk space in the job request so that we limit the number of hit filtering jobs based on available disk space
+}
 """
 Dictionary defining the pipeline step's cluster parameters
 """
@@ -84,7 +86,7 @@ def default(inputs, outputs, wildcards):
         if n_method:
             command += ["-n", operating_params["best_n"]]
 
-        subprocess.run(command, stdout=output_file)
+        subprocess.run(command)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:

@@ -28,30 +28,10 @@ output_list = [
 """
 List defining the pipeline step's output structure.
 """
-alignment_memory = 220
-"""
-Amount of RAM (in GB) required for each individual alignment cluster job. 
-"""
-
-alignment_cores = 22
-"""
-Number of cores required for each individual alignment cluster job. 
-"""
-
-alignment_merging_disk_space = 250
-"""
-Amount of local disk space (in GB) required in the temporary file directory for merging alignment outputs. 
-"""
-
-alignment_filtering_disk_space = 200
-"""
-Amount of local disk space (in GB) required in the temporary file directory for filtering alignment output.
-"""
 
 cluster_params = {
-    "memory": "220G",
-    "cores": 22,
-    "options": "-R y"
+    "memory": "220G",  # Amount of RAM required for each read mapping cluster job
+    "cores": 22,  # Number of cores requested for each read mapping cluster job
 }
 """
 Dictionary defining the pipeline step's cluster parameters
