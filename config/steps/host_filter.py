@@ -88,7 +88,7 @@ def default(inputs, outputs, wildcards):
     # Set locations of reference files
     bitmask = fo.bitmask_directory + op.host_database + ".bitmask"
     host_database = fo.database_directory + op.host_database
-    srprism_index = fo.srprism_index_directory + op.host_database + ".srprism"
+    srprism_index = fo.srprism_directory + op.host_database + ".srprism"
 
     # If either of the paired read files are non-empty, filter them for host reads
     if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):
