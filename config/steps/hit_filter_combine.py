@@ -66,7 +66,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    lf.combine_list_rows(inputs, outputs[0])
+    lf.combine_list_rows(list(inputs.plainstrings()), outputs[0])
 
 
 # Defining the wrapper function that chooses which defined operation to run

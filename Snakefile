@@ -205,7 +205,7 @@ rule map_reads_to_genes_summary:
     benchmark:
         step_params["map_reads_to_genes_summary"]["benchmark"]
     run:
-        run_step(step_params["map_reads_to_genes_summary"], input, output)
+        run_step(step_params["map_reads_to_genes_summary"], input, output, wildcards)
 
 rule map_reads_to_genes_summary_combine:
     input:

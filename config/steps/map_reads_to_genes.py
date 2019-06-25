@@ -81,7 +81,10 @@ def default(inputs, outputs, wildcards):
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):
 
-        subprocess.run([resource_params["diamond"], operating_params["method"], "--block-size", str(resource_params["block_size"]), "--index-chunks", str(resource_params["index_chunks"]), "--threads", str(cluster_params["cores"] * 2), "--target_database", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"]), operating_params["sensitivity"]])
+        command = [resource_params["diamond"], operating_params["method"], "--block-size", str(resource_params["block_size"]), "--index-chunks", str(resource_params["index_chunks"]), "--threads", str(cluster_params["cores"] * 2), "--db", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"])]
+        if operating_params["sensitivity"] != "":
+            command += operating_params["sensitivity"]
+        subprocess.run(command)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:

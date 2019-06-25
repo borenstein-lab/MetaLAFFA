@@ -23,7 +23,7 @@ column_names = []
 if args.use_sample:
     column_names.append("sample")
 
-# Otherwise, we use the name of the FASTQ
+# Otherwise, we use the name of the BLAST output
 else:
     column_names.append("blast_output")
 
@@ -35,7 +35,7 @@ for name in summary_stat_names:
 
     # If we are associating the summary stats with the FASTQ type, indicate that in each summary stat column header
     if args.use_type:
-        fastq_type = re.search("^[^.]*\\.([^.]*)\\.", os.path.basename(args.fastq)).group(1)
+        fastq_type = re.search("^[^.]*\\.([^.]*)\\.", os.path.basename(args.blast_output)).group(1)
         column_names.append("_".join([fastq_type, name]))
 
     # Otherwise, use the plain summary stat column header

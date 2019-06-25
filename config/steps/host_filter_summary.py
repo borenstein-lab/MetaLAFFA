@@ -57,7 +57,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    subprocess.run([op.python, "src/host_filter_summary.py", inputs.input, "--output", outputs[0], "--use-sample", "--use-type"])
+    subprocess.run([op.python, "src/host_filter_summary.py", inputs.input, "--output", outputs[0], "--use_sample", "--use_type"])
 
 
 # Defining the wrapper function that chooses which defined operation to run

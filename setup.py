@@ -63,7 +63,7 @@ if not args.no_bmtagger:
     if not os.path.isfile(config.steps.host_filter.resource_params["bmtool"]) or not os.path.isfile(config.steps.host_filter.resource_params["bmfilter"]) or not os.path.isfile(config.steps.host_filter.resource_params["bmtagger"]) or not os.path.isfile(config.steps.host_filter.resource_params["extract_fa"]):
         subprocess.run(["make"], cwd=fo.source_directory + "bmtools/")
 
-    if not os.path.isdir(fo.source_directory + "srpsim/"):
+    if not os.path.isdir(fo.source_directory + "srprism/"):
         subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/src/srprism.tar.gz", "-P", fo.source_directory])
         subprocess.run(["tar", "-zxf", "srprism.tar.gz"], cwd=fo.source_directory)
     if not os.path.isfile(config.steps.host_filter.resource_params["srprism"]):

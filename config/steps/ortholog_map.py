@@ -29,7 +29,9 @@ output_list = [
 List defining the pipeline step's output structure.
 """
 
-cluster_params = {}
+cluster_params = {
+    "memory": "40G"  # Custom memory request for ortholog mapping
+}
 """
 Dictionary defining the pipeline step's cluster parameters
 """

@@ -36,14 +36,17 @@ output_list = [
 List defining the pipeline step's outputs.
 """
 
-cluster_params = {}
+cluster_params = {
+    "memory": "40G"  # Custom memory request for duplicate filtering
+}
 """
 Dictionary defining the pipeline step's cluster parameters
 """
 
 resource_params = {
-    "mark_duplicates": "src/picard.jar MarkDuplicates",  # Path to java jar for marking duplicates
-    "fastq_to_sam": "src/picard.jar FastqToSam",  # Path to java jar for converting FASTQ files to SAM format
+    "picard": "src/picard.jar",  # Path to java jar for PICARD tools
+    "mark_duplicates": "MarkDuplicates",  # PICARD tool for marking duplicates
+    "fastq_to_sam": "FastqToSam",  # PICARD tool for converting FASTQ files to SAM format
     "samtools": "src/samtools-1.9/samtools",  # Path to samtools program
     "quality_format": "Standard",  # SAM file quality format
     "sort_order": "coordinate"  # SAM file sort order
@@ -82,11 +85,11 @@ def default(inputs, outputs, wildcards):
 
         # Convert the paired read files to SAM format
         paired_sam = inputs.forward + ".paired.sam"
-        subprocess.run([op.java, "-jar", resource_params["fastq_to_sam"], "F1=%s" % inputs.forward, "F2=%s" % inputs.reverse, "O=%s" % paired_sam, "V=%s" % resource_params["quality_format"], "SO=%s" % resource_params["sort_order"], "SM=%s" % wildcards.sample])
+        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["fastq_to_sam"], "F1=%s" % inputs.forward, "F2=%s" % inputs.reverse, "O=%s" % paired_sam, "V=%s" % resource_params["quality_format"], "SO=%s" % resource_params["sort_order"], "SM=%s" % wildcards.sample])
 
         # Mark duplicates
         marked_output = inputs.forward + ".marked.sam"
-        subprocess.run([op.java, "-jar", resource_params["mark_duplicates"], "I=%s" % paired_sam, "O=%s" % marked_output, "M=%s" % outputs[5]])
+        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["mark_duplicates"], "I=%s" % paired_sam, "O=%s" % marked_output, "M=%s" % outputs[5]])
         subprocess.run(["rm", paired_sam])
 
         # Convert the marked output to a parse-able format
@@ -97,7 +100,7 @@ def default(inputs, outputs, wildcards):
 
         # Extract duplicate reads from the formatted marked output
         with open(outputs[3], "w") as marked_read_file:
-            subprocess.run([op.python, "src/extract_duplicates.py", formatted_marked_output_file], stdout=marked_read_file)
+            subprocess.run([op.python, "src/extract_duplicates.py", formatted_marked_output], stdout=marked_read_file)
 
         # Remove the marked reads from the original fastqs
         with open(outputs[0], "w") as forward_output:
@@ -115,11 +118,11 @@ def default(inputs, outputs, wildcards):
 
         # Convert the singleton read file to SAM format
         singleton_sam = inputs.forward + ".singleton.sam"
-        subprocess.run([op.java, "-jar", resource_params["fastq_to_sam"], "F1=%s" % inputs.forward, "O=%s" % singleton_sam, "V=%s" % resource_params["quality_format"], "SO=%s" % resource_params["sort_order"], "SM=%s" % wildcards.sample])
+        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["fastq_to_sam"], "F1=%s" % inputs.forward, "O=%s" % singleton_sam, "V=%s" % resource_params["quality_format"], "SO=%s" % resource_params["sort_order"], "SM=%s" % wildcards.sample])
 
         # Mark duplicates
         marked_output = inputs.singleton + ".marked.sam"
-        subprocess.run([op.java, "-jar", resource_params["mark_duplicates"], "I=%s" % singleton_sam, "O=%s" % marked_output, "M=%s" % outputs[6]])
+        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["mark_duplicates"], "I=%s" % singleton_sam, "O=%s" % marked_output, "M=%s" % outputs[6]])
         subprocess.run(["rm", singleton_sam])
 
         # Convert the marked output to a parse-able format
@@ -130,7 +133,7 @@ def default(inputs, outputs, wildcards):
 
         # Extract duplicate reads from the formatted marked output
         with open(outputs[4], "w") as marked_read_file:
-            subprocess.run([op.python, "src/extract_duplicates.py", formatted_marked_output_file],
+            subprocess.run([op.python, "src/extract_duplicates.py", formatted_marked_output],
                            stdout=marked_read_file)
 
         # Remove the marked reads from the original fastqs

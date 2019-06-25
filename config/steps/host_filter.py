@@ -36,7 +36,9 @@ output_list = [
 List defining the pipeline step's output structure.
 """
 
-cluster_params = {}
+cluster_params = {
+    "memory": "20G"  # Custom memory requirement for host filtering
+}
 """
 Dictionary defining the pipeline step's cluster parameters
 """

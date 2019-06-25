@@ -34,7 +34,9 @@ output_list = [
 List defining the pipeline step's output structure.
 """
 
-cluster_params = {}
+cluster_params = {
+    "memory": "40G"  # Custom memory request for quality filtering
+}
 """
 Dictionary defining the pipeline step's cluster parameters
 """
@@ -70,7 +72,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    trimming_parameters = " ".join(["MAXINFO:" + operating_params["max_info"], "MINLEN:" + operating_params["min_len"]])
+    trimming_parameters = ["MAXINFO:" + operating_params["max_info"], "MINLEN:" + operating_params["min_len"]]
 
     # If either of the paired read files are non-empty, filter them for duplicate reads
     if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):
@@ -80,7 +82,7 @@ def default(inputs, outputs, wildcards):
         new_reverse_singletons = outputs[3] + ".reverse_singletons.fastq"
 
         # Perform paired-end quality filtering and trimming
-        subprocess.run([op.java, "-jar", resource_params["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons, trimming_parameters])
+        subprocess.run([op.java, "-jar", resource_params["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters)
 
         # Merge new singletons into single new singleton file
         with open(outputs[3], "w") as output_file:
@@ -99,8 +101,7 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.singleton):
 
         # Perform single-end quality filtering and trimming
-        subprocess.run([op.java, "-jar", resource_params["trimmer"], "SE", inputs.singleton, outputs[4],
-                        trimming_parameters])
+        subprocess.run([op.java, "-jar", resource_params["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters)
 
         # If we quality filtered the paired-end reads, add singletons to combined singleton output file
         if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):

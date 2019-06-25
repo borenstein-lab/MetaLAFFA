@@ -62,7 +62,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use-sample"])
+    subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use_sample"])
 
 
 # Defining the wrapper function that chooses which defined operation to run
