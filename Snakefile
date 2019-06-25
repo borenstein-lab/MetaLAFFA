@@ -410,3 +410,11 @@ rule summary_combine:
         step_params["summary_combine"]["benchmark"]
     run:
         run_step(step_params["summary_combine"], input, output, wildcards)
+
+rule process_final_output:
+    input:
+        step_params["raw_final_outputs"]
+    output:
+        step_params["final_outputs"]
+    run:
+        run_step(step_params["process_final_output"], input, output, wildcards)

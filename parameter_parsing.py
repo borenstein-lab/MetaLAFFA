@@ -7,6 +7,7 @@ import importlib
 import copy
 import os
 
+
 def get_working_name(filename):
     """
     Processes the filename and returns the version the pipeline will used based on config settings (e.g. if we are working with zipped files, make sure expected input and output file names are zipped file names).
@@ -187,7 +188,7 @@ def create_step_params(step_info):
     """
 
     # Initialize dictionary that will hold all of the parameters for each step
-    step_params = {"final_outputs": []}
+    step_params = {"raw_final_outputs": set(), "final_outputs": set()}
 
     # Get the list of step names (excluding special keys in the step information dictionary
     step_names = []
@@ -230,9 +231,11 @@ def create_step_params(step_info):
         for output_index in range(len(output_list)):
             output_list[output_index] = get_working_name(prefix_components[0] + fo.provenance_separator.join(prefix_components[1:]) + "/" + output_list[output_index])
 
-            # Add the output file to the list of final output files if indicated
+            # Add the output file to the list of raw final output files if indicated
             if step_name in step_info["FINAL_OUTPUTS"]:
-                step_params["final_outputs"] += lf.generate_possible_patterns_from_restricted_wildcards([output_list[output_index]], op.wildcard_restrictions)
+                raw_final_output_files = lf.generate_possible_patterns_from_restricted_wildcards([output_list[output_index]], op.wildcard_restrictions)
+                for raw_final_output_file in raw_final_output_files:
+                    step_params["raw_final_outputs"].add(raw_final_output_file)
         step_params[step_name]["output"] = output_list
 
         # Set the benchmark file name pattern
@@ -274,6 +277,20 @@ def create_step_params(step_info):
 
         # Add the input generator function to the step parameters
         step_params[step_name]["input"] = create_input_generator(processed_input_dic)
+
+    # After all other processing, we can also now set the final processed output files
+    for raw_final_output in step_params["raw_final_outputs"]:
+
+        # Get the name of the output file
+        final_output_file = os.path.basename(raw_final_output)
+
+        # Get the step prefix for the step that generated the final output file
+        step_prefix = re.match("^([^/]*/)", re.sub("^" + fo.summary_directory, "", re.sub("^" + fo.output_directory, "", raw_final_output))).group(1)
+
+        print(raw_final_output)
+        print(fo.final_output_directory + step_prefix + final_output_file)
+
+        step_params["final_outputs"].add(fo.final_output_directory + step_prefix + final_output_file)
 
     return step_params
 

@@ -60,6 +60,11 @@ summary_directory = output_directory + "summaries/"
 Output subdirectory for pipeline step summary files.
 """
 
+final_output_directory = output_directory + "final/"
+"""
+Output subdirectory in which to collect the final output files.
+"""
+
 source_directory = "src/"
 """
 Directory for scripts and third-party tools used in the pipeline.

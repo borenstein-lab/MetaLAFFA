@@ -52,4 +52,3 @@ ortholog_aggregation_summary:ortholog_aggregation
 
 # Combine summaries from each pipeline step into single overall summary table
 $summary_combine:SUMMARIES
-
