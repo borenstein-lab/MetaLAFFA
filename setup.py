@@ -115,10 +115,10 @@ if not args.no_uniprot:
         subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz", "-P", fo.database_directory])
 
     if not os.path.isfile(fo.gene_normalization_directory + "uniref90.gene_normalization"):
-        subprocess.run([fo.source_directory + "create_gene_length_table.py", fo.database_directory + "uniref90.fasta.gz", "--output", fo.database_directory + "uniref90.gene_normalization"])
+        subprocess.run([op.python, fo.source_directory + "create_gene_length_table.py", fo.database_directory + "uniref90.fasta.gz", "--output", fo.database_directory + "uniref90.gene_normalization"])
 
     if not os.path.isfile(fo.gene_to_ortholog_directory + "uniref_to_ko"):
-        subprocess.run([fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", "KO", "--output", fo.gene_to_ortholog_directory + "uniref_to_ko"])
+        subprocess.run([op.python, fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", "KO", "--output", fo.gene_to_ortholog_directory + "uniref_to_ko"])
 
 if not args.no_musicc:
     subprocess.run(["pip", "install", "--user", "numpy", "scipy", "scikit-learn==0.17.1", "pandas", "musicc"])
