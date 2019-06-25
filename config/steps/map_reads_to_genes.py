@@ -33,9 +33,9 @@ alignment_memory = 220
 Amount of RAM (in GB) required for each individual alignment cluster job. 
 """
 
-alignment_cpus = 22
+alignment_cores = 22
 """
-Number of CPUs required for each individual alignment cluster job. 
+Number of cores required for each individual alignment cluster job. 
 """
 
 alignment_merging_disk_space = 250
@@ -50,7 +50,7 @@ Amount of local disk space (in GB) required in the temporary file directory for 
 
 cluster_params = {
     "memory": "220G",
-    "cpus": 22,
+    "cores": 22,
     "options": "-R y"
 }
 """
@@ -101,7 +101,7 @@ def default(inputs, outputs, wildcards):
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):
 
-        subprocess.run([resource_params["diamond"], operating_params["method"], "--block-size", str(resource_params["block_size"]), "--index-chunks", str(resource_params["index_chunks"]), "--threads", str(cluster_params["cpus"] * 2), "--target_database", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"]), operating_params["sensitivity"]])
+        subprocess.run([resource_params["diamond"], operating_params["method"], "--block-size", str(resource_params["block_size"]), "--index-chunks", str(resource_params["index_chunks"]), "--threads", str(cluster_params["cores"] * 2), "--target_database", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"]), operating_params["sensitivity"]])
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
