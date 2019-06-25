@@ -76,10 +76,10 @@ if not args.no_trimmomatic:
     subprocess.run(["unzip", fo.source_directory + "Trimmomatic-0.39.zip", "-d", fo.source_directory])
 
 if not args.no_diamond:
-    subprocess.run(["wget", "http://github.com/bbuchfink/diamond/archive/v0.9.24.tar.gz", "-P", fo.source_directory])
-    subprocess.run(["tar", "-zxf", "v0.9.24.tar.gz"], cwd=fo.source_directory)
-    subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + fo.source_directory + "diamond-0.9.24/"], cwd=fo.source_directory + "diamond-0.9.24/")
-    subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.24/")
+    subprocess.run(["wget", "http://github.com/bbuchfink/diamond/archive/v0.9.22.tar.gz", "-P", fo.source_directory])
+    subprocess.run(["tar", "-zxf", "v0.9.22.tar.gz"], cwd=fo.source_directory)
+    subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/")
+    subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/")
 
 if not args.no_uniprot:
 

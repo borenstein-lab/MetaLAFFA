@@ -58,7 +58,7 @@ Dictionary defining the pipeline step's cluster parameters
 """
 
 resource_params = {
-    "diamond": "src/diamond-0.9.24/bin/diamond",  # Location of the DIAMOND program
+    "diamond": "src/diamond-0.9.22/diamond",  # Location of the DIAMOND program
     "block_size": 36,  # Block size to use in DIAMOND
     "index_chunks": 1  # Index chunks for DIAMOND
 }

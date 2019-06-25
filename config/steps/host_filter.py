@@ -47,7 +47,7 @@ resource_params = {
     "bmtagger": "src/bmtools/bmtagger/bmtagger.sh",  # Path to bmtagger program
     "extract_fa": "src/bmtools/bmtagger/extract_fullseq",  # Path to extract_fa program
     "srprism": "src/srprism/gnuac/app/srprism",  # Path to srprism program
-    "blastn_dir": ":src/ncbi-blast-2.2.31+-src/c++/ReleaseMT/bin/"  # Path to directory containing the blastn program
+    "blastn_dir": "src/ncbi-blast-2.2.31+-src/c++/ReleaseMT/bin/"  # Path to directory containing the blastn program
 }
 """
 Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
