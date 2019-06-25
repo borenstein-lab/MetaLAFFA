@@ -41,7 +41,8 @@ with custom_read(args.uniref_id_mapping) as full_mapping:
 # For each ortholog, write a line for each UniRef version ID that maps to it
 for ortholog in ortholog_to_id.keys():
     for uniref_id in ortholog_to_id[ortholog]:
-        for uniref_version_id in id_to_uniref_version[uniref_id]:
-            output.write("\t".join([ortholog, uniref_version_id]) + os.linesep)
+        if uniref_version_id in id_to_uniref_version:
+            for uniref_version_id in id_to_uniref_version[uniref_id]:
+                output.write("\t".join([ortholog, uniref_version_id]) + os.linesep)
 
 output.close()
