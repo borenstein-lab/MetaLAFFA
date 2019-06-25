@@ -4,7 +4,8 @@ tmp/*
 data/*
 src/Trimmomatic*
 src/bmtagger/*
-src/srprism/*
+src/bmtools*
+src/srprism*
 src/diamond*
 src/ncbi*
 src/picard.jar
