@@ -81,11 +81,11 @@ def is_empty(filename):
 
         # Unzip the file and then count the number of lines
         unzip_process = subprocess.Popen(["zcat", filename], stdout=subprocess.PIPE)
-        num_lines = int(subprocess.run(["wc -l"], stdin=unzip_process.stdout, stdout=subprocess.PIPE, text=True).stdout.strip().decode("utf-8"))
+        num_lines = int(subprocess.run(["wc -l"], stdin=unzip_process.stdout, stdout=subprocess.PIPE).stdout.strip().decode("utf-8"))
 
     # Otherwise, we just count the number of lines
     else:
-        num_lines = int(subprocess.run(["wc -l", filename], stdout=subprocess.PIPE, text=True).stdout.strip().decode("utf-8"))
+        num_lines = int(subprocess.run(["wc -l", filename], stdout=subprocess.PIPE).stdout.strip().decode("utf-8"))
 
     # Return whether the number of lines is 0 (an empty file)
     return num_lines == 0
