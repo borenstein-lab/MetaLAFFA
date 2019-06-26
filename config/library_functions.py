@@ -25,29 +25,31 @@ def unzipped_name(filename):
     return re.sub("\\.gz$", "", filename)
 
 
-def get_working_output_name(filename):
+def get_working_output_name(filename, step_id):
     """
     Determines the version of the file name that will be operated on (e.g. if operations should be performed in a temporary directory, rather than in the output directory).
 
     :param filename: File name to process
+    :param step_id: ID for step so that we can separate files with potentially the same name in the tmp directory
     :return: Working name of the file
     """
 
     working_output = unzipped_name(filename)
     if op.work_in_tmp_dir:
-        working_output = fo.tmp_dir + os.path.basename(working_output)
+        working_output = "/".join([fo.tmp_dir, step_id, os.path.basename(working_output)])
     return working_output
 
 
-def process_output(filename):
+def process_output(filename, step_id):
     """
     Standard output file processing for pipeline steps (e.g. if specified, zip output files).
 
     :param filename: File to process
+    :param step_id: ID for step so that we can separate files with potentially the same name in the tmp directory
     :return: None
     """
 
-    working_output = get_working_output_name(filename)
+    working_output = get_working_output_name(filename, step_id)
     if op.zipped_files:
         subprocess.run(["gzip", working_output])
         working_output = working_output + ".gz"
@@ -301,8 +303,8 @@ def create_dummy_inputs(sample_list, step_info, step_params):
         # Check whether each expected input file exists, and if not create a dummy file and note that in the log file
         for expected_input_file in expected_input_files:
             if not os.path.isfile(expected_input_file):
-                subprocess.run(["touch", get_working_output_name(expected_input_file)])
-                process_output(expected_input_file)
+                subprocess.run(["touch", get_working_output_name(expected_input_file, "dummy")])
+                process_output(expected_input_file, "dummy")
                 dummy_log_file.write(expected_input_file + os.linesep)
 
 
@@ -321,13 +323,13 @@ def run_step(curr_step_params, inputs, outputs, wildcards, process_files=True):
     working_outputs = []
     for output in outputs:
         if process_files:
-            working_outputs.append(get_working_output_name(output))
+            working_outputs.append(get_working_output_name(output, curr_step_params["step_id"]))
         else:
             working_outputs.append(output)
     curr_step_params["rule_function"](inputs, working_outputs, wildcards)
     for output in outputs:
         if process_files:
-            process_output(output)
+            process_output(output, curr_step_params["step_id"])
 
 
 def process_final_output_name(raw_final_output):

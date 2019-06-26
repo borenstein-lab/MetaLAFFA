@@ -206,6 +206,9 @@ def create_step_params(step_info):
         # Import the config submodule for this step
         step_module = importlib.import_module(".".join(["config", "steps", step_name]))
 
+        # Set the step ID
+        step_params[step_name]["step_id"] = step_module.step_prefix
+
         # Check for custom cluster resource requests and use defaults when not specified
         memory = cl.default_time
         if "memory" in step_module.cluster_params:
