@@ -36,6 +36,7 @@ def get_working_output_name(filename, step_id):
 
     working_output = unzipped_name(filename)
     if op.work_in_tmp_dir:
+        os.makedirs("/".join([fo.tmp_dir, step_id]))
         working_output = "/".join([fo.tmp_dir, step_id, os.path.basename(working_output)])
     return working_output
 
@@ -55,6 +56,7 @@ def process_output(filename, step_id):
         working_output = working_output + ".gz"
     if op.work_in_tmp_dir:
         subprocess.run(["mv", working_output, filename])
+        subprocess.run(["rm", "-rf", "/".join(fo.tmp_dir, step_id)])
 
 
 def is_zipped(filename):
