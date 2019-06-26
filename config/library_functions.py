@@ -306,7 +306,7 @@ def create_dummy_inputs(sample_list, step_info, step_params):
                 dummy_log_file.write(expected_input_file + os.linesep)
 
 
-def run_step(curr_step_params, inputs, outputs, wildcards):
+def run_step(curr_step_params, inputs, outputs, wildcards, process_files=True):
     """
     Runs standard and rule-specific operations
 
@@ -314,12 +314,34 @@ def run_step(curr_step_params, inputs, outputs, wildcards):
     :param inputs: The Snakemake inputs object
     :param outputs: The dictionary of output files
     :param wildcards: The Snakemake wildcards object
+    :param process_files: Flag indicating whether we should process the input and output files at either end of the pipeline step (e.g. automating the unzipping, operating in the temporary directory, etc.).
     :return: None
     """
 
     working_outputs = []
     for output in outputs:
-        working_outputs.append(get_working_output_name(output))
+        if process_files:
+            working_outputs.append(get_working_output_name(output))
+        else:
+            working_outputs.append(output)
     curr_step_params["rule_function"](inputs, working_outputs, wildcards)
     for output in outputs:
-        process_output(output)
+        if process_files:
+            process_output(output)
+
+
+def process_final_output_name(raw_final_output):
+    """
+    Determine where the file should be placed as a final output of the pipeline.
+
+    :param raw_final_output: Name of file to process.
+    :return: Processed final output location
+    """
+
+    # Get the name of the output file
+    final_output_file = os.path.basename(raw_final_output)
+
+    # Get the step prefix for the step that generated the final output file
+    step_prefix = re.match("^([^/]*/)", re.sub("^" + fo.summary_directory, "", re.sub("^" + fo.output_directory, "", raw_final_output))).group(1)
+
+    return(fo.final_output_directory + step_prefix + final_output_file)

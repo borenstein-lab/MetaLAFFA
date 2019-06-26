@@ -95,7 +95,7 @@ wildcard_restrictions = {
 Define restrictions on wildcard values for file name patterns
 """
 
-python = "python3"
+python = "/net/borenstein/vol1/PROGRAMS/conda3/bin/python"
 """
 The path to the python executable to use when running the pipeline
 """

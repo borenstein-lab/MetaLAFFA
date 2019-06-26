@@ -280,18 +280,11 @@ def create_step_params(step_info):
 
     # After all other processing, we can also now set the final processed output files
     for raw_final_output in step_params["raw_final_outputs"]:
-
-        # Get the name of the output file
-        final_output_file = os.path.basename(raw_final_output)
-
-        # Get the step prefix for the step that generated the final output file
-        step_prefix = re.match("^([^/]*/)", re.sub("^" + fo.summary_directory, "", re.sub("^" + fo.output_directory, "", raw_final_output))).group(1)
-
-        print(raw_final_output)
-        print(fo.final_output_directory + step_prefix + final_output_file)
-
-        step_params["final_outputs"].add(fo.final_output_directory + step_prefix + final_output_file)
-
+        step_params["final_outputs"].add(lf.process_final_output_name(raw_final_output))
+        
+        # Set the rule for the final output processing step
+        step_params["process_final_output"] = {}
+        step_params["process_final_output"]["rule_function"] = importlib.import_module(".".join(["config", "steps", "process_final_output"])).rule_function
     return step_params
 
 

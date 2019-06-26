@@ -1,6 +1,7 @@
 # snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
 
 import config.operation as op
+import config.cluster as cl
 from parameter_parsing import *
 from config.library_functions import *
 
@@ -293,7 +294,7 @@ rule gene_map_summary:
 
 rule gene_map_summary_combine:
     input:
-        expand(list(step_params["gene_map_summary_combine"]["input"](None).values()), sample=samples, type=types)
+        expand(list(step_params["gene_map_summary_combine"]["input"](None).values()), sample=samples)
     output:
         step_params["gene_map_summary_combine"]["output"]
     params:
@@ -329,7 +330,7 @@ rule ortholog_map_summary:
 
 rule ortholog_map_summary_combine:
     input:
-        expand(list(step_params["ortholog_map_summary_combine"]["input"](None).values()), sample=samples, type=types)
+        expand(list(step_params["ortholog_map_summary_combine"]["input"](None).values()), sample=samples)
     output:
         step_params["ortholog_map_summary_combine"]["output"]
     params:
@@ -341,7 +342,7 @@ rule ortholog_map_summary_combine:
 
 rule ortholog_map_combine:
     input:
-        expand(list(step_params["ortholog_map_combine"]["input"](None).values()), sample=samples, type=types)
+        expand(list(step_params["ortholog_map_combine"]["input"](None).values()), sample=samples)
     output:
         step_params["ortholog_map_combine"]["output"]
     params:
@@ -416,5 +417,7 @@ rule process_final_output:
         step_params["raw_final_outputs"]
     output:
         step_params["final_outputs"]
+    params:
+        cluster=cl.sge_cluster_param_string_generator(cl.default_memory, cl.default_time, cl.default_cores, cl.default_options)
     run:
-        run_step(step_params["process_final_output"], input, output, wildcards)
+        run_step(step_params["process_final_output"], input, output, wildcards, process_files=False)

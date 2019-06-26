@@ -61,7 +61,7 @@ def default(inputs, outputs, wildcards):
     :param wildcards: Wildcards determined from input file name patterns
     :return: None.
     """
-
+    print(list(inputs.plainstrings()))
     subprocess.run([op.python, "src/summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]])
 
 

@@ -41,7 +41,7 @@ Dictionary defining the pipeline step's parameters that control resource usage b
 
 operating_params = {
     "type": "default",  # ID for operation to perform
-    "method": "",  # Method to use for ortholog aggregation, options include: standard, empanada
+    "method": "standard",  # Method to use for ortholog aggregation, options include: standard
     "standard_method": "fractional"  # Standard aggregation method to use, options include: fractional, whole
 }
 """
@@ -70,6 +70,8 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.input):
 
         mapping = fo.ortholog_to_grouping_directory + wildcards.mapping
+
+
         if operating_params["method"] == "standard":
             subprocess.run([op.python, "src/ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--output", outputs[0]])
 

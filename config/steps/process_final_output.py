@@ -6,6 +6,9 @@ This configuration submodule contains parameters related to the summary combine 
 """
 
 import config.file_organization as fo
+import config.library_functions as lf
+import re
+import os
 import subprocess
 
 input_dic = {
@@ -55,8 +58,8 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    for final_output in inputs.input:
-        subprocess.run(["cp", final_output, fo.final_output_directory])
+    for final_output in list(inputs.plainstrings()):
+        subprocess.run(["cp", final_output, lf.process_final_output_name(final_output)])
 
 
 # Defining the wrapper function that chooses which defined operation to run
