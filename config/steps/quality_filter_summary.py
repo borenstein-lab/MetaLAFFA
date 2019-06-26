@@ -6,6 +6,7 @@ This configuration submodule contains parameters related to the quality filter s
 """
 
 import config.operation as op
+import config.library_functions as lf
 import subprocess
 
 input_dic = {
@@ -62,7 +63,10 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use_sample"])
+    if not lf.is_empty(inputs.input):
+        subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use_sample"])
+    else:
+        subprocess.run(["touch", outputs[0]])
 
 
 # Defining the wrapper function that chooses which defined operation to run

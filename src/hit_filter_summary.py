@@ -72,7 +72,7 @@ row_id = os.path.basename(args.blast_output)
 
 # If we are using the sample ID, replace that as the row ID
 if args.use_sample:
-    row_id = re.search("^([^.])\\.", os.path.basename(args.blast_output)).group(1)
+    row_id = re.search("^([^.]*)\\.", os.path.basename(args.blast_output)).group(1)
 
 # Print the mapping summary for this blast output file
 output.write("\t".join([row_id, str(matched_read_count), str(match_count), str(total_e_value/match_count)]) + os.linesep)

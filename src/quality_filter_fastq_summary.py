@@ -57,7 +57,7 @@ row_id = os.path.basename(args.fastq)
 
 # If we are using the sample ID, replace that as the row ID
 if args.use_sample:
-    row_id = re.search("^([^.])\\.", os.path.basename(args.fastq)).group(1)
+    row_id = re.search("^([^.]*)\\.", os.path.basename(args.fastq)).group(1)
 
 # Print the host filtering summary for this file
 output.write("\t".join([row_id, str(read_count), str(average_read_length), str(average_base_quality)]) + os.linesep)

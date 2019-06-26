@@ -1,6 +1,8 @@
 import pandas
+import pandas.errors
 import argparse
 import sys
+import os
 
 parser = argparse.ArgumentParser(description="Combines separate summary tables into a single summary table")
 parser.add_argument("summary_tables", nargs="+", help="The summary tables to combine")
@@ -15,7 +17,11 @@ if args.output:
 # Read the summary tables
 tables = []
 for table in args.summary_tables:
-    tables.append(pandas.read_csv(table, sep="\t", header=0))
+    try:
+        table = pandas.read_csv(table, sep="\t", header=0)
+        tables.append(table)
+    except pandas.errors.EmptyDataError:
+        sys.stderr.write("Skipping empty table: " + table + os.linesep)
 
 # Get the ID column name
 id_column = tables[0].columns[0]

@@ -6,6 +6,7 @@ This configuration submodule contains parameters related to the ortholog map sum
 """
 
 import config.operation as op
+import config.library_functions as lf
 import subprocess
 
 input_dic = {
@@ -57,7 +58,10 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    subprocess.run([op.python, "src/ortholog_map_summary.py", inputs.input, "--output", outputs[0]])
+    if not lf.is_empty(inputs.input):
+        subprocess.run([op.python, "src/ortholog_map_summary.py", inputs.input, "--output", outputs[0], "--use_sample"])
+    else:
+        subprocess.run(["touch", outputs[0]])
 
 
 # Defining the wrapper function that chooses which defined operation to run
