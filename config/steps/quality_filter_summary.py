@@ -63,7 +63,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    if not lf.is_empty(inputs.input):
+    if not lf.is_empty(inputs.pre_forward) or not lf.is_empty(inputs.pre_reverse) or not lf.is_empty(inputs.post_forward) or not lf.is_empty(inputs.post_reverse) or not lf.is_empty(inputs.new_singleton) or not lf.is_empty(inputs.old_singleton):
         subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use_sample"])
     else:
         subprocess.run(["touch", outputs[0]])
