@@ -58,7 +58,6 @@ def process_output(filename, step_id):
         working_output = working_output + ".gz"
     if op.work_in_tmp_dir:
         subprocess.run(["mv", working_output, filename])
-        subprocess.run(["rm", "-rf", "/".join([fo.tmp_dir, step_id])])
 
 
 def is_zipped(filename):
