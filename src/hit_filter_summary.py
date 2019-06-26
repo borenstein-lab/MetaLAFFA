@@ -7,7 +7,7 @@ from file_handling_lib import *
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Summarizes mapping from filtering blast output")
-parser.add_argument("blast_output", nargs="+", help="blast output for which to summarize mapping")
+parser.add_argument("blast_output", help="blast output for which to summarize mapping")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")
 parser.add_argument("--use_type", "-u", action="store_true", help="Should FASTQ type be associated with stats?")
 parser.add_argument("--use_sample", "-s", action="store_true", help="Should summary stats be associated with the sample ID instead of the blast file name?")
