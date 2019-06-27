@@ -31,7 +31,7 @@ if args.use_sample:
     id_name = "sample"
 
 # Print the column names for the quality filtering summary file
-output.write("\t".join([id_name, "post_quality_filtering_paired_reads", "post_quality_filtering_paired_average_read_length", "post_quality_filtering_paired_average_base_quality", "post_quality_filtering_singleton_reads", "post_quality_filtering_singleton_average_read_length", "post_quality_filtering_singleton_average_base_quality"]) + "\n")
+output.write("\t".join([id_name, "post_quality_filtering_forward_reads", "post_quality_filtering_forward_average_read_length", "post_quality_filtering_forward_average_base_quality", "post_quality_filtering_forward_based_singleton_reads", "post_quality_filtering_forward_based_singleton_average_read_length", "post_quality_filtering_forward_based_singleton_average_base_quality", "post_quality_filtering_reverse_reads", "post_quality_filtering_reverse_average_read_length", "post_quality_filtering_reverse_average_base_quality", "post_quality_filtering_reverse_based_singleton_reads", "post_quality_filtering_reverse_based_singleton_average_read_length", "post_quality_filtering_reverse_based_singleton_average_base_quality", "post_quality_filtering_singleton_reads", "post_quality_filtering_singleton_average_read_length", "post_quality_filtering_singleton_average_base_quality"]) + "\n")
 
 # Parse the new singleton file to get the read names of the new singletons
 new_singletons = set()
@@ -166,6 +166,4 @@ if args.use_sample:
     row_id = re.search("^([^.]*)\\.", os.path.basename(args.original_r1_fastq)).group(1)
 
 # Print the quality filtering summary for this sample
-output.write("\t".join([row_id, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + os.linesep)
-output.write("\t".join([os.path.basename(args.filtered_r2_fastq), str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality)]) + os.linesep)
-output.write("\t".join([os.path.basename(args.filtered_old_singleton_fastq), "N/A", "N/A", "N/A", str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + os.linesep)
+output.write("\t".join([row_id, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality), str(r2_read_count), str(r2_average_read_length), str(r2_average_base_quality), str(r2_new_singleton_read_count), str(r2_new_singleton_average_read_length), str(r2_new_singleton_average_base_quality), str(old_singleton_read_count), str(old_singleton_average_read_length), str(old_singleton_average_base_quality)]) + os.linesep)
