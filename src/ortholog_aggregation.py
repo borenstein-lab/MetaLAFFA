@@ -14,10 +14,16 @@ ortholog_profiles = pandas.read_csv(args.ortholog_profiles, sep="\t", header=0, 
 mapping_matrix = pandas.read_csv(args.ortholog_to_grouping, sep="\t", header=0, index_col=0)
 
 # Replace NAs with zeros
-ortholog_profiles.fillna(0)
+ortholog_profiles = ortholog_profiles.fillna(0)
 
-# Filter and sort the mapping matrix
-mapping_matrix = mapping_matrix.reindex(list(ortholog_profiles.index))
+# Filter down to orthologs that are both in the profiles and in the mapping matrix
+profile_orthologs = set(ortholog_profiles.index)
+mapping_orthologs = set(mapping_matrix.index)
+shared_orthologs = list(profile_orthologs.intersection(mapping_orthologs))
+
+# Filter and sort the matrices
+ortholog_profiles = ortholog_profiles.reindex(shared_orthologs)
+mapping_matrix = mapping_matrix.reindex(shared_orthologs)
 
 # If using the fractional summary method, we divide ortholog contributions to higher functional groups evenly among the higher groups each ortholog belongs to
 if args.summary_method == "fractional":
@@ -36,7 +42,6 @@ output_table = mapping_matrix.dot(ortholog_profiles)
 output_table = output_table[(output_table.T != 0).any()]
 
 # Print the output
-
 output_string = output_table.to_csv(args.output, sep="\t", header=True, index=True, index_label=args.grouping_name)
 
 # If no output file was specified, then we print the table to standard output

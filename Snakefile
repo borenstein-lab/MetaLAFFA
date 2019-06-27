@@ -148,7 +148,7 @@ rule quality_filter_summary:
 
 rule quality_filter_summary_combine:
     input:
-        expand(list(step_params["quality_filter_summary_combine"]["input"](None).values()), sample=samples, type=types)
+        expand(list(step_params["quality_filter_summary_combine"]["input"](None).values()), sample=samples)
     output:
         step_params["quality_filter_summary_combine"]["output"]
     params:
