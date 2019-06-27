@@ -10,8 +10,11 @@ parser.add_argument("--output", "-o", default=None, help="File to write output t
 args = parser.parse_args()
 
 # Read the ortholog profiles and mapping matrix
-ortholog_profiles = pandas.read_table(args.ortholog_profiles, sep="\t", header=0, index_col=0)
+ortholog_profiles = pandas.read_csv(args.ortholog_profiles, sep="\t", header=0, index_col=0)
 mapping_matrix = pandas.read_csv(args.ortholog_to_grouping, sep="\t", header=0, index_col=0)
+
+# Replace NAs with zeros
+ortholog_profiles.fillna(0)
 
 # Filter and sort the mapping matrix
 mapping_matrix = mapping_matrix.reindex(list(ortholog_profiles.index))

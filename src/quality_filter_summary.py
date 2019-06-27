@@ -159,11 +159,11 @@ if r2_new_singleton_read_count > 0:
 if r2_new_singleton_base_count > 0:
     r2_new_singleton_average_base_quality = float(r2_new_singleton_total_quality_score)/float(r2_new_singleton_base_count)
 
-row_id = os.path.basename(args.fastq)
+row_id = os.path.basename(args.original_r1_fastq)
 
 # If we are using the sample ID, replace that as the row ID
 if args.use_sample:
-    row_id = re.search("^([^.]*)\\.", os.path.basename(args.fastq)).group(1)
+    row_id = re.search("^([^.]*)\\.", os.path.basename(args.original_r1_fastq)).group(1)
 
 # Print the quality filtering summary for this sample
 output.write("\t".join([row_id, str(r1_read_count), str(r1_average_read_length), str(r1_average_base_quality), str(r1_new_singleton_read_count), str(r1_new_singleton_average_read_length), str(r1_new_singleton_average_base_quality)]) + os.linesep)

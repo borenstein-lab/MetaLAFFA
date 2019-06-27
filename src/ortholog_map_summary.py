@@ -44,11 +44,11 @@ line = f.readline()
 for line in f:
     ortholog_count += 1
 
-row_id = os.path.basename(args.gene_profile)
+row_id = os.path.basename(args.ortholog_profile)
 
 # If we are using the sample ID, replace that as the row ID
 if args.use_sample:
-    row_id = re.search("^([^.]*)\\.", os.path.basename(args.gene_profile)).group(1)
+    row_id = re.search("^([^.]*)\\.", os.path.basename(args.ortholog_profile)).group(1)
 
 # Print the KO counting summary for this file
 output.write("\t".join([row_id, str(ortholog_count)]) + os.linesep)

@@ -11,7 +11,7 @@ args = parser.parse_args()
 # Read the profiles
 profiles = pandas.read_csv(args.profiles, sep="\t", header=0, index_col=0)
 
-# Get the name of the functional groupo that was summarized to
+# Get the name of the functional group that was summarized to
 functional_group = profiles.index.name
 
 # Count the number of non-zeros in each column (number of the higher groupings found in each sample)
