@@ -1,12 +1,8 @@
-#!/net/borenstein/vol1/PROGRAMS/python2/bin/python
-# Author: AlexE
-# Date: 12/15/2014
+import argparse
 
 NAME_FIELD = 0
 FLAG_FIELD = 1
 DUP_FLAG = -11
-
-import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("samview", help="The samview of a SAM or BAM file with marked duplicate reads.", metavar="Samview")
@@ -23,9 +19,9 @@ while line != "":
     if len(flag) >= 13:
         if flag[DUP_FLAG] == "1":
             if args.suffix:
-                print fields[NAME_FIELD] + args.suffix
+                print(fields[NAME_FIELD] + args.suffix)
             else:
-                print fields[NAME_FIELD]
+                print(fields[NAME_FIELD])
 
     # Skip the next line, which is the paired read, and move to the next read
     line = f.readline()

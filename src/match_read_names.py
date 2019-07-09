@@ -1,9 +1,6 @@
-#!/net/borenstein/vol1/PROGRAMS/python2/bin/python
-# Author: AlexE
-# Date: 12/5/2014
-
-import argparse, re, sys, gzip
-from file_handling import *
+import argparse
+import sys
+from file_handling_lib import *
 
 NUM_LINES = 4
 
@@ -21,9 +18,9 @@ line2 = f2.readline()
 count = 0
 while line1 != "" and line2 != "":
     if count == 0 or count == 2:
-        print line1.strip()
+        print(line1.strip())
     else:
-        print line2.strip()
+        print(line2.strip())
     count += 1
     count = count % 4
     line1 = f1.readline()
