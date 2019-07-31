@@ -19,7 +19,7 @@ cores = cluster_params["cores"]
 wd = cluster_params["wd"]
 reserve = cluster_params["reserve"]
 
-submission_command = ["qsub"]
+submission_command = ["qsub", args.job_script]
 
 # If multiple cores are requested, then we need to request memory per CPU, not total memory
 if cores > 1:
