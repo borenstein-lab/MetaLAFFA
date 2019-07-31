@@ -210,20 +210,11 @@ def create_step_params(step_info):
         step_params[step_name]["step_id"] = step_module.step_prefix
 
         # Check for custom cluster resource requests and use defaults when not specified
-        memory = cl.default_time
-        if "memory" in step_module.cluster_params:
-            memory = step_module.cluster_params["memory"]
-        time = cl.default_time
-        if "time" in step_module.cluster_params:
-            time = step_module.cluster_params["time"]
-        options = cl.default_options
-        if "options" in step_module.cluster_params:
-            options = step_module.cluster_params["options"]
-        cores = cl.default_cores
-        if "cores" in step_module.cluster_params:
-            cores = step_module.cluster_params["cores"]
-            step_params[step_name]["threads"] = step_module.cluster_params["cores"] * op.cpu_to_thread_multiplier
-        step_params[step_name]["cluster_params"] = cl.sge_cluster_param_string_generator(memory, time, cores, options)
+        cluster_params = cl.default_cluster_params
+        for key in step_module.cluster_params:
+            cluster_params[key] = step_module.cluster_params[key]
+        step_params[step_name]["cluster_params"] = cluster_params
+        step_params[step_name]["threads"] = cluster_params["cores"] * op.cpu_to_thread_multiplier
 
         # Assign the prefix components to this step
         assign_step_prefix_components(step_name, step_info, step_params)

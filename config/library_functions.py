@@ -349,4 +349,4 @@ def process_final_output_name(raw_final_output):
     # Get the step prefix for the step that generated the final output file
     step_prefix = re.match("^([^/]*/)", re.sub("^" + fo.summary_directory, "", re.sub("^" + fo.output_directory, "", raw_final_output))).group(1)
 
-    return(fo.final_output_directory + step_prefix + final_output_file)
+    return fo.final_output_directory + step_prefix + final_output_file
