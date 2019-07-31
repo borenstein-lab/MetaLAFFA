@@ -1,5 +1,4 @@
 import argparse
-import sys
 import os
 import subprocess
 import config.file_organization as fo
