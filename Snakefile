@@ -418,6 +418,6 @@ rule process_final_output:
     output:
         step_params["final_outputs"]
     params:
-        cluster=cl.sge_cluster_param_string_generator(cl.default_memory, cl.default_time, cl.default_cores, cl.default_options)
+        cluster=cl.default_cluster_params
     run:
         run_step(step_params["process_final_output"], input, output, wildcards, process_files=False)
