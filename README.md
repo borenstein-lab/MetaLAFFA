@@ -33,8 +33,8 @@ Complete pipeline setup by running the setup.py script:
 
 ``` bash
 # Perform pipeline setup.
-cd Functional_Annotation_Pipeline
-python setup.py
+cd metaLAFFA
+python3 setup.py
 ```
 
 Note that it can take a few hours to install all third-party tools and download and process all default databases, and takes ~10G of RAM.
@@ -162,7 +162,7 @@ By the default, metaLAFFA is built to use several third-party tools and a couple
 
 ``` bash
 # Perform pipeline setup.
-cd Functional_Annotation_Pipeline
+cd metaLAFFA
 python3 setup.py
 ```
 

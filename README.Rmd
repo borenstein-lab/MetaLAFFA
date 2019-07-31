@@ -35,8 +35,8 @@ Complete pipeline setup by running the setup.py script:
 
 ```{bash, eval = F}
 # Perform pipeline setup.
-cd Functional_Annotation_Pipeline
-python setup.py
+cd metaLAFFA
+python3 setup.py
 ```
 
 Note that it can take a few hours to install all third-party tools and
@@ -334,7 +334,7 @@ metaLAFFA scripts to work):
 
 ```{bash, eval = F}
 # Perform pipeline setup.
-cd Functional_Annotation_Pipeline
+cd metaLAFFA
 python3 setup.py
 ```
 
