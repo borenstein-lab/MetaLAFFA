@@ -32,7 +32,7 @@ elif memory_units == "G":
 submission_file_path = fo.submission_file_directory + os.path.basename(args.job_script)
 with open(submission_file_path, "w") as submission_file:
     submission_file.write("Executable = %s\n" % args.job_script)
-    submission_file.write("Request_CPUs = %d\n" % cores)
+    # submission_file.write("Request_CPUs = %d\n" % cores)
     submission_file.write("Image_Size = %d\n" % memory_int)
     submission_file.write("Queue\n")
 
