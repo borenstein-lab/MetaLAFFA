@@ -51,7 +51,7 @@ if not args.no_blast:
         subprocess.run(["tar", "-zxf", "ncbi-blast-2.2.31+-src.tar.gz"], cwd=fo.source_directory)
 
     if not os.path.isdir(config.steps.host_filter.resource_params["blastn_dir"]):
-        subprocess.run(["./configure --without-boost"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/")
+        subprocess.run(["./configure", "--without-boost"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/")
         subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/build/")
 
 
