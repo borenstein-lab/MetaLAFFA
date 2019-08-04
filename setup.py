@@ -106,7 +106,7 @@ if not args.no_diamond:
         subprocess.run(["tar", "-zxf", "v0.9.22.tar.gz"], cwd=fo.source_directory)
 
     if not os.path.isfile(config.steps.map_reads_to_genes.resource_params["diamond"]):
-        subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/")
+        subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/")
         subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/")
 
 if not args.no_uniprot:

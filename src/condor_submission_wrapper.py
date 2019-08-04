@@ -2,7 +2,6 @@ import argparse
 import os
 import re
 import subprocess
-import config.file_organization as fo
 from snakemake.utils import read_job_properties
 
 # Parse command line arguments
@@ -13,10 +12,11 @@ args = parser.parse_args()
 job_properties = read_job_properties(args.job_script)
 
 # Create a directory to put Condor submission files if one does not already exist
-if not os.path.isdir(fo.submission_file_directory):
-    os.makedirs(fo.submission_file_directory)
+submission_dir = "submission_files/"
+if not os.path.isdir(submission_dir):
+    os.makedirs(submission_dir)
 
-cluster_params = job_properties["params"]
+cluster_params = job_properties["params"]["cluster"]
 memory = cluster_params["memory"]
 cores = cluster_params["cores"]
 
@@ -28,11 +28,12 @@ if memory_units == "M":
 elif memory_units == "G":
     memory_int *= 10 ** 6
 
-# Create a Condor submission file and submit the job to the cluster
-submission_file_path = fo.submission_file_directory + os.path.basename(args.job_script)
+# Create a Condor submission file and submit the job to the cluster)
+submission_file_path = submission_dir + os.path.basename(args.job_script)
 with open(submission_file_path, "w") as submission_file:
     submission_file.write("Executable = %s\n" % args.job_script)
     # submission_file.write("Request_CPUs = %d\n" % cores)
+    submission_file.write("Request_Memory = %dK\n" % memory_int)
     submission_file.write("Image_Size = %d\n" % memory_int)
     submission_file.write("Queue\n")
 
