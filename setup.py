@@ -21,26 +21,10 @@ parser.add_argument("--uniprot", "-u", action="store_true", help="If used, downl
 
 args = parser.parse_args()
 
-# Create any directories required for setup steps
-if not args.no_blast or not args.no_bmtagger or not args.no_markduplicates or not args.no_trimmomatic or not args.no_diamond:
-    if not os.path.isdir(fo.source_directory):
-        os.makedirs(fo.source_directory)
-
-if not args.no_human_reference or args.uniprot:
-    if not os.path.isdir(fo.database_directory):
-        os.makedirs(fo.database_directory)
-
-if not args.no_human_reference:
-    if not os.path.isdir(fo.bitmask_directory):
-        os.makedirs(fo.bitmask_directory)
-    if not os.path.isdir(fo.srprism_directory):
-        os.makedirs(fo.srprism_directory)
-
-if args.uniprot:
-    if not os.path.isdir(fo.gene_normalization_directory):
-        os.makedirs(fo.gene_normalization_directory)
-    if not os.path.isdir(fo.gene_to_ortholog_directory):
-        os.makedirs(fo.gene_to_ortholog_directory)
+# Create any missing directories
+for required_directory in fo.required_directories:
+    if not os.path.isdir(required_directory):
+        os.makedirs(required_directory)
 
 if not args.no_snakemake:
     subprocess.run(["pip3", "install", "--user", "snakemake"])
