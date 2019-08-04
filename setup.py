@@ -16,8 +16,8 @@ parser.add_argument("--no_human_reference", "-nh", action="store_true", help="If
 parser.add_argument("--no_markduplicates", "-nma", action="store_true", help="If used, do not download PICARD and samtools and install them in the pipeline directory for duplicate filtering.")
 parser.add_argument("--no_trimmomatic", "-nt", action="store_true", help="If used, do not download Trimmomatic and install it in the pipeline directory for quality filtering.")
 parser.add_argument("--no_diamond", "-nd", action="store_true", help="If used, do not download DIAMOND and install it in the pipeline directory for read mapping.")
-parser.add_argument("--no_uniprot", "-nu", action="store_true", help="If used, do not download the default UNIPROT gene sequence reference database for read mapping.")
 parser.add_argument("--no_musicc", "-nmu", action="store_true", help="If used, do not install MUSiCC via pip for ortholog abundance correction.")
+parser.add_argument("--uniprot", "-u", action="store_true", help="If used, download the default UNIPROT gene sequence reference database for read mapping.")
 
 args = parser.parse_args()
 
@@ -26,7 +26,7 @@ if not args.no_blast or not args.no_bmtagger or not args.no_markduplicates or no
     if not os.path.isdir(fo.source_directory):
         os.makedirs(fo.source_directory)
 
-if not args.no_human_reference or not args.no_uniprot:
+if not args.no_human_reference or args.uniprot:
     if not os.path.isdir(fo.database_directory):
         os.makedirs(fo.database_directory)
 
@@ -36,7 +36,7 @@ if not args.no_human_reference:
     if not os.path.isdir(fo.srprism_directory):
         os.makedirs(fo.srprism_directory)
 
-if not args.no_uniprot:
+if args.uniprot:
     if not os.path.isdir(fo.gene_normalization_directory):
         os.makedirs(fo.gene_normalization_directory)
     if not os.path.isdir(fo.gene_to_ortholog_directory):
@@ -109,7 +109,7 @@ if not args.no_diamond:
         subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/")
         subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/")
 
-if not args.no_uniprot:
+if args.uniprot:
     if not os.path.isfile(fo.database_directory + "uniref90.fasta.gz"):
         subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz", "-P", fo.database_directory])
 
@@ -126,4 +126,4 @@ if not args.no_uniprot:
         subprocess.run([op.python, fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", "UniRef90", "KO", "--output", fo.gene_to_ortholog_directory + "uniref_to_ko"])
 
 if not args.no_musicc:
-    subprocess.run(["pip", "install", "--user", "numpy", "scipy", "scikit-learn==0.17.1", "pandas", "musicc"])
+    subprocess.run(["pip", "install", "--user", "numpy", "scipy", "scikit-learn", "pandas", "musicc"])
