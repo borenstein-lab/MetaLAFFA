@@ -1,4 +1,6 @@
-# snakemake -p -c "qsub {params.cluster}" -j 50 --latency-wait 60
+# To run the pipeline on a cluster, run the below command after providing the appropriate job submission wrapper, how many jobs to send to the queue at a time (here 50), and how long to wait before checking for the existence of an output file (here 60 seconds, increase for shared filesystems with higher latency). You will likely want to run this command in a screen that you can detach so that you don't have to keep the same terminal session open the entire time the pipeline is running.
+#
+# snakemake -c "python3 src/<appropriate_submission_wrapper>.py" -j 50 --latency-wait 60
 
 import config.operation as op
 import config.cluster as cl

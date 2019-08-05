@@ -20,6 +20,10 @@ cluster_params = job_properties["params"]["cluster"]
 memory = cluster_params["memory"]
 cores = cluster_params["cores"]
 
+#############################################
+# EDIT BELOW HERE FOR CLUSTER CUSTOMIZATION #
+#############################################
+
 # Fix memory requirement to be in KB for Image_Size request
 memory_int = int(re.match("([0-9]*)[^0-9]", memory).group(1))
 memory_units = re.match("[0-9]*([^0-9]*)$", memory).group(1)
@@ -33,7 +37,6 @@ submission_file_path = submission_dir + os.path.basename(args.job_script)
 with open(submission_file_path, "w") as submission_file:
     submission_file.write("Executable = %s\n" % args.job_script)
     # submission_file.write("Request_CPUs = %d\n" % cores)
-    submission_file.write("Request_Memory = %dK\n" % memory_int)
     submission_file.write("Image_Size = %d\n" % memory_int)
     submission_file.write("Queue\n")
 
