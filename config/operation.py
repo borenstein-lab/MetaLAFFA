@@ -5,6 +5,8 @@ Pipeline operation parameters
 This configuration submodule contains parameters related to user operation of the pipeline.
 """
 
+import config.file_organization as fo
+
 pipeline_step_list = "pipeline_steps.txt"
 """
 The file listing which pipeline steps to run and defining how the inputs and outputs of different steps are linked. Each line of the file should consist of the name of a pipeline step (the name of a snakemake rule), followed by a colon and then an ordered comma-separated list of pipeline steps that are the input to the given step. Input steps should be ordered based on their usage in the step they feed into. For example:
@@ -77,19 +79,24 @@ target_database = "uniref90"
 The name of the target database to map reads to for gene identification 
 """
 
-gene_to_ortholog = "uniref_to_ko"
+target_ortholog = "ko"
 """
-The file that maps genes to orthologs
+The name of the target ortholog to map genes to for functional annotation
 """
 
-ortholog_to_grouping = ["brite_ko_to_prokaryotic_module", "brite_ko_to_prokaryotic_pathway"]
+gene_to_ortholog_mapping = target_database + "_to_" + target_ortholog
+"""
+The mapping to use for linking genes to orthologs
+"""
+
+ortholog_to_grouping_mappings = ["KOvsMODULE_BACTERIAL_KEGG_2013_07_15", "KOvsPATHWAY_BACTERIAL_KEGG_2013_07_15"]
 """
 List of ortholog-to-grouping mapping files for aggregating ortholog abundances into functional groups 
 """
 
 wildcard_restrictions = {
     "type": list(fastq_types.values()),
-    "mapping": ortholog_to_grouping
+    "mapping": ortholog_to_grouping_mappings
 }
 """
 Define restrictions on wildcard values for file name patterns
@@ -103,4 +110,74 @@ The path to the python executable to use when running the pipeline
 java = "java"
 """
 The path to the java executable to use when running the pipeline
+"""
+
+bitmask_suffix = ".bitmask"
+"""
+Suffix for a bitmask file
+"""
+
+blast_db_suffix = ".nsq"
+"""
+Suffix for a BLAST database sequence file
+"""
+
+srprism_suffix = ".srprism"
+"""
+Suffix for an srprism index file
+"""
+
+diamond_db_suffix = ".dmnd"
+"""
+Suffix for a DIAMOND database
+"""
+
+gene_normalization_suffix = ".norm"
+"""
+Suffix for a gene count normalization file
+"""
+
+gene_to_ortholog_suffix = ".map"
+"""
+Suffix for a gene-to-ortholog mapping file
+"""
+
+ortholog_to_grouping_suffix = ".map"
+"""
+Suffix for an ortholog-to-grouping mapping file
+"""
+
+host_bitmask_file = fo.bitmask_directory + host_database + bitmask_suffix
+"""
+The path to the bitmask file for host filtering
+"""
+
+host_database_file = fo.database_directory + host_database
+"""
+The path to the database for host filtering
+"""
+
+host_index_file = fo.index_directory + host_database + srprism_suffix
+"""
+The path to the index file for host filtering
+"""
+
+target_database_file = fo.database_directory + target_database + diamond_db_suffix
+"""
+The path to the database for mapping reads to gene counts
+"""
+
+gene_normalization_file = fo.gene_normalization_directory + target_database + gene_normalization_suffix
+"""
+The path to the gene normalization file for normalization mapped gene counts
+"""
+
+gene_to_ortholog_file = fo.gene_to_ortholog_directory + gene_to_ortholog_mapping + gene_to_ortholog_suffix
+"""
+The path to the gene-to-ortholog mapping file for mapping gene counts to ortholog counts
+"""
+
+ortholog_to_grouping_files = [fo.ortholog_to_grouping_directory + mapping + ortholog_to_grouping_suffix for mapping in ortholog_to_grouping_mappings]
+"""
+The paths to the ortholog-to-grouping mapping files for mapping ortholog counts to higher functional grouping counts
 """
