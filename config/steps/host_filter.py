@@ -43,7 +43,7 @@ cluster_params = {
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {
+required_programs = {
     "bmtool": fo.source_directory + "bmtools/bmtagger/bmtool",  # Path to bmtools program
     "bmfilter": fo.source_directory + "bmtools/bmtagger/bmfilter",  # Path to bmfilter program
     "bmtagger": fo.source_directory + "bmtools/bmtagger/bmtagger.sh",  # Path to bmtagger program
@@ -52,7 +52,12 @@ resource_params = {
     "blastn_dir": fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/bin/"  # Path to directory containing the blastn program
 }
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {
@@ -82,15 +87,15 @@ def default(inputs, outputs, wildcards):
 
     # Set environment variables for bmtagger
     running_env = os.environ.copy()
-    running_env["BMFILTER"] = resource_params["bmfilter"]
-    running_env["EXTRACT_FA"] = resource_params["extract_fa"]
-    running_env["SRPRISM"] = resource_params["srprism"]
-    running_env["PATH"] += resource_params["blastn_dir"]
+    running_env["BMFILTER"] = required_programs["bmfilter"]
+    running_env["EXTRACT_FA"] = required_programs["extract_fa"]
+    running_env["SRPRISM"] = required_programs["srprism"]
+    running_env["PATH"] += required_programs["blastn_dir"]
 
     # Set locations of reference files
-    bitmask = fo.bitmask_directory + op.host_database + ".bitmask"
-    host_database = fo.database_directory + op.host_database
-    srprism_index = fo.srprism_directory + op.host_database + ".srprism"
+    bitmask = op.host_bitmask_file
+    host_database = op.host_database_file
+    srprism_index = op.host_index_file
 
     # If either of the paired read files are non-empty, filter them for host reads
     if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):
@@ -110,7 +115,7 @@ def default(inputs, outputs, wildcards):
             forward_input = inputs.forward + "unzipped"
 
         # Run bmtagger on the paired (and read ID-matched) read files to mark reads
-        subprocess.run([resource_params["bmtagger"], "-q1", "-1", forward_input, "-2", inputs.reverse + ".matched", "-o", outputs[3], "-b", bitmask, "-d", host_database, "-x", srprism_index], env=running_env)
+        subprocess.run([required_programs["bmtagger"], "-q1", "-1", forward_input, "-2", inputs.reverse + ".matched", "-o", outputs[3], "-b", bitmask, "-d", host_database, "-x", srprism_index], env=running_env)
 
         # Remove the temporary matched read ID file
         subprocess.run(["rm", matched_input])
@@ -143,7 +148,7 @@ def default(inputs, outputs, wildcards):
             singleton_input = inputs.singleton + "unzipped"
 
         # Run bmtagger on the singleton read file to mark reads
-        subprocess.run([resource_params["bmtagger"], "-q1", "-1", singleton_input, "-o", outputs[4], "-b", bitmask, "-d", host_database, "-x", srprism_index], env=running_env)
+        subprocess.run([required_programs["bmtagger"], "-q1", "-1", singleton_input, "-o", outputs[4], "-b", bitmask, "-d", host_database, "-x", srprism_index], env=running_env)
 
         # Remove the temporary unzipped forward read file if it exists
         if tmp_unzipped_exists:

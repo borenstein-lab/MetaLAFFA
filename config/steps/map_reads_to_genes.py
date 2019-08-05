@@ -37,13 +37,19 @@ cluster_params = {
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {
-    "diamond": "src/diamond-0.9.22/diamond",  # Location of the DIAMOND program
-    "block_size": 36,  # Block size to use in DIAMOND
-    "index_chunks": 1  # Index chunks for DIAMOND
+required_programs = {
+    "diamond": fo.source_directory + "diamond-0.9.22/diamond",  # Location of the DIAMOND program
 }
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {
+    "block_size": 36,  # Block size to use in DIAMOND
+    "index_chunks": 1  # Index chunks for DIAMOND}
+}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {
@@ -76,12 +82,12 @@ def default(inputs, outputs, wildcards):
     """
 
     # Set locations of reference files
-    target_database = fo.database_directory + op.target_database + ".dmnd"
+    target_database = op.target_database_file
 
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):
 
-        command = [resource_params["diamond"], operating_params["method"], "--block-size", str(resource_params["block_size"]), "--index-chunks", str(resource_params["index_chunks"]), "--threads", str(cluster_params["cores"] * 2), "--db", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"])]
+        command = [required_programs["diamond"], operating_params["method"], "--block-size", str(non_essential_params["block_size"]), "--index-chunks", str(non_essential_params["index_chunks"]), "--threads", str(cluster_params["cores"] * 2), "--db", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"])]
         if operating_params["sensitivity"] != "":
             command += operating_params["sensitivity"]
         subprocess.run(command)

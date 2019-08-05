@@ -30,15 +30,20 @@ List defining the pipeline step's output structure.
 """
 
 cluster_params = {
-    "options": "-cwd -R y -l disk_free=250G"  # Because combining read mapping output is not RAM intensive, but still generates large output before compression, reserve disk space in the job request so that we limit the number of hit filtering jobs based on available disk space
+    "disk": "250G"
 }
 """
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {}
+required_programs = {}
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {

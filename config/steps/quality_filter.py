@@ -6,6 +6,7 @@ This configuration submodule contains parameters related to the quality filter p
 """
 
 import config.operation as op
+import config.file_organization as fo
 import config.library_functions as lf
 import subprocess
 
@@ -41,9 +42,17 @@ cluster_params = {
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {
-    "trimmer": "src/Trimmomatic-0.39/trimmomatic-0.39.jar",  # Location of the quality trimming and filtering program
+required_programs = {
+    "trimmer": fo.source_directory + "Trimmomatic-0.39/trimmomatic-0.39.jar",  # Location of the quality trimming and filtering program
 }
+"""
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
+"""
 
 operating_params = {
     "type": "default",  # ID for operation to perform
@@ -82,7 +91,7 @@ def default(inputs, outputs, wildcards):
         new_reverse_singletons = outputs[3] + ".reverse_singletons.fastq"
 
         # Perform paired-end quality filtering and trimming
-        subprocess.run([op.java, "-jar", resource_params["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters)
+        subprocess.run([op.java, "-jar", required_programs["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters)
 
         # Merge new singletons into single new singleton file
         with open(outputs[3], "w") as output_file:
@@ -101,7 +110,7 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.singleton):
 
         # Perform single-end quality filtering and trimming
-        subprocess.run([op.java, "-jar", resource_params["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters)
+        subprocess.run([op.java, "-jar", required_programs["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters)
 
         # If we quality filtered the paired-end reads, add singletons to combined singleton output file
         if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):

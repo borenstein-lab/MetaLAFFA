@@ -7,6 +7,7 @@ This configuration submodule contains parameters related to the duplicate filter
 
 import config.operation as op
 import config.library_functions as lf
+import config.file_organization as fo
 import subprocess
 
 input_dic = {
@@ -43,16 +44,22 @@ cluster_params = {
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {
-    "picard": "src/picard.jar",  # Path to java jar for PICARD tools
+required_programs = {
+    "picard": fo.source_directory + "picard.jar",  # Path to java jar for PICARD tools
+    "samtools": fo.source_directory + "samtools-1.9/samtools"  # Path to samtools program
+}
+"""
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {
     "mark_duplicates": "MarkDuplicates",  # PICARD tool for marking duplicates
     "fastq_to_sam": "FastqToSam",  # PICARD tool for converting FASTQ files to SAM format
-    "samtools": "src/samtools-1.9/samtools",  # Path to samtools program
     "quality_format": "Standard",  # SAM file quality format
     "sort_order": "coordinate"  # SAM file sort order
 }
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {
@@ -85,17 +92,17 @@ def default(inputs, outputs, wildcards):
 
         # Convert the paired read files to SAM format
         paired_sam = inputs.forward + ".paired.sam"
-        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["fastq_to_sam"], "F1=%s" % inputs.forward, "F2=%s" % inputs.reverse, "O=%s" % paired_sam, "V=%s" % resource_params["quality_format"], "SO=%s" % resource_params["sort_order"], "SM=%s" % wildcards.sample])
+        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["fastq_to_sam"], "F1=%s" % inputs.forward, "F2=%s" % inputs.reverse, "O=%s" % paired_sam, "V=%s" % non_essential_params["quality_format"], "SO=%s" % non_essential_params["sort_order"], "SM=%s" % wildcards.sample])
 
         # Mark duplicates
         marked_output = inputs.forward + ".marked.sam"
-        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["mark_duplicates"], "I=%s" % paired_sam, "O=%s" % marked_output, "M=%s" % outputs[5]])
+        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["mark_duplicates"], "I=%s" % paired_sam, "O=%s" % marked_output, "M=%s" % outputs[5]])
         subprocess.run(["rm", paired_sam])
 
         # Convert the marked output to a parse-able format
         formatted_marked_output = inputs.forward + ".samview"
         with open(formatted_marked_output, "w") as formatted_marked_output_file:
-            subprocess.run([resource_params["samtools"], "view", marked_output], stdout=formatted_marked_output_file)
+            subprocess.run([required_programs["samtools"], "view", marked_output], stdout=formatted_marked_output_file)
         subprocess.run(["rm", marked_output])
 
         # Extract duplicate reads from the formatted marked output
@@ -118,17 +125,17 @@ def default(inputs, outputs, wildcards):
 
         # Convert the singleton read file to SAM format
         singleton_sam = inputs.forward + ".singleton.sam"
-        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["fastq_to_sam"], "F1=%s" % inputs.forward, "O=%s" % singleton_sam, "V=%s" % resource_params["quality_format"], "SO=%s" % resource_params["sort_order"], "SM=%s" % wildcards.sample])
+        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["fastq_to_sam"], "F1=%s" % inputs.forward, "O=%s" % singleton_sam, "V=%s" % non_essential_params["quality_format"], "SO=%s" % non_essential_params["sort_order"], "SM=%s" % wildcards.sample])
 
         # Mark duplicates
         marked_output = inputs.singleton + ".marked.sam"
-        subprocess.run([op.java, "-jar", resource_params["picard"], resource_params["mark_duplicates"], "I=%s" % singleton_sam, "O=%s" % marked_output, "M=%s" % outputs[6]])
+        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["mark_duplicates"], "I=%s" % singleton_sam, "O=%s" % marked_output, "M=%s" % outputs[6]])
         subprocess.run(["rm", singleton_sam])
 
         # Convert the marked output to a parse-able format
         formatted_marked_output = inputs.singleton + ".samview"
         with open(formatted_marked_output, "w") as formatted_marked_output_file:
-            subprocess.run([resource_params["samtools"], "view", marked_output], stdout=formatted_marked_output_file)
+            subprocess.run([required_programs["samtools"], "view", marked_output], stdout=formatted_marked_output_file)
         subprocess.run(["rm", marked_output])
 
         # Extract duplicate reads from the formatted marked output

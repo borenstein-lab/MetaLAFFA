@@ -34,9 +34,14 @@ cluster_params = {}
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {}
+required_programs = {}
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {
@@ -69,7 +74,7 @@ def default(inputs, outputs, wildcards):
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):
 
-        mapping = fo.ortholog_to_grouping_directory + wildcards.mapping
+        mapping = fo.ortholog_to_grouping_directory + wildcards.mapping + op.ortholog_to_grouping_suffix
 
         if operating_params["method"] == "standard":
             subprocess.run([op.python, "src/ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--grouping_name", wildcards.mapping, "--output", outputs[0]])

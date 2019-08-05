@@ -36,9 +36,14 @@ cluster_params = {
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {}
+required_programs = {}
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {
@@ -68,7 +73,7 @@ def default(inputs, outputs, wildcards):
     """
 
     # Set locations of reference files if necessary
-    gene_to_ortholog = fo.gene_to_ortholog_directory + op.gene_to_ortholog
+    gene_to_ortholog = op.gene_to_ortholog_file
 
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):

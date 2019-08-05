@@ -32,6 +32,16 @@ cluster_params = {}
 Dictionary defining the pipeline step's cluster parameters
 """
 
+required_programs = {}
+"""
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
+"""
+
 operating_params = {
     "type": "default"  # ID for operation to perform
 }

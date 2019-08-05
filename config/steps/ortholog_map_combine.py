@@ -32,9 +32,14 @@ cluster_params = {}
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {}
+required_programs = {}
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {

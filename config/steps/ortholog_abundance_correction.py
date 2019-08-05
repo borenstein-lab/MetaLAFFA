@@ -6,6 +6,7 @@ This configuration submodule contains parameters related to the ortholog abundan
 """
 
 import config.library_functions as lf
+import config.operation as op
 import subprocess
 
 input_dic = {
@@ -32,11 +33,16 @@ cluster_params = {}
 Dictionary defining the pipeline step's cluster parameters
 """
 
-resource_params = {
+required_programs = {
     "musicc": "run_musicc.py"  # Location of the MUSiCC program
 }
 """
-Dictionary defining the pipeline step's parameters that control resource usage but do not affect the output
+Dictionary defining the paths to programs used by this pipeline step
+"""
+
+non_essential_params = {}
+"""
+Dictionary defining the pipeline step's parameters that don't affect the output
 """
 
 operating_params = {
@@ -70,7 +76,10 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.input):
 
         if operating_params["method"] == "musicc":
-            subprocess.run([resource_params["musicc"], inputs.input, "-o", outputs[0], operating_params["musicc_method"]])
+            subprocess.run([required_programs["musicc"], inputs.input, "-o", outputs[0], operating_params["musicc_method"]])
+
+        elif operating_params["method"] == "relative":
+            subprocess.run([op.python, "src/ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]])
 
         # Otherwise, if the method is unrecognized, just copy the input file to the output
         else:
