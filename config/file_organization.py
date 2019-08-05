@@ -30,7 +30,7 @@ database_directory = "databases/"
 Directory containing databases to map reads to
 """
 
-srprism_directory = "indices/"
+index_directory = "indices/"
 """
 Directory containing indices for srprism
 """
@@ -87,7 +87,7 @@ The character to use when separating steps in the pipeline in filenames, which a
 if nested_subdirectories:
     provenance_separator = "/"
 
-required_directories = [initial_data_directory, output_directory, benchmark_dir, bitmask_directory, database_directory, srprism_directory, gene_normalization_directory, gene_to_ortholog_directory, ortholog_to_grouping_directory, log_directory, summary_directory, final_output_directory, source_directory]
+required_directories = [initial_data_directory, output_directory, benchmark_dir, bitmask_directory, database_directory, index_directory, gene_normalization_directory, gene_to_ortholog_directory, ortholog_to_grouping_directory, log_directory, summary_directory, final_output_directory, source_directory]
 """
 List of directories that must exist for proper pipeline operation, these directories should be created during pipeline setup if they do not already exist.
 """
