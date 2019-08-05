@@ -39,14 +39,13 @@ gene_map_summary:gene_map
 ortholog_map:gene_map
 ortholog_map_summary:ortholog_map
 *ortholog_map_summary_combine:ortholog_map_summary
-$ortholog_map_combine:ortholog_map
+ortholog_map_combine:ortholog_map
 
 # Correct ortholog counts
-ortholog_abundance_correction:ortholog_map_combine
+$ortholog_abundance_correction:ortholog_map_combine
 
 # Aggregate ortholog abundances into higher-level functional categorizations
-# $ortholog_aggregation:ortholog_abundance_correction
-$ortholog_aggregation:ortholog_map_combine
+$ortholog_aggregation:ortholog_abundance_correction
 ortholog_aggregation_summary:ortholog_aggregation
 *ortholog_aggregation_summary_combine:ortholog_aggregation_summary
 
