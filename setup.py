@@ -152,8 +152,50 @@ if not args.no_musicc and pip_installed:
         install_error = True
         install_results["musicc"]["error"] = True
 
-# Try to create and process default databases
-if not args.no_human_reference:
+# Report any installation errors
+if install_error:
+    for key in install_results.keys():
+        if install_results[key]["error"]:
+            sys.stderr.write("%s failed to install properly. See %s and %s in the %s directory for installation details.\n" % (key, install_results[key]["stdout"], install_results[key]["stderr"], fo.source_directory))
+            if len(installed_tool_dependencies[key]) > 0:
+                sys.stderr.write("The following were not generated because %s is required for their generation: %s\n" % (key, ", ".join(installed_tool_dependencies[key])))
+            sys.stderr.write("\n")
+
+# Report any tools that are missing
+all_missing_programs = set()
+if subprocess.run(["which", op.python], capture_output=True).returncode != 0:
+    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Python scripts. Please either install Python or change the 'python' variable in the config.operation.py submodule to point to a valid Python executable.\n" % op.python)
+    all_missing_programs.add(op.python)
+
+if subprocess.run(["which", op.java], capture_output=True).returncode != 0:
+    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Java jars. Please either install Java or change the 'java' variable in the config.operation.py submodule to point to a valid Java executable.\n" % op.java)
+    all_missing_programs.add(op.java)
+
+makeblastdb_location = config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb"
+if subprocess.run(["which", makeblastdb_location], capture_output=True).returncode != 0:
+    sys.stderr.write("Warning: %s is not present and executable in your current environment. This will be required for processing the default human reference database for host filtering. Check for BLAST+ installation errors if you tried to install BLAST+ with the setup script.\n" % makeblastdb_location)
+    all_missing_programs.add(makeblastdb_location)
+
+for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
+    required_programs = importlib.import_module(".".join(["config.steps", modname])).required_programs.values()
+
+    # Check if each file exists or is an executable in the environment
+    step_missing_programs = []
+    for required_program in required_programs:
+        program_exists = os.path.isfile(required_program)
+        executable_exists = subprocess.run(["which", required_program], capture_output=True).returncode == 0
+        if not program_exists and not executable_exists:
+            step_missing_programs.append(required_program)
+
+    # If a program is missing, inform the user and add it to the set of missing programs
+    if len(step_missing_programs) > 0:
+        sys.stderr.write("Warning: program(s) missing for the %s pipeline step. The step may not run correctly without the program(s):\n" % modname)
+        for missing_program in step_missing_programs:
+            sys.stderr.write("%s\n" % missing_program)
+        all_missing_programs.union(set(step_missing_programs))
+
+# Try to create and process default database files
+if not args.no_human_reference and config.steps.host_filter.required_programs["bmtool"] not in all_missing_programs and config.steps.host_filter.required_programs["srprism"] not in all_missing_programs and makeblastdb_location not in all_missing_programs:
     if not os.path.isfile(fo.database_directory + op.host_database + ".fa"):
         subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/%s.fa" % op.host_database, "-P", fo.database_directory])
 
@@ -164,13 +206,13 @@ if not args.no_human_reference:
         subprocess.run([config.steps.host_filter.required_programs["srprism"], "mkindex", "-i", op.host_database_file + ".fa", "-o", op.host_index_file, "-M", "7168"])
 
     if not os.path.isfile(op.host_database_file + op.blast_db_suffix) and not install_results["blast"]["error"]:
-        subprocess.run([config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb", "-in", op.host_database_file + ".fa", "-dbtype", "nucl", "-out", op.host_database_file])
+        subprocess.run([makeblastdb_location, "-in", op.host_database_file + ".fa", "-dbtype", "nucl", "-out", op.host_database_file])
 
 if not args.no_ko_mappings:
     for ortholog_to_grouping_mapping in op.ortholog_to_grouping_mappings:
-        subprocess.run(["wget", "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping, "-P", fo.ortholog_to_grouping_directory, "-O", ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix])
+        subprocess.run(["wget", "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping, "-O", fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix])
 
-if args.uniprot:
+if args.uniprot and config.steps.map_reads_to_genes.required_programs["diamond"] not in all_missing_programs and op.python not in all_missing_programs:
     if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz"):
         subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/%s/%s.fasta.gz" % (op.target_database, op.target_database), "-P", fo.database_directory])
 
@@ -186,39 +228,7 @@ if args.uniprot:
     if not os.path.isfile(op.gene_to_ortholog_file):
         subprocess.run([op.python, fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", op.target_database, op.target_ortholog, "--output", op.gene_to_ortholog_file])
 
-# Report any installation errors
-if install_error:
-    for key in install_results.keys():
-        if install_results[key]["error"]:
-            sys.stderr.write("%s failed to install properly. See %s and %s in the %s directory for installation details.\n" % (key, install_results[key]["stdout"], install_results[key]["stderr"], fo.source_directory))
-            if len(installed_tool_dependencies[key]) > 0:
-                sys.stderr.write("The following were not generated because %s is required for their generation: %s\n" % (key, ", ".join(installed_tool_dependencies[key])))
-            sys.stderr.write("\n")
-
-# Report any tools/reference data that are missing
-if subprocess.run(["which", op.python], capture_output=True).returncode != 0:
-    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Python scripts. Please either install Python or change the 'python' variable in the config.operation.py submodule to point to a valid Python executable.\n" % op.python)
-
-if subprocess.run(["which", op.java], capture_output=True).returncode != 0:
-    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Java jars. Please either install Java or change the 'java' variable in the config.operation.py submodule to point to a valid Java executable.\n" % op.java)
-
-for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
-    required_programs = importlib.import_module(".".join(["config.steps", modname])).required_programs.values()
-
-    # Check if each file exists or is an executable in the environment
-    missing_programs = []
-    for required_program in required_programs:
-        program_exists = os.path.isfile(required_program)
-        executable_exists = subprocess.run(["which", required_program], capture_output=True).returncode == 0
-        if not program_exists and not executable_exists:
-            missing_programs.append(required_program)
-
-    # If a program is missing, inform the user
-    if len(missing_programs) > 0:
-        sys.stderr.write("Warning: program(s) missing for the %s pipeline step. The step may not run correctly without the program(s):\n" % modname)
-        for missing_program in missing_programs:
-            sys.stderr.write("%s\n" % missing_program)
-
+# Report any database files that are missing
 if not os.path.isfile(op.host_bitmask_file):
     sys.stderr.write("Warning: The host database bitmask (%s) does not exist. You will be unable to perform the default host filtering step without it. Make sure that 'bitmask_directory' in config.file_organization and 'host_database' in config.operation.py are correct.\n" % op.host_bitmask_file)
 
