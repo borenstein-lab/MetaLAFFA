@@ -42,8 +42,8 @@ install_results = {}
 for tool in ["snakemake", "blast", "bmtools", "srprism", "samtools", "diamond", "musicc"]:
     install_results[tool] = {}
     install_results[tool]["error"] = False
-    install_results[tool]["stdout"] = tool + "_install.out"
-    install_results[tool]["stderr"] = tool + "_install.err"
+    install_results[tool]["stdout"] = fo.source_directory + tool + "_install.out"
+    install_results[tool]["stderr"] = fo.source_directory + tool + "_install.err"
 
 if subprocess.run(["which", args.pip], capture_output=True).returncode != 0:
     pip_installed = False
@@ -67,7 +67,7 @@ if not cmake_installed:
 # Try to install third party tools
 if not args.no_snakemake and pip_installed:
     try:
-        subprocess.run([args.pip, "install", "--user", "snakemake"], stdout=open(fo.source_directory + install_results["snakemake"]["stdout"], "w"), stderr=open(fo.source_directory + install_results["snakemake"]["stderr"], "w"))
+        subprocess.run([args.pip, "install", "--user", "snakemake"], stdout=open(install_results["snakemake"]["stdout"], "w"), stderr=open(install_results["snakemake"]["stderr"], "w"))
     except (EnvironmentError, subprocess.CalledProcessError):
         install_error = True
         install_results["snakemake"]["error"] = True
@@ -81,7 +81,7 @@ if not args.no_blast and make_installed:
         subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/")
 
         try:
-            subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/build/", stdout=open("../../../../" + install_results["blast"]["stdout"], "w"), stderr=open("../../../../" + install_results["blast"]["stderr"], "w"))
+            subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/build/", stdout=open(install_results["blast"]["stdout"], "w"), stderr=open(install_results["blast"]["stderr"], "w"))
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["blast"]["error"] = True
@@ -93,7 +93,7 @@ if not args.no_bmtagger and make_installed:
     if not os.path.isfile(config.steps.host_filter.required_programs["bmtool"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmfilter"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmtagger"]) or not os.path.isfile(config.steps.host_filter.required_programs["extract_fa"]):
 
         try:
-            subprocess.run(["make"], cwd=fo.source_directory + "bmtools/", stdout=open("../" + install_results["bmtools"]["stdout"], "w"), stderr=open("../" + install_results["bmtools"]["stderr"], "w"))
+            subprocess.run(["make"], cwd=fo.source_directory + "bmtools/", stdout=open(install_results["bmtools"]["stdout"], "w"), stderr=open(install_results["bmtools"]["stderr"], "w"))
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["bmtools"]["error"] = True
@@ -106,7 +106,7 @@ if not args.no_bmtagger and make_installed:
         subprocess.run(["./configure"], cwd=fo.source_directory + "srprism/gnuac/")
 
         try:
-            subprocess.run(["make"], cwd=fo.source_directory + "srprism/gnuac/", stdout=open("../../" + install_results["srprism"]["stdout"], "w"), stderr=open("../../" + install_results["srprism"]["stderr"], "w"))
+            subprocess.run(["make"], cwd=fo.source_directory + "srprism/gnuac/", stdout=open(install_results["srprism"]["stdout"], "w"), stderr=open(install_results["srprism"]["stderr"], "w"))
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["srprism"]["error"] = True
@@ -122,7 +122,7 @@ if not args.no_markduplicates:
     if not os.path.isfile(config.steps.duplicate_filter.required_programs["samtools"]) and make_installed:
         subprocess.run(["./configure", "--without-curses", "--disable-lzma"], cwd=fo.source_directory + "samtools-1.9/")
         try:
-            subprocess.run(["make"], cwd=fo.source_directory + "samtools-1.9/", stdout=open("../" + install_results["samtools"]["stdout"], "w"), stderr=open("../" + install_results["samtools"]["stderr"], "w"))
+            subprocess.run(["make"], cwd=fo.source_directory + "samtools-1.9/", stdout=open(install_results["samtools"]["stdout"], "w"), stderr=open(install_results["samtools"]["stderr"], "w"))
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["samtools"]["error"] = True
@@ -139,15 +139,15 @@ if not args.no_diamond and make_installed and cmake_installed:
 
     if not os.path.isfile(config.steps.map_reads_to_genes.required_programs["diamond"]):
         try:
-            subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open("../" + install_results["diamond"]["stdout"], "w"), stderr=open("../" + install_results["diamond"]["stderr"], "w"))
-            subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open("../" + install_results["diamond"]["stdout"], "a"), stderr=open("../" + install_results["diamond"]["stderr"], "a"))
+            subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open(install_results["diamond"]["stdout"], "w"), stderr=open(install_results["diamond"]["stderr"], "w"))
+            subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open(install_results["diamond"]["stdout"], "a"), stderr=open(install_results["diamond"]["stderr"], "a"))
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["diamond"]["error"] = True
 
 if not args.no_musicc and pip_installed:
     try:
-        subprocess.run(["pip", "install", "--user", "numpy", "scipy", "scikit-learn", "pandas", "musicc"], stdout=open(fo.source_directory + install_results["musicc"]["stdout"], "w"), stderr=open(fo.source_directory + install_results["musicc"]["stderr"], "w"))
+        subprocess.run(["pip", "install", "--user", "numpy", "scipy", "scikit-learn", "pandas", "musicc"], stdout=open(install_results["musicc"]["stdout"], "w"), stderr=open(install_results["musicc"]["stderr"], "w"))
     except (EnvironmentError, subprocess.CalledProcessError):
         install_error = True
         install_results["musicc"]["error"] = True
@@ -156,7 +156,7 @@ if not args.no_musicc and pip_installed:
 if install_error:
     for key in install_results.keys():
         if install_results[key]["error"]:
-            sys.stderr.write("%s failed to install properly. See %s and %s in the %s directory for installation details.\n" % (key, install_results[key]["stdout"], install_results[key]["stderr"], fo.source_directory))
+            sys.stderr.write("%s failed to install properly. See %s and %s for installation details.\n" % (key, install_results[key]["stdout"], install_results[key]["stderr"]))
             if len(installed_tool_dependencies[key]) > 0:
                 sys.stderr.write("The following were not generated because %s is required for their generation: %s\n" % (key, ", ".join(installed_tool_dependencies[key])))
             sys.stderr.write("\n")
