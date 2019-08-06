@@ -18,7 +18,7 @@ parser.add_argument("--no_markduplicates", "-nma", action="store_true", help="If
 parser.add_argument("--no_trimmomatic", "-nt", action="store_true", help="If used, do not download Trimmomatic and install it in the pipeline directory for quality filtering.")
 parser.add_argument("--no_diamond", "-nd", action="store_true", help="If used, do not download DIAMOND and install it in the pipeline directory for read mapping.")
 parser.add_argument("--no_musicc", "-nmu", action="store_true", help="If used, do not install MUSiCC via pip for ortholog abundance correction.")
-parser.add_argument("--no_ko_mappings", "nkm", action="store_true", help="If used, to not download bacterial ko-to-module and ko-to-pathway mappings from the 2013 version of the KEGG database.")
+parser.add_argument("--no_ko_mappings", "-nkm", action="store_true", help="If used, to not download bacterial ko-to-module and ko-to-pathway mappings from the 2013 version of the KEGG database.")
 parser.add_argument("--uniprot", "-u", action="store_true", help="If used, download the default UNIPROT gene sequence reference database for read mapping.")
 
 args = parser.parse_args()
