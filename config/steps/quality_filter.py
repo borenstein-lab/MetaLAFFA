@@ -5,6 +5,7 @@ Quality filter step parameters
 This configuration submodule contains parameters related to the quality filter pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.file_organization as fo
 import config.library_functions as lf
@@ -91,40 +92,40 @@ def default(inputs, outputs, wildcards):
         new_reverse_singletons = outputs[3] + ".reverse_singletons.fastq"
 
         # Perform paired-end quality filtering and trimming
-        subprocess.run([op.java, "-jar", required_programs["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters)
+        subprocess.run([op.java, "-jar", required_programs["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters, env=env)
 
         # Merge new singletons into single new singleton file
         with open(outputs[3], "w") as output_file:
-            subprocess.run(["cat", new_forward_singletons, new_reverse_singletons], stdout=output_file)
-        subprocess.run(["rm", new_forward_singletons, new_reverse_singletons])
+            subprocess.run(["cat", new_forward_singletons, new_reverse_singletons], stdout=output_file, env=env)
+        subprocess.run(["rm", new_forward_singletons, new_reverse_singletons], env=env)
 
         # Add new singletons to combined singleton output file
         with open(outputs[2], "w") as output_file:
-            subprocess.run(["cat", outputs[3]], stdout=output_file)
+            subprocess.run(["cat", outputs[3]], stdout=output_file, env=env)
 
     # Otherwise, if both paired read files were dummy files, create dummy outputs
     else:
-        subprocess.run(["touch", outputs[0], outputs[1], outputs[3]])
+        subprocess.run(["touch", outputs[0], outputs[1], outputs[3]], env=env)
 
     # If the singleton read file is non-empty, filter it for host reads
     if not lf.is_empty(inputs.singleton):
 
         # Perform single-end quality filtering and trimming
-        subprocess.run([op.java, "-jar", required_programs["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters)
+        subprocess.run([op.java, "-jar", required_programs["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters, env=env)
 
         # If we quality filtered the paired-end reads, add singletons to combined singleton output file
         if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):
             with open(outputs[2], "a") as output_file:
-                subprocess.run(["cat", outputs[4]], stdout=output_file)
+                subprocess.run(["cat", outputs[4]], stdout=output_file, env=env)
 
         # Otherwise, the combined singleton output file is the same as the results of the singleton quality filtering
         else:
             with open(outputs[2], "w") as output_file:
-                subprocess.run(["cat", outputs[4]], stdout=output_file)
+                subprocess.run(["cat", outputs[4]], stdout=output_file, env=env)
 
     # Otherwise, if the singleton read file was a dummy file, create dummy outputs
     else:
-        subprocess.run(["touch", outputs[2], outputs[4]])
+        subprocess.run(["touch", outputs[2], outputs[4]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

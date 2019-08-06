@@ -5,6 +5,7 @@ Gene map step parameters
 This configuration submodule contains parameters related to the gene map pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.file_organization as fo
 import config.library_functions as lf
@@ -78,11 +79,11 @@ def default(inputs, outputs, wildcards):
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):
 
-        subprocess.run([op.python, "src/gene_map.py", inputs.input, wildcards.sample, operating_params["method"], gene_normalization, "--output", outputs[0]])
+        subprocess.run([op.python, "src/gene_map.py", inputs.input, wildcards.sample, operating_params["method"], gene_normalization, "--output", outputs[0]], env=env)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
-        subprocess.run(["touch", outputs[0]])
+        subprocess.run(["touch", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

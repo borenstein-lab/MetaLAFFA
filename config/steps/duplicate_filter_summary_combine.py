@@ -5,6 +5,7 @@ Duplicate filter summary combine step parameters
 This configuration submodule contains parameters related to the duplicate filter summary combine pipeline step.
 """
 
+from config import env
 import config.operation as op
 import subprocess
 
@@ -67,7 +68,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    subprocess.run([op.python, "src/summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]])
+    subprocess.run([op.python, "src/summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

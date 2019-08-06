@@ -5,6 +5,7 @@ Ortholog aggregation summary step parameters
 This configuration submodule contains parameters related to the ortholog aggregation summary pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.library_functions as lf
 import subprocess
@@ -69,9 +70,9 @@ def default(inputs, outputs, wildcards):
     """
 
     if not lf.is_empty(inputs.input):
-        subprocess.run([op.python, "src/ortholog_aggregation_summary.py", inputs.input, "--output", outputs[0]])
+        subprocess.run([op.python, "src/ortholog_aggregation_summary.py", inputs.input, "--output", outputs[0]], env=env)
     else:
-        subprocess.run(["touch", outputs[0]])
+        subprocess.run(["touch", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

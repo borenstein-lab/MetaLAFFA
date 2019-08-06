@@ -5,6 +5,7 @@ Map reads to genes step parameters
 This configuration submodule contains parameters related to the map reads to genes pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.file_organization as fo
 import config.library_functions as lf
@@ -90,11 +91,11 @@ def default(inputs, outputs, wildcards):
         command = [required_programs["diamond"], operating_params["method"], "--block-size", str(non_essential_params["block_size"]), "--index-chunks", str(non_essential_params["index_chunks"]), "--threads", str(cluster_params["cores"] * 2), "--db", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"])]
         if operating_params["sensitivity"] != "":
             command += operating_params["sensitivity"]
-        subprocess.run(command)
+        subprocess.run(command, env=env)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
-        subprocess.run(["touch", outputs[0]])
+        subprocess.run(["touch", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

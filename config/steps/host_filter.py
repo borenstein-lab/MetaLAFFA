@@ -5,6 +5,7 @@ Host filter step parameters
 This configuration submodule contains parameters related to the host filter pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.file_organization as fo
 import config.library_functions as lf
@@ -86,7 +87,7 @@ def default(inputs, outputs, wildcards):
     """
 
     # Set environment variables for bmtagger
-    running_env = os.environ.copy()
+    running_env = env
     running_env["BMFILTER"] = required_programs["bmfilter"]
     running_env["EXTRACT_FA"] = required_programs["extract_fa"]
     running_env["SRPRISM"] = required_programs["srprism"]
@@ -103,14 +104,14 @@ def default(inputs, outputs, wildcards):
         # Match the read IDs between the paired read files for bmtagger
         matched_input = inputs.reverse + ".matched"
         with open(matched_input, "w") as matched_input_file:
-            subprocess.run([op.python, "src/match_read_names.py", inputs.forward, inputs.reverse], stdout=matched_input_file)
+            subprocess.run([op.python, "src/match_read_names.py", inputs.forward, inputs.reverse], stdout=matched_input_file, env=env)
 
         # bmtagger requires unzipped input files, so unzip the forward read file without deleting the original
         tmp_unzipped_exists = False
         forward_input = inputs.forward
         if lf.is_zipped(inputs.forward):
             with open(inputs.forward + "unzipped", "w") as tmp_unzipped_file:
-                subprocess.run(["zcat", inputs.forward], stdout=tmp_unzipped_file)
+                subprocess.run(["zcat", inputs.forward], stdout=tmp_unzipped_file, env=env)
             tmp_unzipped_exists = True
             forward_input = inputs.forward + "unzipped"
 
@@ -118,22 +119,21 @@ def default(inputs, outputs, wildcards):
         subprocess.run([required_programs["bmtagger"], "-q1", "-1", forward_input, "-2", inputs.reverse + ".matched", "-o", outputs[3], "-b", bitmask, "-d", host_database, "-x", srprism_index], env=running_env)
 
         # Remove the temporary matched read ID file
-        subprocess.run(["rm", matched_input])
+        subprocess.run(["rm", matched_input], env=env)
 
         # Remove the temporary unzipped forward read file if it exists
         if tmp_unzipped_exists:
-            subprocess.run(["rm", forward_input])
+            subprocess.run(["rm", forward_input], env=env)
 
         # Remove the marked reads from the original fastqs
         with open(outputs[0], "w") as forward_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.forward], stdout=forward_output)
+            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.forward], stdout=forward_output, env=env)
         with open(outputs[1], "w") as reverse_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.reverse],
-                           stdout=reverse_output)
+            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.reverse], stdout=reverse_output, env=env)
 
     # Otherwise, if both paired read files were dummy files, create dummy outputs
     else:
-        subprocess.run(["touch", outputs[0], outputs[1], outputs[3]])
+        subprocess.run(["touch", outputs[0], outputs[1], outputs[3]], env=env)
 
     # If the singleton read file is non-empty, filter it for host reads
     if not lf.is_empty(inputs.singleton):
@@ -143,7 +143,7 @@ def default(inputs, outputs, wildcards):
         singleton_input = inputs.singleton
         if lf.is_zipped(inputs.singleton):
             with open(inputs.singleton + "unzipped", "w") as tmp_unzipped_file:
-                subprocess.run(["zcat", inputs.singleton], stdout=tmp_unzipped_file)
+                subprocess.run(["zcat", inputs.singleton], stdout=tmp_unzipped_file, env=env)
             tmp_unzipped_exists = True
             singleton_input = inputs.singleton + "unzipped"
 
@@ -152,15 +152,15 @@ def default(inputs, outputs, wildcards):
 
         # Remove the temporary unzipped forward read file if it exists
         if tmp_unzipped_exists:
-            subprocess.run(["rm", singleton_input])
+            subprocess.run(["rm", singleton_input], env=env)
 
         # Remove the marked reads from the original fastqs
         with open(outputs[2], "w") as singleton_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[4], inputs.singleton], stdout=singleton_output)
+            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[4], inputs.singleton], stdout=singleton_output, env=env)
 
     # Otherwise, if the singleton read file was a dummy file, create dummy outputs
     else:
-        subprocess.run(["touch", outputs[2], outputs[4]])
+        subprocess.run(["touch", outputs[2], outputs[4]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

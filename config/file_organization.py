@@ -70,6 +70,16 @@ source_directory = "src/"
 Directory for scripts and third-party tools used in the pipeline.
 """
 
+python_package_directory = source_directory + "python/"
+"""
+Local directory to install Python packages in.
+"""
+
+python_source_directory = python_package_directory + "bin/"
+"""
+Local directory where executables installed by Python packages are placed.
+"""
+
 tmp_dir = "/tmp/"
 """
 Directory containing temporary intermediate files. These tend to be large uncompressed intermediate files that we need to compress before saving, if we are saving intermediate files.

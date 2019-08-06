@@ -5,8 +5,8 @@ Hit filter step parameters
 This configuration submodule contains parameters related to the hit filter pipeline step.
 """
 
+from config import env
 import config.operation as op
-import config.file_organization as fo
 import config.library_functions as lf
 import subprocess
 
@@ -91,11 +91,11 @@ def default(inputs, outputs, wildcards):
         if n_method:
             command += ["-n", operating_params["best_n"]]
 
-        subprocess.run(command)
+        subprocess.run(command, env=env)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
-        subprocess.run(["touch", outputs[0]])
+        subprocess.run(["touch", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

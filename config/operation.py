@@ -112,6 +112,11 @@ java = "java"
 The path to the java executable to use when running the pipeline
 """
 
+snakemake = fo.python_source_directory + "snakemake"
+"""
+The path to the snakemake executable to use when running the pipeline
+"""
+
 bitmask_suffix = ".bitmask"
 """
 Suffix for a bitmask file

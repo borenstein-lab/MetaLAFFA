@@ -5,6 +5,7 @@ Ortholog aggregation step parameters
 This configuration submodule contains parameters related to the ortholog aggregation pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.file_organization as fo
 import config.library_functions as lf
@@ -77,11 +78,11 @@ def default(inputs, outputs, wildcards):
         mapping = fo.ortholog_to_grouping_directory + wildcards.mapping + op.ortholog_to_grouping_suffix
 
         if operating_params["method"] == "standard":
-            subprocess.run([op.python, "src/ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--grouping_name", wildcards.mapping, "--output", outputs[0]])
+            subprocess.run([op.python, "src/ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--grouping_name", wildcards.mapping, "--output", outputs[0]], env=env)
 
     # Otherwise, if the input file is a dummy file, create dummy outputs
     else:
-        subprocess.run(["touch", outputs[0]])
+        subprocess.run(["touch", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

@@ -5,6 +5,7 @@ Ortholog map combine step parameters
 This configuration submodule contains parameters related to the ortholog map combine pipeline step.
 """
 
+from config import env
 import config.operation as op
 import subprocess
 
@@ -67,7 +68,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
     print(list(inputs.plainstrings()))
-    subprocess.run([op.python, "src/summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]])
+    subprocess.run([op.python, "src/summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

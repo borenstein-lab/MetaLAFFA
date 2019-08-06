@@ -5,6 +5,7 @@ Quality filter summary step parameters
 This configuration submodule contains parameters related to the quality filter summary pipeline step.
 """
 
+from config import env
 import config.operation as op
 import config.library_functions as lf
 import subprocess
@@ -74,9 +75,9 @@ def default(inputs, outputs, wildcards):
     """
 
     if not lf.is_empty(inputs.pre_forward) or not lf.is_empty(inputs.pre_reverse) or not lf.is_empty(inputs.post_forward) or not lf.is_empty(inputs.post_reverse) or not lf.is_empty(inputs.new_singleton) or not lf.is_empty(inputs.old_singleton):
-        subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use_sample"])
+        subprocess.run([op.python, "src/quality_filter_summary.py", inputs.pre_forward, inputs.pre_reverse, inputs.post_forward, inputs.post_reverse, inputs.new_singleton, inputs.old_singleton, "--output", outputs[0], "--use_sample"], env=env)
     else:
-        subprocess.run(["touch", outputs[0]])
+        subprocess.run(["touch", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

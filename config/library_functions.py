@@ -7,6 +7,7 @@ This configuration submodule consolidates functions used by all parts of the pip
 
 import config.operation as op
 import config.file_organization as fo
+from config import env
 import re
 import os
 import subprocess
@@ -54,10 +55,10 @@ def process_output(filename, step_id):
 
     working_output = get_working_output_name(filename, step_id)
     if op.zipped_files:
-        subprocess.run(["gzip", working_output])
+        subprocess.run(["gzip", working_output], env=env)
         working_output = working_output + ".gz"
     if op.work_in_tmp_dir:
-        subprocess.run(["mv", working_output, filename])
+        subprocess.run(["mv", working_output, filename], env=env)
 
 
 def is_zipped(filename):
@@ -85,12 +86,12 @@ def is_empty(filename):
     if is_zipped(filename):
 
         # Unzip the file and then count the number of lines
-        unzip_process = subprocess.Popen(["zcat", filename], stdout=subprocess.PIPE)
-        num_lines = int(subprocess.run(["wc", "-l"], stdin=unzip_process.stdout, stdout=subprocess.PIPE).stdout.strip().decode("utf-8"))
+        unzip_process = subprocess.Popen(["zcat", filename], stdout=subprocess.PIPE, env=env)
+        num_lines = int(subprocess.run(["wc", "-l"], stdin=unzip_process.stdout, stdout=subprocess.PIPE, env=env).stdout.strip().decode("utf-8"))
 
     # Otherwise, we just count the number of lines
     else:
-        num_lines = int(subprocess.run(["wc", "-l", filename], stdout=subprocess.PIPE).stdout.strip().decode("utf-8"))
+        num_lines = int(subprocess.run(["wc", "-l", filename], stdout=subprocess.PIPE, env=env).stdout.strip().decode("utf-8"))
 
     # Return whether the number of lines is 0 (an empty file)
     return num_lines == 0
@@ -108,17 +109,17 @@ def combine_list_rows(lists_to_combine, combined_list):
     # Initialize the combined list file
     with open(combined_list, "w") as combined_list_file:
         if is_zipped(lists_to_combine[0]):
-            subprocess.run(["zcat", lists_to_combine[0]], stdout=combined_list_file)
+            subprocess.run(["zcat", lists_to_combine[0]], stdout=combined_list_file, env=env)
         else:
-            subprocess.run(["cat", lists_to_combine[0]], stdout=combined_list_file)
+            subprocess.run(["cat", lists_to_combine[0]], stdout=combined_list_file, env=env)
 
     # Now add rows from the rest of the lists
     with open(combined_list, "a") as combined_list_file:
         for list in lists_to_combine[1:]:
             if is_zipped(list):
-                subprocess.run(["zcat", list], stdout=combined_list_file)
+                subprocess.run(["zcat", list], stdout=combined_list_file, env=env)
             else:
-                subprocess.run(["cat", list], stdout=combined_list_file)
+                subprocess.run(["cat", list], stdout=combined_list_file, env=env)
 
 
 def replace_restricted_patterns(pattern, pattern_restrictions):
@@ -306,7 +307,7 @@ def create_dummy_inputs(sample_list, step_info, step_params):
         # Check whether each expected input file exists, and if not create a dummy file and note that in the log file
         for expected_input_file in expected_input_files:
             if not os.path.isfile(expected_input_file):
-                subprocess.run(["touch", get_working_output_name(expected_input_file, "dummy")])
+                subprocess.run(["touch", get_working_output_name(expected_input_file, "dummy")], env=env)
                 process_output(expected_input_file, "dummy")
                 dummy_log_file.write(expected_input_file + os.linesep)
 

@@ -2,6 +2,7 @@ import argparse
 import sys
 import os
 import subprocess
+from config import env
 import config.file_organization as fo
 import config.operation as op
 import config.steps
@@ -45,13 +46,13 @@ for tool in ["snakemake", "blast", "bmtools", "srprism", "samtools", "diamond", 
     install_results[tool]["stdout"] = fo.source_directory + tool + "_install.out"
     install_results[tool]["stderr"] = fo.source_directory + tool + "_install.err"
 
-if subprocess.run(["which", args.pip], capture_output=True).returncode != 0:
+if subprocess.run(["which", args.pip], capture_output=True, env=env).returncode != 0:
     pip_installed = False
 
-if subprocess.run(["which", "make"], capture_output=True).returncode != 0:
+if subprocess.run(["which", "make"], capture_output=True, env=env).returncode != 0:
     make_installed = False
 
-if subprocess.run(["which", "cmake"], capture_output=True).returncode != 0:
+if subprocess.run(["which", "cmake"], capture_output=True, env=env).returncode != 0:
     cmake_installed = False
 
 # Report any missing required tools
@@ -67,87 +68,87 @@ if not cmake_installed:
 # Try to install third party tools
 if not args.no_snakemake and pip_installed:
     try:
-        subprocess.run([args.pip, "install", "--user", "snakemake"], stdout=open(install_results["snakemake"]["stdout"], "w"), stderr=open(install_results["snakemake"]["stderr"], "w"))
+        subprocess.run([args.pip, "install", "-t", fo.python_package_directory, "snakemake"], stdout=open(install_results["snakemake"]["stdout"], "w"), stderr=open(install_results["snakemake"]["stderr"], "w"), env=env)
     except (EnvironmentError, subprocess.CalledProcessError):
         install_error = True
         install_results["snakemake"]["error"] = True
 
 if not args.no_blast and make_installed:
     if not os.path.isdir(fo.source_directory + "ncbi-blast-2.2.31+-src"):
-        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-src.tar.gz", "-P", fo.source_directory])
-        subprocess.run(["tar", "-zxf", "ncbi-blast-2.2.31+-src.tar.gz"], cwd=fo.source_directory)
+        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-src.tar.gz", "-P", fo.source_directory], env=env)
+        subprocess.run(["tar", "-zxf", "ncbi-blast-2.2.31+-src.tar.gz"], cwd=fo.source_directory, env=env)
 
     if not os.path.isdir(config.steps.host_filter.required_programs["blastn_dir"]) or not os.path.isfile(config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb"):
-        subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/")
+        subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/", env=env)
 
         try:
-            subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/build/", stdout=open(install_results["blast"]["stdout"], "w"), stderr=open(install_results["blast"]["stderr"], "w"))
+            subprocess.run(["make", "all_r"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/build/", stdout=open(install_results["blast"]["stdout"], "w"), stderr=open(install_results["blast"]["stderr"], "w"), env=env)
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["blast"]["error"] = True
 
 if not args.no_bmtagger and make_installed:
     if not os.path.isdir(fo.source_directory + "bmtools/"):
-        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/bmtools.tar.gz", "-P", fo.source_directory])
-        subprocess.run(["tar", "-zxf", "bmtools.tar.gz"], cwd=fo.source_directory)
+        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/bmtools.tar.gz", "-P", fo.source_directory], env=env)
+        subprocess.run(["tar", "-zxf", "bmtools.tar.gz"], cwd=fo.source_directory, env=env)
     if not os.path.isfile(config.steps.host_filter.required_programs["bmtool"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmfilter"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmtagger"]) or not os.path.isfile(config.steps.host_filter.required_programs["extract_fa"]):
 
         try:
-            subprocess.run(["make"], cwd=fo.source_directory + "bmtools/", stdout=open(install_results["bmtools"]["stdout"], "w"), stderr=open(install_results["bmtools"]["stderr"], "w"))
+            subprocess.run(["make"], cwd=fo.source_directory + "bmtools/", stdout=open(install_results["bmtools"]["stdout"], "w"), stderr=open(install_results["bmtools"]["stderr"], "w"), env=env)
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["bmtools"]["error"] = True
 
     if not os.path.isdir(fo.source_directory + "srprism/"):
-        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/src/srprism.tar.gz", "-P", fo.source_directory])
-        subprocess.run(["tar", "-zxf", "srprism.tar.gz"], cwd=fo.source_directory)
+        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/src/srprism.tar.gz", "-P", fo.source_directory], env=env)
+        subprocess.run(["tar", "-zxf", "srprism.tar.gz"], cwd=fo.source_directory, env=env)
     if not os.path.isfile(config.steps.host_filter.required_programs["srprism"]):
-        subprocess.run(["./ac.sh"], cwd=fo.source_directory + "srprism/gnuac/")
-        subprocess.run(["./configure"], cwd=fo.source_directory + "srprism/gnuac/")
+        subprocess.run(["./ac.sh"], cwd=fo.source_directory + "srprism/gnuac/", env=env)
+        subprocess.run(["./configure"], cwd=fo.source_directory + "srprism/gnuac/", env=env)
 
         try:
-            subprocess.run(["make"], cwd=fo.source_directory + "srprism/gnuac/", stdout=open(install_results["srprism"]["stdout"], "w"), stderr=open(install_results["srprism"]["stderr"], "w"))
+            subprocess.run(["make"], cwd=fo.source_directory + "srprism/gnuac/", stdout=open(install_results["srprism"]["stdout"], "w"), stderr=open(install_results["srprism"]["stderr"], "w"), env=env)
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["srprism"]["error"] = True
 
 if not args.no_markduplicates:
     if not os.path.isfile(fo.source_directory + "picard.jar"):
-        subprocess.run(["wget", "https://github.com/broadinstitute/picard/releases/download/2.20.2/picard.jar", "-P", fo.source_directory])
+        subprocess.run(["wget", "https://github.com/broadinstitute/picard/releases/download/2.20.2/picard.jar", "-P", fo.source_directory], env=env)
 
     if not os.path.isdir(fo.source_directory + "samtools-1.9/"):
-        subprocess.run(["wget", "https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2", "-P", fo.source_directory])
-        subprocess.run(["tar", "-jxf", "samtools-1.9.tar.bz2"], cwd=fo.source_directory)
+        subprocess.run(["wget", "https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2", "-P", fo.source_directory], env=env)
+        subprocess.run(["tar", "-jxf", "samtools-1.9.tar.bz2"], cwd=fo.source_directory, env=env)
 
     if not os.path.isfile(config.steps.duplicate_filter.required_programs["samtools"]) and make_installed:
-        subprocess.run(["./configure", "--without-curses", "--disable-lzma"], cwd=fo.source_directory + "samtools-1.9/")
+        subprocess.run(["./configure", "--without-curses", "--disable-lzma"], cwd=fo.source_directory + "samtools-1.9/", env=env)
         try:
-            subprocess.run(["make"], cwd=fo.source_directory + "samtools-1.9/", stdout=open(install_results["samtools"]["stdout"], "w"), stderr=open(install_results["samtools"]["stderr"], "w"))
+            subprocess.run(["make"], cwd=fo.source_directory + "samtools-1.9/", stdout=open(install_results["samtools"]["stdout"], "w"), stderr=open(install_results["samtools"]["stderr"], "w"), env=env)
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["samtools"]["error"] = True
 
 if not args.no_trimmomatic:
     if not os.path.isfile(config.steps.quality_filter.required_programs["trimmer"]):
-        subprocess.run(["wget", "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip", "-P", fo.source_directory])
-        subprocess.run(["unzip", fo.source_directory + "Trimmomatic-0.39.zip", "-d", fo.source_directory])
+        subprocess.run(["wget", "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip", "-P", fo.source_directory], env=env)
+        subprocess.run(["unzip", fo.source_directory + "Trimmomatic-0.39.zip", "-d", fo.source_directory], env=env)
 
 if not args.no_diamond and make_installed and cmake_installed:
     if not os.path.isdir(fo.source_directory + "diamond-0.9.22/"):
-        subprocess.run(["wget", "http://github.com/bbuchfink/diamond/archive/v0.9.22.tar.gz", "-P", fo.source_directory])
-        subprocess.run(["tar", "-zxf", "v0.9.22.tar.gz"], cwd=fo.source_directory)
+        subprocess.run(["wget", "http://github.com/bbuchfink/diamond/archive/v0.9.22.tar.gz", "-P", fo.source_directory], env=env)
+        subprocess.run(["tar", "-zxf", "v0.9.22.tar.gz"], cwd=fo.source_directory, env=env)
 
     if not os.path.isfile(config.steps.map_reads_to_genes.required_programs["diamond"]):
         try:
-            subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open(install_results["diamond"]["stdout"], "w"), stderr=open(install_results["diamond"]["stderr"], "w"))
-            subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open(install_results["diamond"]["stdout"], "a"), stderr=open(install_results["diamond"]["stderr"], "a"))
+            subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open(install_results["diamond"]["stdout"], "w"), stderr=open(install_results["diamond"]["stderr"], "w"), env=env)
+            subprocess.run(["make", "install"], cwd=fo.source_directory + "diamond-0.9.22/", stdout=open(install_results["diamond"]["stdout"], "a"), stderr=open(install_results["diamond"]["stderr"], "a"), env=env)
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["diamond"]["error"] = True
 
 if not args.no_musicc and pip_installed:
     try:
-        subprocess.run(["pip", "install", "--user", "numpy", "scipy", "scikit-learn", "pandas", "musicc"], stdout=open(install_results["musicc"]["stdout"], "w"), stderr=open(install_results["musicc"]["stderr"], "w"))
+        subprocess.run([args.pip, "install", "-t", fo.python_package_directory, "numpy", "scipy", "scikit-learn", "pandas", "musicc"], stdout=open(install_results["musicc"]["stdout"], "w"), stderr=open(install_results["musicc"]["stderr"], "w"), env=env)
     except (EnvironmentError, subprocess.CalledProcessError):
         install_error = True
         install_results["musicc"]["error"] = True
@@ -163,16 +164,20 @@ if install_error:
 
 # Report any tools that are missing
 all_missing_programs = set()
-if subprocess.run(["which", op.python], capture_output=True).returncode != 0:
+if subprocess.run(["which", op.python], capture_output=True, env=env).returncode != 0:
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Python scripts. Please either install Python or change the 'python' variable in the config.operation.py submodule to point to a valid Python executable.\n" % op.python)
     all_missing_programs.add(op.python)
 
-if subprocess.run(["which", op.java], capture_output=True).returncode != 0:
+if subprocess.run(["which", op.java], capture_output=True, env=env).returncode != 0:
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Java jars. Please either install Java or change the 'java' variable in the config.operation.py submodule to point to a valid Java executable.\n" % op.java)
     all_missing_programs.add(op.java)
 
+if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0:
+    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running metaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable.\n" % op.snakemake)
+    all_missing_programs.add(op.snakemake)
+
 makeblastdb_location = config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb"
-if subprocess.run(["which", makeblastdb_location], capture_output=True).returncode != 0:
+if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0:
     sys.stderr.write("Warning: %s is not present and executable in your current environment. This will be required for processing the default human reference database for host filtering. Check for BLAST+ installation errors if you tried to install BLAST+ with the setup script.\n" % makeblastdb_location)
     all_missing_programs.add(makeblastdb_location)
 
@@ -183,7 +188,7 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
     step_missing_programs = []
     for required_program in required_programs:
         program_exists = os.path.isfile(required_program)
-        executable_exists = subprocess.run(["which", required_program], capture_output=True).returncode == 0
+        executable_exists = subprocess.run(["which", required_program], capture_output=True, env=env).returncode == 0
         if not program_exists and not executable_exists:
             step_missing_programs.append(required_program)
 
@@ -197,37 +202,37 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
 # Try to create and process default database files
 if not args.no_human_reference and config.steps.host_filter.required_programs["bmtool"] not in all_missing_programs and config.steps.host_filter.required_programs["srprism"] not in all_missing_programs and makeblastdb_location not in all_missing_programs:
     if not os.path.isfile(fo.database_directory + op.host_database + ".fa"):
-        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/%s.fa" % op.host_database, "-P", fo.database_directory])
+        subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/%s.fa" % op.host_database, "-P", fo.database_directory], env=env)
 
     if not os.path.isfile(op.host_bitmask_file) and not install_results["bmtools"]["error"]:
-        subprocess.run([config.steps.host_filter.required_programs["bmtool"], "-d", op.host_database_file + ".fa", "-o", op.host_bitmask_file, "-A", "0", "-w", "18"])
+        subprocess.run([config.steps.host_filter.required_programs["bmtool"], "-d", op.host_database_file + ".fa", "-o", op.host_bitmask_file, "-A", "0", "-w", "18"], env=env)
 
     if not os.path.isfile(op.host_index_file + ".idx") and not install_results["srprism"]["error"]:
-        subprocess.run([config.steps.host_filter.required_programs["srprism"], "mkindex", "-i", op.host_database_file + ".fa", "-o", op.host_index_file, "-M", "7168"])
+        subprocess.run([config.steps.host_filter.required_programs["srprism"], "mkindex", "-i", op.host_database_file + ".fa", "-o", op.host_index_file, "-M", "7168"], env=env)
 
     if not os.path.isfile(op.host_database_file + op.blast_db_suffix) and not install_results["blast"]["error"]:
-        subprocess.run([makeblastdb_location, "-in", op.host_database_file + ".fa", "-dbtype", "nucl", "-out", op.host_database_file])
+        subprocess.run([makeblastdb_location, "-in", op.host_database_file + ".fa", "-dbtype", "nucl", "-out", op.host_database_file], env=env)
 
 if not args.no_ko_mappings:
     for ortholog_to_grouping_mapping in op.ortholog_to_grouping_mappings:
         if not os.path.isfile(fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix):
-            subprocess.run(["wget", "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping, "-O", fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix])
+            subprocess.run(["wget", "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping, "-O", fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix], env=env)
 
 if args.uniprot and config.steps.map_reads_to_genes.required_programs["diamond"] not in all_missing_programs and op.python not in all_missing_programs:
     if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz"):
-        subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/%s/%s.fasta.gz" % (op.target_database, op.target_database), "-P", fo.database_directory])
+        subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/%s/%s.fasta.gz" % (op.target_database, op.target_database), "-P", fo.database_directory], env=env)
 
     if not os.path.isfile(op.target_database_file) and not install_results["diamond"]["error"]:
-        subprocess.run([config.steps.map_reads_to_genes.required_programs["diamond"], "makedb", "--in", fo.database_directory + op.target_database + ".fasta.gz", "-d", fo.database_directory + op.target_database])
+        subprocess.run([config.steps.map_reads_to_genes.required_programs["diamond"], "makedb", "--in", fo.database_directory + op.target_database + ".fasta.gz", "-d", fo.database_directory + op.target_database], env=env)
 
     if not os.path.isfile(fo.database_directory + "idmapping.dat.gz"):
-        subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz", "-P", fo.database_directory])
+        subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz", "-P", fo.database_directory], env=env)
 
     if not os.path.isfile(op.gene_normalization_file):
-        subprocess.run([op.python, fo.source_directory + "create_gene_length_table.py", fo.database_directory + op.target_database + ".fasta.gz", "--output", op.gene_normalization_file])
+        subprocess.run([op.python, fo.source_directory + "create_gene_length_table.py", fo.database_directory + op.target_database + ".fasta.gz", "--output", op.gene_normalization_file], env=env)
 
     if not os.path.isfile(op.gene_to_ortholog_file):
-        subprocess.run([op.python, fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", op.target_database, op.target_ortholog, "--output", op.gene_to_ortholog_file])
+        subprocess.run([op.python, fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", op.target_database, op.target_ortholog, "--output", op.gene_to_ortholog_file], env=env)
 
 # Report any database files that are missing
 if not os.path.isfile(op.host_bitmask_file):
