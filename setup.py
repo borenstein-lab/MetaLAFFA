@@ -40,7 +40,7 @@ installed_tool_dependencies = {
     "diamond": ["annotated gene diamond database"]
 }
 install_results = {}
-for tool in ["snakemake", "blast", "bmtools", "srprism", "samtools", "diamond", "musicc"]:
+for tool in ["python_package", "blast", "bmtools", "srprism", "samtools", "diamond"]:
     install_results[tool] = {}
     install_results[tool]["error"] = False
     install_results[tool]["stdout"] = fo.source_directory + tool + "_install.out"
@@ -66,12 +66,17 @@ if not cmake_installed:
     sys.stderr.write("cmake not found. CMake is required for installation of [diamond]. These tools will not be installed during setup.\n")
 
 # Try to install third party tools
-if not args.no_snakemake and pip_installed:
+if pip_installed:
+    pip_install_list = []
+    if not args.no_snakemake:
+        pip_install_list.append("snakemake")
+    if not args.no_musicc:
+        pip_install_list.append("musicc")
     try:
-        subprocess.run([args.pip, "install", "-t", fo.python_package_directory, "snakemake"], stdout=open(install_results["snakemake"]["stdout"], "w"), stderr=open(install_results["snakemake"]["stderr"], "w"), env=env)
+        subprocess.run([args.pip, "install", "-t", fo.python_package_directory] + pip_install_list, stdout=open(install_results["python_package"]["stdout"], "w"), stderr=open(install_results["python_package"]["stderr"], "w"), env=env)
     except (EnvironmentError, subprocess.CalledProcessError):
         install_error = True
-        install_results["snakemake"]["error"] = True
+        install_results["python_package"]["error"] = True
 
 if not args.no_blast and make_installed:
     if not os.path.isdir(fo.source_directory + "ncbi-blast-2.2.31+-src"):
@@ -146,13 +151,6 @@ if not args.no_diamond and make_installed and cmake_installed:
             install_error = True
             install_results["diamond"]["error"] = True
 
-if not args.no_musicc and pip_installed:
-    try:
-        subprocess.run([args.pip, "install", "-t", fo.python_package_directory, "numpy", "scipy", "scikit-learn", "pandas", "musicc"], stdout=open(install_results["musicc"]["stdout"], "w"), stderr=open(install_results["musicc"]["stderr"], "w"), env=env)
-    except (EnvironmentError, subprocess.CalledProcessError):
-        install_error = True
-        install_results["musicc"]["error"] = True
-
 # Report any installation errors
 if install_error:
     for key in install_results.keys():
@@ -187,7 +185,7 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
     # Check if each file exists or is an executable in the environment
     step_missing_programs = []
     for required_program in required_programs:
-        program_exists = os.path.isfile(required_program)
+        program_exists = os.path.exists(required_program)
         executable_exists = subprocess.run(["which", required_program], capture_output=True, env=env).returncode == 0
         if not program_exists and not executable_exists:
             step_missing_programs.append(required_program)
