@@ -77,7 +77,7 @@ if not args.no_blast and make_installed:
         subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-src.tar.gz", "-P", fo.source_directory])
         subprocess.run(["tar", "-zxf", "ncbi-blast-2.2.31+-src.tar.gz"], cwd=fo.source_directory)
 
-    if not os.path.isdir(config.steps.host_filter.required_programs["blastn_dir"]):
+    if not os.path.isdir(config.steps.host_filter.required_programs["blastn_dir"]) or not os.path.isfile(config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb"):
         subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/")
 
         try:
@@ -210,7 +210,8 @@ if not args.no_human_reference and config.steps.host_filter.required_programs["b
 
 if not args.no_ko_mappings:
     for ortholog_to_grouping_mapping in op.ortholog_to_grouping_mappings:
-        subprocess.run(["wget", "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping, "-O", fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix])
+        if not os.path.isfile(fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix):
+            subprocess.run(["wget", "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping, "-O", fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix])
 
 if args.uniprot and config.steps.map_reads_to_genes.required_programs["diamond"] not in all_missing_programs and op.python not in all_missing_programs:
     if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz"):
