@@ -1,9 +1,6 @@
 import argparse
 from config import env
 import subprocess
-import sys
-import re
-import os
 import config.operation as op
 
 parser = argparse.ArgumentParser(description="Wrapper script to run the pipeline, ensuring that the shell environment for Snakemake is correct.")
