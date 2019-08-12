@@ -129,6 +129,11 @@ Suffix for a BLAST database sequence file
 
 srprism_suffix = ".srprism"
 """
+Suffix for an srprism index ID
+"""
+
+srprism_index_suffix = ".idx"
+"""
 Suffix for an srprism index file
 """
 

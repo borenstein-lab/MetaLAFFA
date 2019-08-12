@@ -239,7 +239,7 @@ if not os.path.isfile(op.host_bitmask_file):
 if not os.path.isfile(op.host_database_file + op.blast_db_suffix):
     sys.stderr.write("Warning: The host BLAST database sequence file (%s) does not exist. You will be unable to perform the default host filtering step without it. Make sure that 'database_directory' in config.file_organization and 'host_database' in config.operation.py are correct.\n" % op.host_database_file + op.blast_db_suffix)
 
-if not os.path.isfile(op.host_index_file):
+if not os.path.isfile(op.host_index_file + op.srprism_index_suffix):
     sys.stderr.write("Warning: The host database index (%s) does not exist. You will be unable to perform the default host filtering step without it. Make sure that 'index_directory' in config.file_organization and 'host_database' in config.operation.py are correct.\n" % op.host_index_file)
 
 if not os.path.isfile(op.target_database_file):
