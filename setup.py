@@ -70,6 +70,7 @@ if pip_installed:
     pip_install_list = []
     if not args.no_snakemake:
         pip_install_list.append("snakemake")
+        pip_install_list.append("psutil")
     if not args.no_musicc:
         pip_install_list.append("musicc")
     try:
