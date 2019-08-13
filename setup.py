@@ -261,5 +261,5 @@ for ortholog_to_grouping in op.ortholog_to_grouping_files:
 if not args.no_jobscript:
     with open(fo.source_directory + "template_jobscript.sh") as template, open(fo.source_directory + "configured_jobscript.sh", "w") as configured:
         for line in template:
-            configured.write(line.format(python=op.python, metaLAFFA_directory=os.getcwd()))
+            configured.write(line.format(python=op.python, metaLAFFA_directory=os.getcwd(), PYTHONPATH="{{PYTHONPATH}}"))
 
