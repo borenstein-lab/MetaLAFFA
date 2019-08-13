@@ -14,7 +14,7 @@ args = parser.parse_args()
 # Create the snakemake command and add options to it as specified by the arguments
 command = [op.snakemake]
 if not args.local:
-    command += ["-c", args.submission_wrapper]
+    command += ["-c", "'python %s'" % args.submission_wrapper]
 command += ["-j", str(args.number_of_jobs)]
 command += ["--latency-wait", str(args.wait)]
 
