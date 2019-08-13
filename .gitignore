@@ -26,3 +26,5 @@ gene_to_ortholog_maps/*
 ortholog_to_grouping_maps/*
 dummy_input_files_generated.txt
 src/configured_jobscript.sh
+src/*.err
+src/*.out
