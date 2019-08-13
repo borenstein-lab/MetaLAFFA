@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 from snakemake.utils import read_job_properties
+from config import env
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Submits a Snakemake job to Condor")
@@ -40,4 +41,4 @@ with open(submission_file_path, "w") as submission_file:
     submission_file.write("Image_Size = %d\n" % memory_int)
     submission_file.write("Queue\n")
 
-subprocess.run(["condor_submit", submission_file_path])
+subprocess.run(["condor_submit", submission_file_path], env=env)
