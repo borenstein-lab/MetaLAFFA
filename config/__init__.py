@@ -11,7 +11,7 @@ env = os.environ.copy()
 # If the python package directory is not specified as an absolute path, prepend the current working directory to make it an absolute path
 fixed_python_path = python_package_directory
 if re.match("^/", fixed_python_path) is None:
-    fixed_python_path = os.getcwd() + "/" + fixed_python_path
+    fixed_python_path = os.getcwd() + "/" + fixed_python_path + ":" + os.getcwd()
 
 # If there is no PYTHONPATH environment variable, add ours
 if "PYTHONPATH" not in env:

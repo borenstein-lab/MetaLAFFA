@@ -21,6 +21,7 @@ parser.add_argument("--no_diamond", "-nd", action="store_true", help="If used, d
 parser.add_argument("--no_musicc", "-nmu", action="store_true", help="If used, do not install MUSiCC via pip for ortholog abundance correction.")
 parser.add_argument("--no_ko_mappings", "-nkm", action="store_true", help="If used, to not download bacterial ko-to-module and ko-to-pathway mappings from the 2013 version of the KEGG database.")
 parser.add_argument("--uniprot", "-u", action="store_true", help="If used, download the default UNIPROT gene sequence reference database for read mapping.")
+parser.add_argument("--no_jobscript", "-nj", action="store_true", help="If used, do not configure the template jobscript to standardize the environment when running cluster jobs remotely")
 
 args = parser.parse_args()
 
@@ -254,3 +255,10 @@ if not os.path.isfile(op.gene_to_ortholog_file):
 for ortholog_to_grouping in op.ortholog_to_grouping_files:
     if not os.path.isfile(ortholog_to_grouping):
         sys.stderr.write("Warning: The ortholog-to-grouping map (%s) does not exist. You will be unable to perform the default ortholog aggregation step without it. Make sure that 'ortholog_to_grouping_directory' in config.file_organization and 'ortholog_to_grouping' in config.operation.py are correct.\n" % ortholog_to_grouping)
+
+# Configure the job script for running Snakemake on a cluster
+if not args.no_jobscript:
+    with open(fo.source_directory + "template_jobscript.sh") as template, open(fo.source_directory + "configured_jobscript.sh", "w") as configured:
+        for line in template:
+            configured.write(line.format(python=op.python, metaLAFFA_directory=os.getcwd()))
+

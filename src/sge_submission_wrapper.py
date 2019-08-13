@@ -3,6 +3,7 @@ import re
 import math
 import subprocess
 from snakemake.utils import read_job_properties
+from config import env
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Submits a Snakemake job to SGE")
@@ -36,14 +37,14 @@ if cores > 1:
     memory = str(memory_per_cpu) + memory_units
     submission_command += ["-pe serial %d" % cores]
 
-submission_command += ["-l mfree=%s" % memory, "-l h_rt=%s" % time, "-wd %s" % wd]
+submission_command += ["-l", "mfree=%s" % memory, "-l", "h_rt=%s" % time, "-wd", wd]
 
 # Only add the disk_free request if working in local TMP storage, otherwise comment out this addition to the resource request
 if disk is not None:
-    submission_command += ["-l disk_free=%s" % disk]
+    submission_command += ["-l", "disk_free=%s" % disk]
 
 # Should resources for this job be reserved (set aside as they become available from completed jobs) until enough resources are available for the job to run?
 if reserve:
-    submission_command += ["-R y"]
+    submission_command += ["-R", "y"]
 
-subprocess.run(submission_command)
+subprocess.run(submission_command, env=env)

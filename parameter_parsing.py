@@ -213,7 +213,7 @@ def create_step_params(step_info):
         cluster_params = cl.default_cluster_params
         for key in step_module.cluster_params:
             cluster_params[key] = step_module.cluster_params[key]
-        step_params[step_name]["cluster_params"] = cluster_params
+        step_params[step_name]["cluster_params"] = copy.deepcopy(cluster_params)
         step_params[step_name]["threads"] = cluster_params["cores"] * op.cpu_to_thread_multiplier
 
         # Assign the prefix components to this step
