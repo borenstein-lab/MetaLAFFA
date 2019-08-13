@@ -15,8 +15,10 @@ args = parser.parse_args()
 command = [op.snakemake]
 if not args.local:
     command += ["-c", args.submission_wrapper]
-command += ["-j", str(args.number_of_jobs)]
-command += ["--latency-wait", str(args.wait)]
+if args.number_of_jobs is not None:
+    command += ["-j", str(args.number_of_jobs)]
+if args.wait is not None:
+    command += ["--latency-wait", str(args.wait)]
 
 # Run the snakemake command
 subprocess.run(command, env=env)
