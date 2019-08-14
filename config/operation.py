@@ -30,6 +30,11 @@ The fifth is for steps that should have their intermediate outputs deleted once 
 Steps can be skipped by commenting them out with the "#" character, though note that any later steps relying on skipped steps should have their input steps updated.
 """
 
+snakefile = "Snakefile"
+"""
+The file that defines what pipeline steps are available to Snakemake.
+"""
+
 sample_list = None
 """
 The file to specifies which samples to annotate. If "None", then samples will be determined based on the contents of the input FASTQ directory.

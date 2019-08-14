@@ -15,6 +15,7 @@ args = parser.parse_args()
 
 # Create the snakemake command and add options to it as specified by the arguments
 command = [op.snakemake]
+command += ["--snakefile", op.snakefile]
 if not args.local:
     command += ["-c", args.submission_wrapper]
 if not args.local:
