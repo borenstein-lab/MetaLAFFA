@@ -1,3 +1,5 @@
+import os
+
 """
 Cluster parameters
 ---------------------
@@ -9,7 +11,7 @@ default_cluster_params = {
     "memory": "10G",
     "time": "24:0:0",
     "cores": 1,
-    "wd": ".",
+    "wd": os.getcwd(),
     "reserve": True
 }
 """

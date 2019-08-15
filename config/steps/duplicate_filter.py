@@ -93,11 +93,11 @@ def default(inputs, outputs, wildcards):
 
         # Convert the paired read files to SAM format
         paired_sam = inputs.forward + ".paired.sam"
-        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["fastq_to_sam"], "F1=%s" % inputs.forward, "F2=%s" % inputs.reverse, "O=%s" % paired_sam, "V=%s" % non_essential_params["quality_format"], "SO=%s" % non_essential_params["sort_order"], "SM=%s" % wildcards.sample], env=env)
+        subprocess.run([op.java, "-jar", required_programs["picard"], non_essential_params["fastq_to_sam"], "F1=%s" % inputs.forward, "F2=%s" % inputs.reverse, "O=%s" % paired_sam, "V=%s" % non_essential_params["quality_format"], "SO=%s" % non_essential_params["sort_order"], "SM=%s" % wildcards.sample], env=env)
 
         # Mark duplicates
         marked_output = inputs.forward + ".marked.sam"
-        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["mark_duplicates"], "I=%s" % paired_sam, "O=%s" % marked_output, "M=%s" % outputs[5]], env=env)
+        subprocess.run([op.java, "-jar", required_programs["picard"], non_essential_params["mark_duplicates"], "I=%s" % paired_sam, "O=%s" % marked_output, "M=%s" % outputs[5]], env=env)
         subprocess.run(["rm", paired_sam], env=env)
 
         # Convert the marked output to a parse-able format
@@ -125,11 +125,11 @@ def default(inputs, outputs, wildcards):
 
         # Convert the singleton read file to SAM format
         singleton_sam = inputs.forward + ".singleton.sam"
-        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["fastq_to_sam"], "F1=%s" % inputs.forward, "O=%s" % singleton_sam, "V=%s" % non_essential_params["quality_format"], "SO=%s" % non_essential_params["sort_order"], "SM=%s" % wildcards.sample], env=env)
+        subprocess.run([op.java, "-jar", required_programs["picard"], non_essential_params["fastq_to_sam"], "F1=%s" % inputs.forward, "O=%s" % singleton_sam, "V=%s" % non_essential_params["quality_format"], "SO=%s" % non_essential_params["sort_order"], "SM=%s" % wildcards.sample], env=env)
 
         # Mark duplicates
         marked_output = inputs.singleton + ".marked.sam"
-        subprocess.run([op.java, "-jar", required_programs["picard"], required_programs["mark_duplicates"], "I=%s" % singleton_sam, "O=%s" % marked_output, "M=%s" % outputs[6]], env=env)
+        subprocess.run([op.java, "-jar", required_programs["picard"], non_essential_params["mark_duplicates"], "I=%s" % singleton_sam, "O=%s" % marked_output, "M=%s" % outputs[6]], env=env)
         subprocess.run(["rm", singleton_sam], env=env)
 
         # Convert the marked output to a parse-able format

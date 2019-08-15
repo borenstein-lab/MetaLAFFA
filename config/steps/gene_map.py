@@ -74,7 +74,7 @@ def default(inputs, outputs, wildcards):
     """
 
     # Set locations of reference files if necessary
-    gene_normalization = fo.gene_normalization_directory + op.target_database_file + ".gene_normalization_file"
+    gene_normalization = op.gene_normalization_file
 
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):

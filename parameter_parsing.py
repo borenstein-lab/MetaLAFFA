@@ -210,7 +210,7 @@ def create_step_params(step_info):
         step_params[step_name]["step_id"] = step_module.step_prefix
 
         # Check for custom cluster resource requests and use defaults when not specified
-        cluster_params = cl.default_cluster_params
+        cluster_params = copy.deepcopy(cl.default_cluster_params)
         for key in step_module.cluster_params:
             cluster_params[key] = step_module.cluster_params[key]
         step_params[step_name]["cluster_params"] = copy.deepcopy(cluster_params)

@@ -46,7 +46,7 @@ Dictionary defining the paths to programs used by this pipeline step
 """
 
 non_essential_params = {
-    "block_size": 36,  # Block size to use in DIAMOND
+    "block_size": 24,  # Block size to use in DIAMOND
     "index_chunks": 1  # Index chunks for DIAMOND}
 }
 """

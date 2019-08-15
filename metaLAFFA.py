@@ -9,6 +9,7 @@ parser.add_argument("--jobscript", "-j", default="src/configured_jobscript.sh", 
 parser.add_argument("--number_of_jobs", "-n", type=int, default=50, help="Number of jobs have submitted to the cluster queue at any one time, or if running locally, the number of cores to use for running jobs in parallel (default %(default)s).")
 parser.add_argument("--wait", "-w", type=int, default=60, help="Number of seconds to wait after a job finishes before checking that the output exists, this can avoid Snakemake incorrectly marking a step as failed when a file might not be present due to latency over a shared file system (default %(default)s).")
 parser.add_argument("--dryrun", "-d", action="store_true", help="If used, determine what steps would be performed and report to the user, but do not actually run the steps.")
+parser.add_argument("--verbose", "-v", action="store_true", help="If used, run Snakemake in verbose mode to print generated job scripts and additional running information.")
 parser.add_argument("--local", "-l", action="store_true", help="If used, run metaLAFFA locally rather than on a cluster.")
 
 args = parser.parse_args()
@@ -24,7 +25,8 @@ command += ["-j", str(args.number_of_jobs)]
 command += ["--latency-wait", str(args.wait)]
 if args.dryrun:
     command += ["-n"]
-command += ["--verbose", "-p"]
+if args.verbose:
+    command += ["--verbose", "-p"]
 
 # Run the snakemake command
 subprocess.run(command, env=env)

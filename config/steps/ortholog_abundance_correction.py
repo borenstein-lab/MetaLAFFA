@@ -50,7 +50,7 @@ Dictionary defining the pipeline step's parameters that don't affect the output
 operating_params = {
     "type": "default",  # ID for operation to perform
     "method": "musicc",  # Method to use for ortholog abundance correction, options include: musicc, relative
-    "musicc_method": "-c learn_model"  # MUSiCC correction method, options include: -n, -c use_generic, -c learn_model
+    "musicc_method": ["-n", "-c", "learn_model"]  # MUSiCC correction method, options include: -n, -c use_generic, -c learn_model
 }
 """
 Dictionary defining the pipeline step's parameters using when running the associated software
@@ -78,7 +78,8 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.input):
 
         if operating_params["method"] == "musicc":
-            subprocess.run([required_programs["musicc"], inputs.input, "-o", outputs[0], operating_params["musicc_method"]], env=env)
+            command = [required_programs["musicc"], inputs.input, "-o", outputs[0]] + operating_params["musicc_method"]
+            subprocess.run(command, env=env)
 
         elif operating_params["method"] == "relative":
             subprocess.run([op.python, "src/ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]], env=env)

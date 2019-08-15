@@ -27,7 +27,7 @@ if "disk" in cluster_params:
 # EDIT BELOW HERE FOR CLUSTER CUSTOMIZATION #
 #############################################
 
-submission_command = ["qsub", args.job_script]
+submission_command = ["qsub"]
 
 # If multiple cores are requested, then we need to request memory per CPU, not total memory
 if cores > 1:
@@ -35,7 +35,7 @@ if cores > 1:
     memory_units = re.match("[0-9]*([^0-9]*)$", memory).group(1)
     memory_per_cpu = math.floor(float(memory_int) / float(cores))
     memory = str(memory_per_cpu) + memory_units
-    submission_command += ["-pe serial %d" % cores]
+    submission_command += ["-pe", "serial", str(cores)]
 
 submission_command += ["-l", "mfree=%s" % memory, "-l", "h_rt=%s" % time, "-wd", wd]
 
@@ -46,5 +46,7 @@ if disk is not None:
 # Should resources for this job be reserved (set aside as they become available from completed jobs) until enough resources are available for the job to run?
 if reserve:
     submission_command += ["-R", "y"]
+
+submission_command += [args.job_script]
 
 subprocess.run(submission_command, env=env)

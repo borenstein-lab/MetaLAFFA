@@ -68,7 +68,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
     print(list(inputs.plainstrings()))
-    subprocess.run([op.python, "src/summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
+    subprocess.run([op.python, "src/profile_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run
