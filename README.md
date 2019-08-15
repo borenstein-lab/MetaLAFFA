@@ -1,6 +1,7 @@
 Tutorial for running metaLAFFA
 ================
 
+-   [Overview](#overview)
 -   [Quick Start Summary](#quick-start-summary)
     -   [Downloading metaLAFFA](#downloading-metalaffa)
     -   [Configuring metaLAFFA](#configuring-metalaffa)
@@ -8,7 +9,6 @@ Tutorial for running metaLAFFA
         -   [Configuring metaLAFFA to submit jobs to a cluster](#configuring-metalaffa-to-submit-jobs-to-a-cluster)
     -   [Trying out metaLAFFA](#trying-out-metalaffa)
 -   [Full-length Tutorial](#full-length-tutorial)
-    -   [Overview](#overview)
     -   [metaLAFFA step descriptions](#metalaffa-step-descriptions)
         -   [1. Host read filtering](#host-read-filtering)
         -   [2. Duplicate read filtering](#duplicate-read-filtering)
@@ -36,16 +36,30 @@ Tutorial for running metaLAFFA
         -   [Starting metaLAFFA](#starting-metalaffa)
         -   [Locating final outputs](#locating-final-outputs)
         -   [Restarting metaLAFFA](#restarting-metalaffa)
+        -   [Using metaLAFFA to annotate a new dataset](#using-metalaffa-to-annotate-a-new-dataset)
 -   [References](#references)
 
 **Repository:** <https://github.com/engal/metaLAFFA>
 
 **Publication:** TBD
 
+**Note:** metaLAFFA is supported on Mac and Linux, but not on Windows.
+
+### Overview
+
+metaLAFFA is a pipeline for annotating shotgun metagenomic data with abundances of functional orthology groups. This process consists of several steps to go from raw FASTQs (with sequencing adapters removed) to functional profiles:
+
+1.  Host read filtering (e.g. removing human DNA)
+2.  Duplicate read filtering
+3.  Quality trimming and filtering
+4.  Mapping reads to genes
+5.  Mapping genes to functional orthology groups (e.g. KOs)
+6.  Aggregating orthologs into higher-level groupings (e.g. pathways)
+
 Quick Start Summary
 -------------------
 
-Follow these steps to annotate two example gut microbiome samples using metaLAFFA.
+Follow these steps to annotate your first metagenomic shotgun sequencing dataset using metaLAFFA.
 
 1.  If not already installed, install [**Python3**](https://www.python.org/downloads/) (version 3.7 or greater is required).
 
@@ -72,7 +86,9 @@ Start pipeline setup by running the setup.py script:
 
 ##### Using a custom functionally-annotated gene database
 
-By default, the setup script does not download any target protein database to map reads against for annotation purposes. You can either enable the `--uniprot` flag for the setup script, which will download the UniRef90 database (takes ~80G of free disk space) and create the necessary gene-to-ortholog and gene count normalization files automatically, or you can use your own existing database by modifying the pipeline configuration module. Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
+By default, the setup script does not download any target protein database to map reads against for annotation purposes. You can either enable the `--uniprot` flag for the setup script, which will download the UniRef90 database (takes ~80G of free disk space and multiple hours depending on your download speed) and create the necessary gene-to-ortholog and gene count normalization files automatically, or you can use your own existing database by modifying the pipeline configuration module. If you use the `--uniprot` option during setup, then you can ignore the following section on configuring a custom target database since metaLAFFA defaults are configured to use the UniRef90 database when present.
+
+Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
 
 1.  Change the configuration module to point to your database and use your ortholog nomenclature of choice by editing the `config/operation.py` submodule, changing line 77 to:
 
@@ -112,6 +128,8 @@ By default, the setup script does not download any target protein database to ma
 
 ##### Configuring metaLAFFA to submit jobs to a cluster
 
+Though metaLAFFA can be run locally, running metaLAFFA on a cluster will allow you to best utilize its ability to parallelize the annotation of many metagenomic shotgun sequencing samples. If you plan to run metaLAFFA locally, you can skip the following section on configuring metaLAFFA to run on a cluster. However, you should make sure to modify `config/steps/map_reads_to_genes.py`, changing the number of cores defined in `cluster_params` to be the number of cores you want a single DIAMOND alignment process to use.
+
 By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCondor clusters. This is achieved via the use of Python job submission wrapper scripts, included in the `src/` directory (`src/sge_submission_wrapper.py` and `src/condor_submission_wrapper.py` respectively). If your cluster uses a different cluster management system, then you will need to create your own job submission wrapper by following these steps:
 
 1.  Copy the appropriate example job submission wrapper script to serve as a template for your new wrapper.
@@ -124,7 +142,7 @@ By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
     1.  Starting from the cluster-specific section of the SGE template wrapper script:
 
-        1.  First, the script intializes the list of components that make up the command to submit the job to the cluster. On SGE, the basic submission command is `qsub`, but you'll want to change this to the correct submission command for your cluster. The second component of the base submission command is the name of the script to run for the cluster job.
+        1.  First, the script initializes the list of components that make up the command to submit the job to the cluster. On SGE, the basic submission command is `qsub`, but you'll want to change this to the correct submission command for your cluster.
 
         2.  Next, there is some example processing for multi-core jobs. For the cluster where this was developed, multi-core jobs must request memory-per-core, rather than total memory for the job, so the script must calculate this. At the end of these calculations, the `qsub` command-line option for requesting multiple cores is added to the base submission command.
 
@@ -132,7 +150,9 @@ By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
         4.  After the common resource requests and job settings have been added, the script next checks whether it should include a request for local disk space on a cluster node and whether it should request that resources be set aside until the job can run. The former is important if you have limited disk space on your shared file system and need to process intermediate files locally on cluster nodes during pipeline steps. The latter is useful for ensuring the jobs with large resource requests get to run.
 
-        5.  Finally, the script runs the final submission command on the command-line.
+        5.  Next, the name of the script to run is added at the end of the command.
+
+        6.  Finally, the script runs the final submission command on the command-line.
 
     2.  Starting from the cluster-specific section of the HTCondor wrapper script:
 
@@ -148,7 +168,7 @@ By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
 1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://portal.hmpdacc.org/)).
 
-2.  Format the names of your intial FASTQs to follow the default naming convention recognized by metaLAFFA:
+2.  Format the names of your initial FASTQs to follow the default naming convention recognized by metaLAFFA:
 
     Forward-read FASTQs should be named `<sample>.R1.fastq.gz`
 
@@ -156,33 +176,32 @@ By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
     Singleton/unpaired FASTQs should be named `<sample>.S.fastq.gz`
 
-3.  Place the FASTQs in the `data/` directory.
+**Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
 
-4.  Start metaLAFFA with the following command (some tips on running metaLAFFA below):
+1.  Place the FASTQs in the `data/` directory.
 
-        snakemake -c "python3 src/<name_of_your_cluster_system>_submission_wrapper.py" -j 50 --latency-wait 60
+2.  Start metaLAFFA with one of the following commands:
 
-    1.  Since Snakemake needs to run for the entire annotation process, we recommend that you begin a [**screen session**](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+    1.  If you are running metaLAFFA locally, use:
 
-    2.  The `-j 50` option specifies how many jobs should be in your cluster's queue at any one time, which limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
+            python3 metaLAFFA.py --local --n <number_of_cores>
 
-    3.  The `--latency-wait 60` option specifies that Snakemake should wait up to a minute after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and clusters can often have some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. You should modify this setting according to the expected latency for your cluster environment.
+        where <number_of_cores> is the number of coress that you want to allow metaLAFFA to use to parallelize pipeline steps (i.e. each core will be running a separate pipeline operation).
 
-    4.  metaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing lines 9-13 of `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipelin_step>.py`.
+    2.  If you are running metaLAFFA on a cluster, use:
+
+            python3 metaLAFFA.py 
+
+    3.  Since Snakemake (and thus metaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [**screen session**](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+
+    4.  You can use the `-n <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many jobs should be in your cluster's queue at any one time. This limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
+
+    5.  You can use the `-w <time_in_seconds>` (default is 60 for <time_in_seconds>) option to specify the time to wait after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and if running on a cluster, there can often be some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. When running on a cluster, you should modify this setting according to the expected latency for your cluster environment.
+
+    6.  When running on a cluster, metaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing lines 9-13 of `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
 
 Full-length Tutorial
 --------------------
-
-### Overview
-
-metaLAFFA is a pipeline for annotating shotgun metagenomic data with abundances of functional orthology groups. This process consists of several steps to go from raw FASTQs (with sequencing adapters removed) to functional profiles:
-
-1.  Host read filtering (e.g. removing human DNA)
-2.  Duplicate read filtering
-3.  Quality trimming and filtering
-4.  Mapping reads to genes
-5.  Mapping genes to functional orthology groups (e.g. KOs)
-6.  Aggregating orthologs into higher-level groupings (e.g. pathways)
 
 This tutorial includes:
 
@@ -209,11 +228,11 @@ The final pre-processing step in metaLAFFA is quality trimming and filtering. Th
 
 Given filtered and quality-controlled FASTQs, metaLAFFA next maps these reads against a database of protein sequences corresponding to identified genes. Note that this (read-based annotation) method is one of two main annotation approaches, the other being assembly-based annotation, such as performed by MOCAT2 (Kultima et al. 2016). Read-based annotation works by assigning functional annotations to individual reads rather than by assembling contigs from reads, assigning functional annotations to ORFs identified in the contigs, and then mapping reads to the ORFs to get counts.
 
-Read annotations are most often performed by aligning reads to a database of gene sequences that have prior functional associations. These alignments are often performed as translated alignments, i.e. doing a 6-frame translation of a read's nucleotide sequence to possible amino acid sequences and then aligning those amino acid sequences to the protein sequences associated with genes. metaLAFFA uses DIAMOND (Buchfink, Xie, and Huson 2015) as its default aligner due to its speed and built-in parallelization. The UniRef90 reference database of gene sequences (from UniProt (Consortium 2018)) is used by default, though other databases of annotated gene sequences could be used if available (e.g. KEGG).
+Read annotations are most often performed by aligning reads to a database of gene sequences that have prior functional associations. These alignments are often performed as translated alignments, i.e. doing a 6-frame translation of a read's nucleotide sequence to possible amino acid sequences and then aligning those amino acid sequences to the protein sequences associated with genes. metaLAFFA uses DIAMOND (Buchfink, Xie, and Huson 2015) as its default aligner due to its speed and built-in parallelization. By default, metaLAFFA is configured to use the UniRef90 reference database of gene sequences (from UniProt (Consortium 2018)) when present, though other databases of annotated gene sequences could be used if available (e.g. KEGG).
 
 ##### 5. Filtering read mapping hits
 
-After mapping reads to gene sequences, metaLAFFA filters these hits to improve annotation quality. There are several ways to filter hits that depend on how many best hits are kept per read and whether hits to genes without functional annotations are kept. The differences in these methods are discussed in Carr et al. (Carr and Borenstein 2014), which analyzes the trade-offs in sensitivity and specificity that come from different choices in hit filtering. By default, metaLAFFA uses a custom Python script to filter hits and uses the highest specificity hit filtering method, keeping only hits with the best e-value for each read and allowing best hits to include genes without functional annotations.
+After mapping reads to gene sequences, metaLAFFA filters these hits to improve annotation quality. There are several ways to filter hits that depend on how many best hits are kept per read and whether hits to genes without functional annotations are kept. The differences in these methods are discussed in Carr et al. (Carr and Borenstein 2014), which analyzes the trade-offs in sensitivity and specificity that come from different choices in hit filtering. By default, metaLAFFA uses a custom Python script to filter hits and uses the highest specificity hit filtering method (i.e. keeping hits that we are most confident in, but potentially missing some true hits due to lower confidence), keeping only hits with the best e-value for each read and allowing best hits to include genes without functional annotations.
 
 ##### 6. Gene counting
 
@@ -221,11 +240,11 @@ Once the hits are filtered, metaLAFFA counts gene abundances based on the number
 
 ##### 7. Ortholog counting
 
-The next step after calculating gene abundances is to convert those gene abundances to abundances of annotated functions. Usually, these come in the form of functional orthology group abundances as defined by various functional annotation systmes (e.g. KEGG (Kanehisa et al. 2018), MetaCyc (Caspi et al. 2007), etc.). These functional orthology groups usually correspond to the function a protein corresponding to a single gene may perform. Similar to the gene counting step, some genes may map to multiple orthology groups in a given system, and so each gene can either contribute its whole abundance to each associated orthology group or fractional contributions of its abundance to each associated orthology group. Again, due to double-counting issues, by default metaLAFFA uses a fraction contribution method when counting ortholog abundances based on gene abundances. Also, metaLAFFA calculates abundances of KEGG orthology groups (KOs) from UniProt gene functional annotations by default. By default, orthology group abundance calculations are performed using a custom Python script.
+The next step after calculating gene abundances is to convert those gene abundances to abundances of annotated functions. Usually, these come in the form of functional orthology group abundances as defined by various functional annotation systems (e.g. KEGG (Kanehisa et al. 2018), MetaCyc (Caspi et al. 2007), etc.). These functional orthology groups usually correspond to the function a protein corresponding to a single gene may perform. Similar to the gene counting step, some genes may map to multiple orthology groups in a given system, and so each gene can either contribute its whole abundance to each associated orthology group or fractional contributions of its abundance to each associated orthology group. Again, due to double-counting issues, by default metaLAFFA uses a fraction contribution method when counting ortholog abundances based on gene abundances. Also, metaLAFFA calculates abundances of KEGG orthology groups (KOs) from UniProt gene functional annotations by default. By default, orthology group abundance calculations are performed using a custom Python script.
 
 ##### 8. Correcting orthology group abundances
 
-Once initial orthology group abundances have been calculated, it is usually necessary to correct them to allow for comparisons between samples. Specifically, orthology group abundances based on read counts from standard shotgun metagenomic seuqencing are inherently compositional in nature (i.e. read count-based abundances reflect relative, rather than absolute, orthology group abundances). To account for this issue and convert orthology group abundances into a form that allows for valid standard statistical comparisons between samples, metaLAFFA uses MUSiCC (Manor and Borenstein 2015) during default operation. MUSiCC uses genes identified as universally single-copy across bacterial genomes to transform read-based relative orthology group abundances into average orthology group copy number across genomes within a sample. By default, metaLAFFA uses MUSiCC's intra-sample correction with learned models for incorporating universal single-copy gene abundances into the correction process.
+Once initial orthology group abundances have been calculated, it is usually necessary to correct them to allow for comparisons between samples. Specifically, orthology group abundances based on read counts from standard shotgun metagenomic sequencing are inherently compositional in nature (i.e. read count-based abundances reflect relative, rather than absolute, orthology group abundances). To account for this issue and convert orthology group abundances into a form that allows for valid standard statistical comparisons between samples, metaLAFFA uses MUSiCC (Manor and Borenstein 2015) during default operation. MUSiCC uses genes identified as universally single-copy across bacterial genomes to transform read-based relative orthology group abundances into average orthology group copy number across genomes within a sample. By default, metaLAFFA uses MUSiCC's inter-sample normalization with intra-sample correction using learned models to correct KO abundances using universal single-copy gene abundances.
 
 ##### 9. Aggregating orthology groups into higher-level functional descriptions
 
@@ -258,7 +277,7 @@ By default, metaLAFFA is built to use several third-party tools and one or two d
 
 The `setup.py` script has various command-line options to modify the default setup procedure. These include options to skip the installation of third-party tools that you may already have installed or skip downloading the default human reference if you have a different host reference database to use. These options are of the form `--no_<name_of_tool>` and you can view the full list of these options by using the `-h` option.
 
-**Note**: by default, metaLAFFA does not download a target database of functionally annotated genes to map reads to, instead assuming that you will configure metaLAFFA to use your own database. However, metaLAFFA is configured by default to work with KO annotations for the UniRef90 database, and you can have metaLAFFA download the UniRef90 database from UniProt by using the `--uniprot` option to the `setup.py` script. However, this database requires ~80G and can take a long time to download.
+**Note**: by default, the setup script does not download a target database of functionally annotated genes to map reads to, instead assuming that you will configure metaLAFFA to use your own database. However, metaLAFFA's default configuration is set to use the UniRef90 database and its associated KO annotations if the database is present. If you would like to use the UniRef90 database, you can have the setup script download the UniRef90 database from UniProt by using the `--uniprot` option to the `setup.py` script. However, this database requires ~80G and can take a long time to download.
 
 ### Configuring metaLAFFA
 
@@ -274,13 +293,13 @@ This submodule defines the file structure of metaLAFFA. Some parameters that you
 
 `final_output_directory`: Where to write the final, desired output files once the pipeline is finished.
 
-`tmp_dir`: Where to write the intermediate files that are generated during some steps of the pipeline but are not kept after the step is done running. By default this is `/tmp/`, which will use local storage on a cluster node, because this will be faster for file reading and writing. However, these intermediate files can be very large (they usually include uncompressed versions of the eventual output for a step) and if you have limited local storage on each cluster node, you may want to change this to process intermediate files in the metaLAFFA directory by setting it tot `./`.
+`tmp_dir`: Where to write the intermediate files that are generated during some steps of the pipeline but are not kept after the step is done running. By default this is `/tmp/` (which, if running on a cluster, will use local storage because this will be faster for file reading and writing. However, these intermediate files can be very large and if you have limited local storage on individual cluster nodes, you may want to change this to process intermediate files in the metaLAFFA directory by setting it to `./`).
 
 ##### config/operation.py
 
 This submodule defines global settings that metaLAFFA uses during pipeline operation. These include whether output files should be compressed, the naming convention for the different types of paired and unpaired FASTQ files, the host database to use for filtering, the target database to use for mapping reads to genes, the file to use for mapping genes to orthologs, the file to use for aggregating orthologs to higher-level functional groupings, and the locations of executables for programs that are used by multiple steps in the pipeline (i.e. Python and Java executables). Some parameters that you may want to change include:
 
-`sample_list`: The location of a list of sample IDs that tell metaLAFFA which samples to annotate. By default, metaLAFFA will annotate all samples it finds in the initial data directory whose file names match the expected pattern (e.g. <sample_id>.R1.fastq.gz for a forward read FASTQ). Providing a list of samples will limit metaLAFFA to only annotate those samples. This may be useful if you want to prioritiate the annotation of specific samples and annotate them first or just annotate samples in batches generally.
+`sample_list`: The location of a list of sample IDs that tell metaLAFFA which samples to annotate. By default, metaLAFFA will annotate all samples it finds in the initial data directory whose file names match the expected pattern (e.g. <sample_id>.R1.fastq.gz for a forward read FASTQ). Providing a list of samples will limit metaLAFFA to only annotate those samples. This may be useful if you want to prioritize the annotation of specific samples and annotate them first or just annotate samples in batches generally.
 
 `fastq_types`: The mapping between the types of FASTQs (i.e. forward paired-reads, reverse paired-reads, and singleton reads) and the expected file name pattern. metaLAFFA will look for samples in the initial data directory that follow the pattern `<sample_id>.<type_id>.fastq.gz`, and you can use this configuration setting to alter the `type_id` that metaLAFFA will accept.
 
@@ -290,7 +309,7 @@ This submodule defines global settings that metaLAFFA uses during pipeline opera
 
 ##### config/cluster.py
 
-This submodule defines the default resource requests and settings for cluster jobs. These include memory, maximum running time, number of cores, and whether cluster resources should be reserved until a job is able to run. You can configure these settings to better fit your cluster by modifying the `default_cluster_params` dictionary.
+This submodule defines the default resource requests and settings for cluster jobs when running metaLAFFA on a cluster. These include memory, maximum running time, number of cores, and whether cluster resources should be reserved until a job is able to run. You can configure these settings to better fit your cluster by modifying the `default_cluster_params` dictionary.
 
 ##### config/steps/\*.py
 
@@ -298,7 +317,7 @@ Each step in the pipeline is configured by the submodule of the same name. These
 
 A step's operations are defined using a Python function, which takes as its arguments the input files to the step, the output files to generate, and any additional information as determined by Snakemake. The function then runs the command-line operations that make up the step via the `subprocess` Python module. These submodules have been written such that advanced users can implement their own functions to redefine pipeline steps and easily swap that function in to run instead of the default function.
 
-Some important default step-specific cluster resource requests (set with 10's to 100's of millions of reads in each FASTQ in mind) include:
+Some important default step-specific resource requests (when running on a cluster and set with 10's to 100's of millions of reads in each FASTQ in mind) include:
 
 `duplicate_filter`: 40G of RAM for MarkDuplicates
 
@@ -308,7 +327,7 @@ Some important default step-specific cluster resource requests (set with 10's to
 
 `hit_filter`: 200G of local disk space for creating a filtered version of DIAMOND output and then gzipping it.
 
-`hit_filter_combine`: 250G of local disk space for concatenating hit-filtered DIAMOND output from FASTQs belong to the same sample (i.e. concatenating the results from the forward paired-read, reverse paired-read, and singlton read FASTQs from the same sample) and then gzipping the output.
+`hit_filter_combine`: 250G of local disk space for concatenating hit-filtered DIAMOND output from FASTQs belong to the same sample (i.e. concatenating the results from the forward paired-read, reverse paired-read, and singleton read FASTQs from the same sample) and then gzipping the output.
 
 ##### config/library\_functions.py
 
@@ -316,7 +335,9 @@ This configuration submodule contains functions used in multiple places elsewher
 
 ##### Configuring metaLAFFA to use a custom annotated gene database
 
-By default, the setup script does not download any target protein database to map reads against for annotation purposes. You can use your own existing database by modifying the pipeline configuration module. Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
+By default, the setup script does not download any target protein database to map reads against for annotation purposes. You can either enable the `--uniprot` flag for the setup script, which will download the UniRef90 database (takes ~80G of free disk space and multiple hours depending on your download speed) and create the necessary gene-to-ortholog and gene count normalization files automatically, or you can use your own existing database by modifying the pipeline configuration module. If you use the `--uniprot` option during setup, then you can ignore the following section on configuring a custom target database since metaLAFFA defaults are configured to use the UniRef90 database when present.
+
+Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
 
 1.  Change the configuration module to point to your database and use your ortholog nomenclature of choice by editing the `config/operation.py` submodule, changing line 77 to:
 
@@ -353,7 +374,7 @@ By default, the setup script does not download any target protein database to ma
                 "method": "relative",
 
     2.  Configure the pipeline to either skip aggregating orthologs to higher-level functional descriptions or provide your own ortholog-to-functional-grouping mapping files.
-        1.  To skip ortholog aggregation and just have the pipeline output corrected ortholog abundances as the final output, comment out lines 48-50 in `pipeline_steps.txt` by puting a `#` at the beginning of each line.
+        1.  To skip ortholog aggregation and just have the pipeline output corrected ortholog abundances as the final output, comment out lines 48-50 in `pipeline_steps.txt` by putting a `#` at the beginning of each line.
 
         2.  To provide your own mapping files, you must create tab-delimited tables in the form
 
@@ -366,13 +387,15 @@ By default, the setup script does not download any target protein database to ma
 
             1.  Write your mapping file to `ortholog_to_grouping_maps/<name_of_your_mapping>.map`.
 
-            2.  Modify the configuration module to find those mapping files by editing the `config/operation.py` submodule, changine line 92 to:
+            2.  Modify the configuration module to find those mapping files by editing the `config/operation.py` submodule, changing line 92 to:
 
                     ortholog_to_grouping_mappings = [<name_of_your_mapping>]
 
                 *Note* You can use any number of mapping files (e.g. if you want to map to multiple levels of higher level function description such as modules and pathways). Just add each mapping file to the `ortholog_to_grouping_maps/` directory and include the name of each mapping in the list of mappings at line 92 in the `config/operation.py` submodule.
 
 ##### Configuring metaLAFFA to submit jobs to a cluster
+
+Though metaLAFFA can be run locally, running metaLAFFA on a cluster will allow you to best utilize its ability to parallelize the annotation of many metagenomic shotgun sequencing samples. If you plan to run metaLAFFA locally, you can skip the following section on configuring metaLAFFA to run on a cluster. However, you should make sure to modify `config/steps/map_reads_to_genes.py`, changing the number of cores defined in `cluster_params` to be the number of cores you want a single DIAMOND alignment process to use.
 
 By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCondor clusters. This is achieved via the use of Python job submission wrapper scripts, included in the `src/` directory (`src/sge_submission_wrapper.py` and `src/condor_submission_wrapper.py` respectively). If your cluster uses a different cluster management system, then you will need to create your own job submission wrapper by following these steps:
 
@@ -386,7 +409,7 @@ By default, metaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
     1.  Starting from the cluster-specific section of the SGE template wrapper script:
 
-        1.  First, the script intializes the list of components that make up the command to submit the job to the cluster. On SGE, the basic submission command is `qsub`, but you'll want to change this to the correct submission command for your cluster. The second component of the base submission command is the name of the script to run for the cluster job.
+        1.  First, the script initializes the list of components that make up the command to submit the job to the cluster. On SGE, the basic submission command is `qsub`, but you'll want to change this to the correct submission command for your cluster. The second component of the base submission command is the name of the script to run for the cluster job.
 
         2.  Next, there is some example processing for multi-core jobs. For the cluster where this was developed, multi-core jobs must request memory-per-core, rather than total memory for the job, so the script must calculate this. At the end of these calculations, the `qsub` command-line option for requesting multiple cores is added to the base submission command.
 
@@ -415,11 +438,11 @@ You must indicate which intermediate step you want metaLAFFA to start from by ap
 -   Change the reading mapping step input to be the initial input data (i.e. changing `map_reads_to_genes:quality_filter` -&gt;; `map_reads_to_genes:INPUT`).
 -   Comment-out or delete steps that you don't want to run (i.e. for all lines for steps starting with `host_filter`, `duplicate_filter`, or `quality_filter`, either put a `#` at the front of the line or delete the line).
 
-Once you've made those changes, metaLAFFA will start from the read mapping step and use files in the `data` directory as input. There are step markers that can be used to indicate certain features of each step, and these should be placed at the beginning of the line for the associated step in`pipelin_steps.txt`. These markers include:
+Once you've made those changes, metaLAFFA will start from the read mapping step and use files in the `data` directory as input. There are step markers that can be used to indicate certain features of each step, and these should be placed at the beginning of the line for the associated step in`pipeline_steps.txt`. These markers include:
 
 `$`: This step produces a final output file that should be copied to a location apart from the rest of the output files to make it easier to locate. Additionally, to avoid unnecessary work, Snakemake will not run any steps that are not required to generate any final output files.
 
-`*`: This step produces a summary table for one or more steps in the pipelin. At the end of the pipeline, the outputs of these steps are merged into a single master summary table as a final output.
+`*`: This step produces a summary table for one or more steps in the pipeline. At the end of the pipeline, the outputs of these steps are merged into a single master summary table as a final output.
 
 ### Running metaLAFFA
 
@@ -429,7 +452,7 @@ Here we provide a walkthrough for running metaLAFFA on a metagenomic shotgun seq
 
 1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://portal.hmpdacc.org/)).
 
-2.  Format the names of your intial FASTQs to follow the default naming convention recognized by metaLAFFA:
+2.  Format the names of your initial FASTQs to follow the default naming convention recognized by metaLAFFA:
 
     Forward-read FASTQs should be named `<sample>.R1.fastq.gz`
 
@@ -439,21 +462,33 @@ Here we provide a walkthrough for running metaLAFFA on a metagenomic shotgun seq
 
     **Note** metaLAFFA expects all three FASTQ types for each sample. If one or more do not exist for a sample (e.g. some samples only have paired reads while others also have some singletons), metaLAFFA will generate appropriately-named empty dummy files as placeholders for the missing expected files. The creation of these dummy files is logged in `dummy_input_files_generated.txt`. If you start metaLAFFA from a step that does not take FASTQs as input (e.g. you have your own DIAMOND output from a separate source and want to annotate it), metaLAFFA will do the same check for expected files and generate (and log the creation of) dummy files for any expected files that are missing.
 
+    **Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
+
 3.  Place the FASTQs in the `data/` directory.
 
 ##### Starting metaLAFFA
 
-1.  Start metaLAFFA with the following command (some tips on running metaLAFFA below):
+Start metaLAFFA with one of the following commands:
 
-        snakemake -c "python3 src/<name_of_your_cluster_system>_submission_wrapper.py" -j 50 --latency-wait 60
+1.  If you are running metaLAFFA locally, use:
 
-    1.  Since Snakemake needs to run for the entire annotation process, we recommend that you begin a [**screen session**](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+        python3 metaLAFFA.py --local --n <number_of_cores>
 
-    2.  The `-j 50` option specifies how many jobs should be in your cluster's queue at any one time, which limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
+    where <number_of_cores> is the number of coress that you want to allow metaLAFFA to use to parallelize pipeline steps (i.e. each core will be running a separate pipeline operation).
 
-    3.  The `--latency-wait 60` option specifies that Snakemake should wait up to a minute after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and clusters can often have some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. You should modify this setting according to the expected latency for your cluster environment.
+2.  If you are running metaLAFFA on a cluster, use:
 
-    4.  metaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing lines 9-13 of `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipelin_step>.py`.
+        python3 metaLAFFA.py 
+
+Some notes on metaLAFFA usage:
+
+1.  Since Snakemake (and thus metaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [**screen session**](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+
+2.  You can use the `-n <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many jobs should be in your cluster's queue at any one time. This limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
+
+3.  You can use the `-w <time_in_seconds>` (default is 60 for <time_in_seconds>) option to specify the time to wait after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and if running on a cluster, there can often be some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. When running on a cluster, you should modify this setting according to the expected latency for your cluster environment.
+
+4.  When running on a cluster, metaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing lines 9-13 of `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
 
 ##### Locating final outputs
 
@@ -470,6 +505,16 @@ Once the pipeline has finished running, you can find your desired output files i
 ##### Restarting metaLAFFA
 
 You can stop metaLAFFA at any point (e.g. CTRL-C while running Snakemake) and if you rerun the same Snakemake command, the pipeline will pick up where it left off.
+
+##### Using metaLAFFA to annotate a new dataset
+
+Once you have successfully used metaLAFFA to annotate a metagenomic shotgun sequencing data, hopefully you will want to use metaLAFFA again in the future as you obtain new data to annotate. However, different datasets may require different pipeline configurations (e.g. different host databases for samples from different host species, different target databases if you want to map reads to a specific set of genes, etc.) and you will probably want to save the specific pipeline configuration you used for each individual dataset for future reference. Thus, metaLAFFA also includes a script, `create_new_metaLAFFA_project.py`, which is run as follows:
+
+    create_new_metaLAFFA_project.py <path_to_new_annotation_project_directory>
+
+This does the following: 1. Creates a new annotation project directory 2. Copies over the necessary configuration files from your original metaLAFFA installation, which has two benefits: 1. This provides you with separate configuration files that are specific to your new annotation project and thus can serve as a record of how you run metaLAFFA for each individual project 2. This maintains any custom adjustments you made to the pipeline configuration when you first ran metaLAFFA, which means that you do not need to repeat any changes to the default configuration that may be specific to your working environment 3. Pre-modifies the configuration (where appropriate) to point to the same supporting files (e.g. source files, databases, and mapping files) as your original metaLAFFA installation, which means that you do not have to repeat the setup process for each new annotation project (i.e. you do not have to reinstall local copies of third-party software or redownload and process host and target databases)
+
+Once you have done this, you can then make any project-specific configuration changes to the project's configuration files without affecting the configuration of your original metaLAFFA installation. For example, you can set the `initial_data_directory` variable in `config/file_organization.py` to point to a different dataset that you want to annotate.
 
 References
 ----------
