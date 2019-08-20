@@ -197,7 +197,7 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
         sys.stderr.write("Warning: program(s) missing for the %s pipeline step. The step may not run correctly without the program(s):\n" % modname)
         for missing_program in step_missing_programs:
             sys.stderr.write("%s\n" % missing_program)
-        all_missing_programs.union(set(step_missing_programs))
+        all_missing_programs = all_missing_programs.union(set(step_missing_programs))
 
 # Try to create and process default database files
 if not args.no_human_reference and config.steps.host_filter.required_programs["bmtool"] not in all_missing_programs and config.steps.host_filter.required_programs["srprism"] not in all_missing_programs and makeblastdb_location not in all_missing_programs:
