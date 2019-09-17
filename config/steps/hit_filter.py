@@ -7,6 +7,7 @@ This configuration submodule contains parameters related to the hit filter pipel
 
 from config import env
 import config.operation as op
+import config.file_organization as fo
 import config.library_functions as lf
 import subprocess
 
@@ -85,7 +86,7 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.input):
 
         # Create the shell command to run, adding optional parameters as necessary
-        command = [op.python, "src/hit_filter.py", inputs.input, operating_params["method"], "--output", outputs[0]]
+        command = [op.python, fo.source_directory + "hit_filter.py", inputs.input, operating_params["method"], "--output", outputs[0]]
         if ortholog_method:
             command += ["--gene_to_ortholog_map", gene_to_ortholog]
         if n_method:

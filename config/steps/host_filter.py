@@ -50,7 +50,7 @@ required_programs = {
     "bmtagger": fo.source_directory + "bmtools/bmtagger/bmtagger.sh",  # Path to bmtagger program
     "extract_fa": fo.source_directory + "bmtools/bmtagger/extract_fullseq",  # Path to extract_fa program
     "srprism": fo.source_directory + "srprism/gnuac/app/srprism",  # Path to srprism program
-    "blastn_dir": fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/bin/"  # Path to directory containing the blastn program
+    "blastn": fo.source_directory + "ncbi-blast-2.2.31+-src/c++/ReleaseMT/bin/blastn"  # Path to blastn program
 }
 """
 Dictionary defining the paths to programs used by this pipeline step
@@ -91,7 +91,7 @@ def default(inputs, outputs, wildcards):
     running_env["BMFILTER"] = required_programs["bmfilter"]
     running_env["EXTRACT_FA"] = required_programs["extract_fa"]
     running_env["SRPRISM"] = required_programs["srprism"]
-    running_env["PATH"] += required_programs["blastn_dir"]
+    running_env["BLASTN"] = required_programs["blastn"]
 
     # Set locations of reference files
     bitmask = op.host_bitmask_file
@@ -104,7 +104,7 @@ def default(inputs, outputs, wildcards):
         # Match the read IDs between the paired read files for bmtagger
         matched_input = inputs.reverse + ".matched"
         with open(matched_input, "w") as matched_input_file:
-            subprocess.run([op.python, "src/match_read_names.py", inputs.forward, inputs.reverse], stdout=matched_input_file, env=env)
+            subprocess.run([op.python, fo.source_directory + "match_read_names.py", inputs.forward, inputs.reverse], stdout=matched_input_file, env=env)
 
         # bmtagger requires unzipped input files, so unzip the forward read file without deleting the original
         tmp_unzipped_exists = False
@@ -127,9 +127,9 @@ def default(inputs, outputs, wildcards):
 
         # Remove the marked reads from the original fastqs
         with open(outputs[0], "w") as forward_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.forward], stdout=forward_output, env=env)
+            subprocess.run([op.python, fo.source_directory + "remove_marked_reads.py", outputs[3], inputs.forward], stdout=forward_output, env=env)
         with open(outputs[1], "w") as reverse_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.reverse], stdout=reverse_output, env=env)
+            subprocess.run([op.python, fo.source_directory + "remove_marked_reads.py", outputs[3], inputs.reverse], stdout=reverse_output, env=env)
 
     # Otherwise, if both paired read files were dummy files, create dummy outputs
     else:
@@ -156,7 +156,7 @@ def default(inputs, outputs, wildcards):
 
         # Remove the marked reads from the original fastqs
         with open(outputs[2], "w") as singleton_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[4], inputs.singleton], stdout=singleton_output, env=env)
+            subprocess.run([op.python, fo.source_directory + "remove_marked_reads.py", outputs[4], inputs.singleton], stdout=singleton_output, env=env)
 
     # Otherwise, if the singleton read file was a dummy file, create dummy outputs
     else:

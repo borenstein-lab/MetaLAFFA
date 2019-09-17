@@ -7,6 +7,7 @@ This configuration submodule contains parameters related to the ortholog map com
 
 from config import env
 import config.operation as op
+import config.file_organization as fo
 import subprocess
 
 input_dic = {
@@ -68,7 +69,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
     print(list(inputs.plainstrings()))
-    subprocess.run([op.python, "src/profile_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
+    subprocess.run([op.python, fo.source_directory + "profile_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run

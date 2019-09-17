@@ -78,7 +78,7 @@ def default(inputs, outputs, wildcards):
         mapping = fo.ortholog_to_grouping_directory + wildcards.mapping + op.ortholog_to_grouping_suffix
 
         if operating_params["method"] == "standard":
-            subprocess.run([op.python, "src/ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--grouping_name", wildcards.mapping, "--output", outputs[0]], env=env)
+            subprocess.run([op.python, fo.source_directory + "ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--grouping_name", wildcards.mapping, "--output", outputs[0]], env=env)
 
     # Otherwise, if the input file is a dummy file, create dummy outputs
     else:

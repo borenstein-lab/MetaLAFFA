@@ -7,6 +7,7 @@ This configuration submodule contains parameters related to the ortholog map pip
 
 from config import env
 import config.operation as op
+import config.file_organization as fo
 import config.library_functions as lf
 import subprocess
 
@@ -78,7 +79,7 @@ def default(inputs, outputs, wildcards):
     # If the input file is non-empty, map the reads
     if not lf.is_empty(inputs.input):
 
-        subprocess.run([op.python, "src/ortholog_map.py", inputs.input, operating_params["method"], gene_to_ortholog, "--output", outputs[0]], env=env)
+        subprocess.run([op.python, fo.source_directory + "ortholog_map.py", inputs.input, operating_params["method"], gene_to_ortholog, "--output", outputs[0]], env=env)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:

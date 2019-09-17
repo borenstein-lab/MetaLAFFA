@@ -7,6 +7,7 @@ This configuration submodule contains parameters related to the quality filter f
 
 from config import env
 import config.operation as op
+import config.file_organization as fo
 import config.library_functions as lf
 import subprocess
 
@@ -70,7 +71,7 @@ def default(inputs, outputs, wildcards):
     """
 
     if not lf.is_empty(inputs.input):
-        subprocess.run([op.python, "src/quality_filter_fastq_summary.py", inputs.input, "--output", outputs[0], "--use_sample", "--use_type"], env=env)
+        subprocess.run([op.python, fo.source_directory + "quality_filter_fastq_summary.py", inputs.input, "--output", outputs[0], "--use_sample", "--use_type"], env=env)
     else:
         subprocess.run(["touch", outputs[0]], env=env)
 

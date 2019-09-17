@@ -82,7 +82,7 @@ def default(inputs, outputs, wildcards):
             subprocess.run(command, env=env)
 
         elif operating_params["method"] == "relative":
-            subprocess.run([op.python, "src/ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]], env=env)
+            subprocess.run([op.python, fo.source_directory + "ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]], env=env)
 
         # Otherwise, if the method is unrecognized, just copy the input file to the output
         else:

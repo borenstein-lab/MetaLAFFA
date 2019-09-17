@@ -108,13 +108,13 @@ def default(inputs, outputs, wildcards):
 
         # Extract duplicate reads from the formatted marked output
         with open(outputs[3], "w") as marked_read_file:
-            subprocess.run([op.python, "src/extract_duplicates.py", formatted_marked_output], stdout=marked_read_file, env=env)
+            subprocess.run([op.python, fo.source_directory + "extract_duplicates.py", formatted_marked_output], stdout=marked_read_file, env=env)
 
         # Remove the marked reads from the original fastqs
         with open(outputs[0], "w") as forward_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.forward], stdout=forward_output, env=env)
+            subprocess.run([op.python, fo.source_directory + "remove_marked_reads.py", outputs[3], inputs.forward], stdout=forward_output, env=env)
         with open(outputs[1], "w") as reverse_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[3], inputs.reverse], stdout=reverse_output, env=env)
+            subprocess.run([op.python, fo.source_directory + "remove_marked_reads.py", outputs[3], inputs.reverse], stdout=reverse_output, env=env)
 
     # Otherwise, if both paired read files were dummy files, create dummy outputs
     else:
@@ -140,11 +140,11 @@ def default(inputs, outputs, wildcards):
 
         # Extract duplicate reads from the formatted marked output
         with open(outputs[4], "w") as marked_read_file:
-            subprocess.run([op.python, "src/extract_duplicates.py", formatted_marked_output], stdout=marked_read_file, env=env)
+            subprocess.run([op.python, fo.source_directory + "extract_duplicates.py", formatted_marked_output], stdout=marked_read_file, env=env)
 
         # Remove the marked reads from the original fastqs
         with open(outputs[2], "w") as singleton_output:
-            subprocess.run([op.python, "src/remove_marked_reads.py", outputs[4], inputs.singleton], stdout=singleton_output, env=env)
+            subprocess.run([op.python, fo.source_directory + "remove_marked_reads.py", outputs[4], inputs.singleton], stdout=singleton_output, env=env)
 
     # Otherwise, if the singleton read file was a dummy file, create dummy outputs
     else:
