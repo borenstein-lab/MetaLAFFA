@@ -21,4 +21,7 @@ if "PYTHONPATH" not in env:
 else:
     env["PYTHONPATH"] = fixed_python_path + ":" + env["PYTHONPATH"]
 
+# Create an environment variable pointing to the current project directory
+env["PROJECT_DIRECTORY"] = os.getcwd()
+
 from .steps import *
