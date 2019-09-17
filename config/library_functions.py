@@ -39,7 +39,7 @@ def get_working_output_name(filename, step_id):
     if op.work_in_tmp_dir:
         tmp_subdir = "/".join([fo.tmp_dir, step_id])
         if not os.path.isdir(tmp_subdir):
-            os.makedirs(tmp_subdir)
+            os.makedirs(tmp_subdir, exist_ok=True)
         working_output = "/".join([tmp_subdir, os.path.basename(working_output)])
     return working_output
 
