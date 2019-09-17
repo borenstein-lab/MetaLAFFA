@@ -1,4 +1,5 @@
 import os
+import config.file_organization as fo
 
 """
 Cluster parameters
@@ -16,4 +17,14 @@ default_cluster_params = {
 }
 """
 Dictionary defining the default pipeline step cluster parameters
+"""
+
+submission_wrapper = fo.source_directory + "sge_submission_wrapper.py"
+"""
+The path to the submission wrapper script for interpretting Snakemake-determined job parameters when using a cluster
+"""
+
+jobscript = fo.source_directory + "configured_jobscript.sh"
+"""
+The path to the jobscript that handles setup of parameters for cluster job session
 """
