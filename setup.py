@@ -85,7 +85,7 @@ if not args.no_blast and make_installed:
         subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-src.tar.gz", "-P", fo.source_directory], env=env)
         subprocess.run(["tar", "-zxf", "ncbi-blast-2.2.31+-src.tar.gz"], cwd=fo.source_directory, env=env)
 
-    if not os.path.isdir(config.steps.host_filter.required_programs["blastn_dir"]) or not os.path.isfile(config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb"):
+    if not os.path.isfile(config.steps.host_filter.required_programs["blastn"]):
         subprocess.run(["./configure"], cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/", env=env)
 
         try:
@@ -176,7 +176,7 @@ if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returnc
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running metaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable.\n" % op.snakemake)
     all_missing_programs.add(op.snakemake)
 
-makeblastdb_location = config.steps.host_filter.required_programs["blastn_dir"] + "makeblastdb"
+makeblastdb_location = os.path.dirname(config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
 if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0:
     sys.stderr.write("Warning: %s is not present and executable in your current environment. This will be required for processing the default human reference database for host filtering. Check for BLAST+ installation errors if you tried to install BLAST+ with the setup script.\n" % makeblastdb_location)
     all_missing_programs.add(makeblastdb_location)
