@@ -173,7 +173,7 @@ if subprocess.run(["which", op.java], capture_output=True, env=env).returncode !
     all_missing_programs.add(op.java)
 
 if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0:
-    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running metaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable.\n" % op.snakemake)
+    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running MetaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable.\n" % op.snakemake)
     all_missing_programs.add(op.snakemake)
 
 makeblastdb_location = os.path.dirname(config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
@@ -261,5 +261,5 @@ for ortholog_to_grouping in op.ortholog_to_grouping_files:
 if not args.no_jobscript:
     with open(fo.source_directory + "template_jobscript.sh") as template, open(fo.source_directory + "configured_jobscript.sh", "w") as configured:
         for line in template:
-            configured.write(line.format(python=op.python, metaLAFFA_directory=os.getcwd(), PYTHONPATH="{{PYTHONPATH}}"))
+            configured.write(line.format(python=op.python, MetaLAFFA_directory=os.getcwd(), PYTHONPATH="{{PYTHONPATH}}"))
 

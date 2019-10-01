@@ -11,7 +11,7 @@ parser.add_argument("--number_of_jobs", "-n", type=int, default=50, help="Number
 parser.add_argument("--wait", "-w", type=int, default=60, help="Number of seconds to wait after a job finishes before checking that the output exists. This can avoid Snakemake incorrectly marking a step as failed when a file might not be immediately visible due to network latency (default: %(default)s).")
 parser.add_argument("--dryrun", "-d", action="store_true", help="If used, determine what steps would be performed and report to the user, but do not actually run the steps.")
 parser.add_argument("--verbose", "-v", action="store_true", help="If used, run Snakemake in verbose mode to print the bodies of generated job scripts and additional running information.")
-parser.add_argument("--local", "-l", action="store_true", help="If used, run metaLAFFA locally rather than on a cluster.")
+parser.add_argument("--local", "-l", action="store_true", help="If used, run MetaLAFFA locally rather than on a cluster.")
 
 args = parser.parse_args()
 
