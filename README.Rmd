@@ -61,13 +61,15 @@ cd metaLAFFA
 python3 setup.py
 ```
 
-**Note**: using default options, it can take a few hours to install all third-party tools and download and process all default databases, takes ~10G of RAM, and ~30G of free disk space.
+**Note**: Using default options, it can take a few hours to install all third-party tools and download and process all default databases, takes ~10G of RAM, and ~30G of free disk space.
+
+**Note**: By default, setup does not download or configure a database of annotated microbial peptide sequences to map reads against. However, you can use the `--uniprot` option when running `setup.py` to download the UniRef90 database (takes ~80G of free disk space) and create the associated DIAMOND-processed database, gene-to-ortholog mapping file, and gene count normalization file. If you do this, you can skip the following "Configuring metaLAFFA" section. 
 
 ### Configuring metaLAFFA
 
 ##### Using a custom functionally-annotated gene database
 
-By default, the setup script does not download any target protein database to map reads against for annotation purposes. You can either enable the `--uniprot` flag for the setup script, which will download the UniRef90 database (takes ~80G of free disk space and multiple hours depending on your download speed) and create the necessary gene-to-ortholog and gene count normalization files automatically, or you can use your own existing database by modifying the pipeline configuration module. If you use the `--uniprot` option during setup, then you can ignore the following section on configuring a custom target database since metaLAFFA defaults are configured to use the UniRef90 database when present.
+By default, the setup script does not download or configure a database of annotated microbial peptdie sequences to map reads against, instead assuming you will use your own existing database by modifying the pipeline configuration module. If you used the `--uniprot` option during setup, then you can ignore the following section on configuring a custom target database since metaLAFFA defaults will be set to use the downloaded UniRef90 database.
 
 Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
 
@@ -422,7 +424,33 @@ cd metaLAFFA
 python3 setup.py
 ```
 
-The `setup.py` script has various command-line options to modify the default setup procedure. These include options to skip the installation of third-party tools that you may already have installed or skip downloading the default human reference if you have a different host reference database to use. These options are of the form `--no_<name_of_tool>` and you can view the full list of these options by using the `-h` option.
+##### Setup script options
+
+The `setup.py` script has various command-line options to modify the default setup procedure:
+
+`--pip PIP, -p PIP`: Which pip to run for local python package installation (default: `pip3`).
+
+`--no_snakemake, -ns`: If used, do not install Snakemake in the pipeline directory. Note that Snakemake is required for pipeline operation, so only use this option if you have already installed Snakemake.
+
+`--no_blast, -nbl`: If used, do not install BLAST+ in the pipeline directory. Note that BLAST+'s `makeblastdb` program is used by this setup script to configure the default database for host read filtering.
+
+`--no_bmtagger, -nbm`: If used, do not install BMTagger in the pipeline directory. BMTagger is used for host filtering in the default pipeline configuration.
+
+`--no_human_reference, -nh`: If used, do not download the default human reference that is packaged with BMTagger (hs37) in the pipeline database directory. Note that the human reference is used for host filtering in the default pipeline configuration.
+
+`--no_markduplicates, -nma`: If used, do not download PICARD and samtools in the pipeline source directory. Note that MarkDuplicates and samtools are used for duplicate filtering in the default pipeline configuration.
+
+`--no_trimmomatic, -nt`: If used, do not download Trimmomatic in the pipeline source directory. Note that Trimmomatic is used for quality trimming and filtering in the default pipeline configuration.
+
+`--no_diamond, -nd`: If used, do not install DIAMOND in the pipeline directory. Note that DIAMOND is used by this setup script to configure the default target microbial peptide database and used for read mapping in the default pipeline configuration.
+
+`--no_musicc, -nmu`: If used, do not install MUSiCC in the pipeline directory via pip. Note that MUSiCC is used for ortholog abundance correction in the default pipeline configuration.
+
+`--no_ko_mappings, -nkm`: If used, do not download the bacterial KO-to-module and KO-to-pathway mappings from the 2013 version of the KEGG database. Note that these mappings are used for aggregating orthologs in the default pipeline configuration.
+
+`--uniprot, -u`: If used, download and configure UniProt's UniRef90 annotated peptide database. Note that the UniRef90 database is used in the default pipeline configuration.
+
+`--no_jobscript, -nj`: If used, do not configure the template jobscript. Note that the jobscript is used to standardize the environment when running cluster jobs remotely.
 
 **Note**: by default, the setup script does not download a target database of functionally annotated genes to map reads to, instead assuming that you will configure metaLAFFA to use your own database. However, metaLAFFA's default configuration is set to use the UniRef90 database and its associated KO annotations if the database is present. If you would like to use the UniRef90 database, you can have the setup script download the UniRef90 database from UniProt by using the `--uniprot` option to the `setup.py` script. However, this database requires ~80G and can take a long time to download.
 
@@ -650,7 +678,7 @@ Here we provide a walkthrough for running metaLAFFA on a metagenomic shotgun seq
     
     Singleton/unpaired FASTQs should be named `<sample>.S.fastq.gz`
     
-    **Note** metaLAFFA expects all three FASTQ types for each sample. If one or more do not exist for a sample (e.g. some samples only have paired reads while others also have some singletons), metaLAFFA will generate appropriately-named empty dummy files as placeholders for the missing expected files. The creation of these dummy files is logged in `dummy_input_files_generated.txt`. If you start metaLAFFA from a step that does not take FASTQs as input (e.g. you have your own DIAMOND output from a separate source and want to annotate it), metaLAFFA will do the same check for expected files and generate (and log the creation of) dummy files for any expected files that are missing.
+    **Note**: metaLAFFA expects all three FASTQ types for each sample. If one or more do not exist for a sample (e.g. some samples only have paired reads while others also have some singletons), metaLAFFA will generate appropriately-named empty dummy files as placeholders for the missing expected files. The creation of these dummy files is logged in `dummy_input_files_generated.txt`. If you start metaLAFFA from a step that does not take FASTQs as input (e.g. you have your own DIAMOND output from a separate source and want to annotate it), metaLAFFA will do the same check for expected files and generate (and log the creation of) dummy files for any expected files that are missing.
 
     **Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
 
@@ -677,6 +705,24 @@ Start metaLAFFA with one of the following commands:
     ```
     python3 metaLAFFA.py 
     ```
+
+##### metaLAFFA script options
+
+The `metaLAFFA.py` script has various command-line options to modify how metaLAFFA runs:
+
+`--submission_wrapper SUBMISSION_WRAPPER, -s SUBMISSION_WRAPPER`: How to call the wrapper script to use to parse job settings, parse resource requests, and submit a job to the cluster (default: `python3 src/sge_submission_wrapper.py`)
+
+`--jobscript JOBSCRIPT, -j JOBSCRIPT`: The jobscript to use when submitting an individual cluster job (default `src/configured_jobscript.sh`)
+
+`--number_of_jobs NUMBER_OF_JOBS, -n NUMBER_OF_JOBS`: Number of jobs that should be active at a time (jobs in the queue when running on a cluster, number of cores to use in parallel when running locally) (default 50 jobs)
+
+`--wait WAIT, -w WAIT`: Number of seconds to wait after a job finishes before checking that the output exists. This wait time can help avoid Snakemake incorrectly marking a step as failed if network latency delays a file becoming visible (default 60 seconds)
+
+`--dryrun, -d`: If used, determine what steps would be performed and report to the user, but do not actually run the steps
+
+`--verbose, -v`: If used, run Snakemake in verbose mode to print the bodies of generated job scripts and additional running information
+
+`--local, -l`: If used, run metaLAFFA locally rather than submitting each step as a job to a cluster
 
 Some notes on metaLAFFA usage:
 
