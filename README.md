@@ -160,13 +160,15 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
     2.  Starting from the cluster-specific section of the HTCondor wrapper script:
 
-        1.  First, the script converts memory requests into the appropriate units for HTCondor memory requests.
+        1.  First, the script defines a `node` variable that indicates which specific cluster node(s) MetaLAFFA should request to run jobs on. If this is set to `None`, then MetaLAFFA will not restrict which node(s) job submissions will be sent to. This may be important if MetaLAFFA (or the data you wish to annotate) will only be available on a subset of nodes (e.g. if only a subset of cluster nodes mount the drive where your data is stored or where MetaLAFFA is installed), in which case you would want MetaLAFFA to request that jobs run only on those specific nodes.
 
-        2.  Next, the script opens up a config file (in `submission_files/`) specific to the pipeline operation it is submitting to the cluster. To keep config files distinct between parallel jobs, the script names this config file based on the name of the pipeline step and the instance of the pipeline step it is running (i.e. which input file is being run through this pipeline step).
+        2.  Next, the script converts memory requests into the appropriate units for HTCondor memory requests.
 
-        3.  The script then populates the config file with resource requests and settings. These include, in order of their addition in the script: the location of the script to run, the number of cores to request for the job, and the amount of memory to reserve for the job. The added `Queue` terminates the configuration file.
+        3.  After determining job parameters, the script opens up a config file (in `submission_files/`) specific to the pipeline operation it is submitting to the cluster. To keep config files distinct between parallel jobs, the script names this config file based on the name of the pipeline step and the instance of the pipeline step it is running (i.e. which input file is being run through this pipeline step).
 
-        4.  Finally, the script runs `condor_submit` on the command-line, providing the path to the config file for this job.
+        4.  The script then populates the config file with resource requests and settings. These include, in order of their addition in the script: the location of the script to run, the number of cores to request for the job, and the amount of memory to reserve for the job. The added `Queue` terminates the configuration file.
+
+        5.  Finally, the script runs `condor_submit` on the command-line, providing the path to the config file for this job.
 
 ### Trying out MetaLAFFA
 
@@ -451,13 +453,15 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
     2.  Starting from the cluster-specific section of the HTCondor wrapper script:
 
-        1.  First, the script converts memory requests into the appropriate units for HTCondor memory requests.
+        1.  First, the script defines a `node` variable that indicates which specific cluster node(s) MetaLAFFA should request to run jobs on. If this is set to `None`, then MetaLAFFA will not restrict which node(s) job submissions will be sent to. This may be important if MetaLAFFA (or the data you wish to annotate) will only be available on a subset of nodes (e.g. if only a subset of cluster nodes mount the drive where your data is stored or where MetaLAFFA is installed), in which case you would want MetaLAFFA to request that jobs run only on those specific nodes.
 
-        2.  Next, the script opens up a config file (in `submission_files/`) specific to the pipeline operation it is submitting to the cluster. To keep config files distinct between parallel jobs, the script names this config file based on the name of the pipeline step and the instance of the pipeline step it is running (i.e. which input file is being run through this pipeline step).
+        2.  Next, the script converts memory requests into the appropriate units for HTCondor memory requests.
 
-        3.  The script then populates the config file with resource requests and settings. These include, in order of their addition in the script: the location of the script to run, the number of cores to request for the job, and the amount of memory to reserve for the job. The added `Queue` terminates the configuration file.
+        3.  After determining job parameters, the script opens up a config file (in `submission_files/`) specific to the pipeline operation it is submitting to the cluster. To keep config files distinct between parallel jobs, the script names this config file based on the name of the pipeline step and the instance of the pipeline step it is running (i.e. which input file is being run through this pipeline step).
 
-        4.  Finally, the script runs `condor_submit` on the command-line, providing the path to the config file for this job.
+        4.  The script then populates the config file with resource requests and settings. These include, in order of their addition in the script: the location of the script to run, the number of cores to request for the job, and the amount of memory to reserve for the job. The added `Queue` terminates the configuration file.
+
+        5.  Finally, the script runs `condor_submit` on the command-line, providing the path to the config file for this job.
 
 ##### Using a different step in MetaLAFFA as a starting point
 

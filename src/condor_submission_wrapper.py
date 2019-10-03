@@ -25,6 +25,9 @@ cores = cluster_params["cores"]
 # EDIT BELOW HERE FOR CLUSTER CUSTOMIZATION #
 #############################################
 
+# If your MetaLAFFA installation is not going to be available on all cluster nodes (e.g. you own a subset of nodes that, by default, mount the drive where you installed MetaLAFFA), then you will need to restrict Condor to requesting slots on the specific node or nodes that will have access to MetaLAFFA. If a single node, set node to the name of the node (in string format). If multiple nodes, set node to the OR'd union (using '|' to join) of those node names (in string format). For example, if you want to request slots on either "node1" or "node2", you would set: node = "node1 | node2".
+node = None
+
 # Fix memory requirement to be in KB for Image_Size request
 memory_int = int(re.match("([0-9]*)[^0-9]", memory).group(1))
 memory_units = re.match("[0-9]*([^0-9]*)$", memory).group(1)
@@ -37,6 +40,8 @@ elif memory_units == "G":
 submission_file_path = submission_dir + os.path.basename(args.job_script)
 with open(submission_file_path, "w") as submission_file:
     submission_file.write("Executable = %s\n" % args.job_script)
+    if node is not None:
+        submission_file.write("Requirements = (Machine == \"%s\")\n" % node)
     # submission_file.write("Request_CPUs = %d\n" % cores)
     submission_file.write("Image_Size = %d\n" % memory_int)
     submission_file.write("Queue\n")
