@@ -91,7 +91,7 @@ for database in ["human_reference", "ortholog_mapping", "uniprot"]:
     processing_results[database]["stdout"] = fo.database_directory + database + "_processing.out"
     processing_results[database]["stderr"] = fo.database_directory + tool + "_processing.err"
 
-sys.stderr.write("Checking for tools required for the automated installation of third-party software.\n\n")
+sys.stdout.write("Checking for tools required for the automated installation of third-party software.\n\n")
 if subprocess.run(["which", args.pip], capture_output=True, env=env).returncode != 0:
     pip_installed = False
 else:
@@ -106,12 +106,13 @@ if subprocess.run(["which", "cmake"], capture_output=True, env=env).returncode !
     cmake_installed = False
 else:
     sys.stderr.write("cmake not found. CMake is required for installation of [diamond]. These tools will not be installed during setup.\n")
+sys.stdout.write("\n")
 
 # Report any missing required tools
-sys.stderr.write("Initial check for tools required for automated third-party software installation complete.\n\n")
+sys.stdout.write("Initial check for tools required for automated third-party software installation complete.\n\n")
 
 # Try to install third party tools
-sys.stderr.write("Beginning automated installation of third-party software.\n\n")
+sys.stdout.write("Beginning automated installation of third-party software.\n\n")
 pip_install_list = []
 if not args.no_snakemake:
     pip_install_list.append("snakemake")
@@ -120,6 +121,7 @@ if not args.no_musicc:
     pip_install_list.append("musicc")
 if len(pip_install_list) > 0:
     if pip_installed:
+        sys.stdout.write("Installing python packages.\n\n")
         try:
             subprocess.run([args.pip, "install", "-t", fo.python_package_directory] + pip_install_list,
                            stdout=open(install_results["python_package"]["stdout"], "w"),
@@ -131,11 +133,13 @@ if len(pip_install_list) > 0:
             sys.stderr.write("Error: Failed to install: %s. Please see %s and %s for installation logs.\n" % (", ".join(pip_install_list), install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
     else:
         sys.stderr.write("Warning: Pip not available, skipping installation of: %s.\n" % ", ".join(pip_install_list))
+sys.stdout.write("\n")
 
 if not args.no_blast:
     if make_installed:
         source_exists = True
         if not os.path.isdir(fo.source_directory + "ncbi-blast-2.2.31+-src"):
+            sys.stdout.write("Downloading BLAST+ source.\n")
             try:
                 subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-src.tar.gz", "-P", fo.source_directory],
                                stdout=open(install_results["blast"]["stdout"], "w"),
@@ -153,6 +157,7 @@ if not args.no_blast:
                 source_exists = False
 
         if not os.path.isfile(config.steps.host_filter.required_programs["blastn"]) and source_exists:
+            sys.stdout.write("Installing BLAST+ locally.\n")
             try:
                 subprocess.run(["./configure"],
                                cwd=fo.source_directory + "ncbi-blast-2.2.31+-src/c++/",
@@ -170,11 +175,13 @@ if not args.no_blast:
                 sys.stderr.write("Error: There was a problem installing BLAST+ locally from source. Please see %s and %s for installation logs.\n" % (install_results["blast"]["stdout"], install_results["blast"]["stderr"]))
     else:
         sys.stderr.write("Warning: Make not available, skipping installation of: BLAST+.\n")
+sys.stdout.write("\n")
 
 if not args.no_bmtagger:
     if make_installed:
         source_exists = True
         if not os.path.isdir(fo.source_directory + "bmtools/"):
+            sys.stdout.write("Downloading BMTagger source.\n")
             try:
                 subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/bmtools.tar.gz", "-P", fo.source_directory],
                                stdout=open(install_results["bmtools"]["stdout"], "w"),
@@ -192,6 +199,7 @@ if not args.no_bmtagger:
                 source_exists = False
 
         if (not os.path.isfile(config.steps.host_filter.required_programs["bmtool"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmfilter"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmtagger"]) or not os.path.isfile(config.steps.host_filter.required_programs["extract_fa"])) and source_exists:
+            sys.stdout.write("Installing BMTagger locally.\n")
             try:
                 subprocess.run(["make"],
                                cwd=fo.source_directory + "bmtools/",
@@ -205,6 +213,7 @@ if not args.no_bmtagger:
 
         source_exists = True
         if not os.path.isdir(fo.source_directory + "srprism/"):
+            sys.stdout.write("Downloading srprism source.\n")
             try:
                 subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/src/srprism.tar.gz", "-P", fo.source_directory],
                                stdout=open(install_results["srprism"]["stdout"], "w"),
@@ -222,6 +231,7 @@ if not args.no_bmtagger:
                 source_exists = False
 
         if not os.path.isfile(config.steps.host_filter.required_programs["srprism"]) and source_exists:
+            sys.stdout.write("Installing srprism locally.\n")
             try:
                 subprocess.run(["./ac.sh"],
                                cwd=fo.source_directory + "srprism/gnuac/",
@@ -244,9 +254,11 @@ if not args.no_bmtagger:
                 sys.stderr.write("Error: There was a problem installing srprism locally from source. Please see %s and %s for installation logs.\n" % (install_results["srprism"]["stdout"], install_results["srprism"]["stderr"]))
     else:
         sys.stderr.write("Warning: Make not available, skipping installation of: BMTagger.\n")
+sys.stdout.write("\n")
 
 if not args.no_markduplicates:
     if not os.path.isfile(fo.source_directory + "picard.jar"):
+        sys.stdout.write("Downloading PICARD jar.\n")
         try:
             subprocess.run(["wget", "https://github.com/broadinstitute/picard/releases/download/2.20.2/picard.jar", "-P", fo.source_directory],
                            stdout=open(install_results["picard"]["stdout"], "w"),
@@ -259,6 +271,7 @@ if not args.no_markduplicates:
 
     source_exists = True
     if not os.path.isdir(fo.source_directory + "samtools-1.9/"):
+        sys.stdout.write("Downloading samtools source.\n")
         try:
             subprocess.run(["wget", "https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2", "-P", fo.source_directory],
                            stdout=open(install_results["samtools"]["stdout"], "w"),
@@ -277,6 +290,7 @@ if not args.no_markduplicates:
 
     if not os.path.isfile(config.steps.duplicate_filter.required_programs["samtools"]) and source_exists:
         if make_installed:
+            sys.stdout.write("Installing samtools locally.\n")
             try:
                 subprocess.run(["./configure", "--without-curses", "--disable-lzma"],
                                cwd=fo.source_directory + "samtools-1.9/",
@@ -295,9 +309,11 @@ if not args.no_markduplicates:
                 sys.stderr.write("Error: There was a problem installing samtools locally from source. Please see %s and %s for installation logs.\n" % (install_results["samtools"]["stdout"], install_results["samtools"]["stderr"]))
         else:
             sys.stderr.write("Warning: Make not available, skipping installation of: samtools.\n")
+sys.stdout.write("\n")
 
 if not args.no_trimmomatic:
     if not os.path.isfile(config.steps.quality_filter.required_programs["trimmer"]):
+        sys.stdout.write("Downloading TRIMMOMATIC jar.\n")
         try:
             subprocess.run(["wget", "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip", "-P", fo.source_directory],
                            stdout=open(install_results["trimmomatic"]["stdout"], "w"),
@@ -311,11 +327,13 @@ if not args.no_trimmomatic:
             install_error = True
             install_error["trimmomatic"]["error"] = True
             sys.stderr.write("Error: There was a problem downloading the TRIMMOMATIC jar. Please see %s and %s for installation logs." % (install_results["trimmomatic"]["stdout"], install_results["trimmomatic"]["stderr"]))
+sys.stdout.write("\n")
 
 if not args.no_diamond:
     if make_installed and cmake_installed:
         source_exists = True
         if not os.path.isdir(fo.source_directory + "diamond-0.9.22/"):
+            sys.stdout.write("Downloading DIAMOND source.\n")
             try:
                 subprocess.run(["wget", "http://github.com/bbuchfink/diamond/archive/v0.9.22.tar.gz", "-P", fo.source_directory],
                                stdout=open(install_results["diamond"]["stdout"], "w"),
@@ -333,6 +351,7 @@ if not args.no_diamond:
                 source_exists = False
 
         if not os.path.isfile(config.steps.map_reads_to_genes.required_programs["diamond"]) and source_exists:
+            sys.stdout.write("Installing DIAMOND locally.\n")
             try:
                 subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"],
                                cwd=fo.source_directory + "diamond-0.9.22/",
@@ -350,6 +369,7 @@ if not args.no_diamond:
                 sys.stderr.write("Error: There was a problem installing DIAMOND locally from source. Please see %s and %s for installation logs.\n" % (install_results["diamond"]["stdout"], install_results["diamond"]["stderr"]))
     else:
         sys.stderr.write("Warning: Make and/or CMake not available, skipping installation of: DIAMOND.\n")
+sys.stdout.write("\n")
 
 # Record any tools that are missing
 all_missing_programs = set()
@@ -380,12 +400,15 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
     # If a program is missing, inform the user and add it to the set of missing programs
     if len(step_missing_programs) > 0:
         all_missing_programs = all_missing_programs.union(set(step_missing_programs))
+sys.stdout.write("Automated installation of third-party software complete.\n\n")
 
+sys.stdout.write("Beginning processing of reference data.\n\n")
 # Try to create and process default database files
 if not args.no_human_reference:
     if config.steps.host_filter.required_programs["bmtool"] not in all_missing_programs and config.steps.host_filter.required_programs["srprism"] not in all_missing_programs and makeblastdb_location not in all_missing_programs:
         source_exists = True
         if not os.path.isfile(fo.database_directory + op.host_database + ".fa"):
+            sys.stdout.write("Downloading human reference.\n")
             try:
                 subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/%s.fa" % op.host_database, "-P", fo.database_directory],
                                stdout=open(processing_results["human_reference"]["stdout"], "w"),
@@ -398,6 +421,7 @@ if not args.no_human_reference:
                 source_exists = False
 
         if not os.path.isfile(op.host_bitmask_file) and source_exists:
+            sys.stdout.write("Creating human reference bitmask.\n")
             try:
                 subprocess.run([config.steps.host_filter.required_programs["bmtool"], "-d", op.host_database_file + ".fa", "-o", op.host_bitmask_file, "-A", "0", "-w", "18"],
                                stdout=open(processing_results["human_reference"]["stdout"], "w"),
@@ -409,6 +433,7 @@ if not args.no_human_reference:
                 sys.stderr.write("Error: There was a problem creating a bitmask for the human reference database. Please see %s and %s for processing logs.\n" % (processing_results["human_reference"]["stdout"], processing_results["human_reference"]["stderr"]))
 
         if not os.path.isfile(op.host_index_file + ".idx") and source_exists:
+            sys.stdout.write("Creating human reference index.\n")
             try:
                 subprocess.run([config.steps.host_filter.required_programs["srprism"], "mkindex", "-i", op.host_database_file + ".fa", "-o", op.host_index_file, "-M", "7168"],
                                stdout=open(processing_results["human_reference"]["stdout"], "w"),
@@ -420,6 +445,7 @@ if not args.no_human_reference:
                 sys.stderr.write("Error: There was a problem creating an index for the human reference database. Please see %s and %s for processing logs.\n" % (processing_results["human_reference"]["stdout"], processing_results["human_reference"]["stderr"]))
 
         if not os.path.isfile(op.host_database_file + op.blast_db_suffix) and source_exists:
+            sys.stdout.write("Creating human reference BLAST database.\n")
             try:
                 subprocess.run([makeblastdb_location, "-in", op.host_database_file + ".fa", "-dbtype", "nucl", "-out", op.host_database_file],
                                stdout=open(processing_results["human_reference"]["stdout"], "w"),
@@ -438,8 +464,10 @@ if not args.no_human_reference:
         if makeblastdb_location in all_missing_programs:
             human_reference_missing_programs.append("makeblastdb")
         sys.stderr.write("Warning: %s not available, skipping download and processing of human reference." % ", ".join(human_reference_missing_programs))
+sys.stdout.write("\n")
 
 if not args.no_ko_mappings:
+    sys.stdout.write("Downloading ortholog-to-grouping mappings.\n")
     for ortholog_to_grouping_mapping in op.ortholog_to_grouping_mappings:
         if not os.path.isfile(fo.ortholog_to_grouping_directory + ortholog_to_grouping_mapping + op.ortholog_to_grouping_suffix):
             try:
@@ -451,11 +479,13 @@ if not args.no_ko_mappings:
                 processing_error = True
                 processing_results["ortholog_mapping"]["error"] = True
                 sys.stderr.write("Error: There was a problem downloading the %s ortholog-to-grouping mapping file. Please see %s and %s for processing logs.\n" % (ortholog_to_grouping_mapping, processing_results["ortholog_mapping"]["stdout"], processing_results["ortholog_mapping"]["stderr"]))
+sys.stdout.write("\n")
 
 if args.uniprot:
     if config.steps.map_reads_to_genes.required_programs["diamond"] not in all_missing_programs and op.python not in all_missing_programs:
         source_exists = True
         if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz"):
+            sys.stdout.write("Downloading UniProt UniRef90 database.\n")
             try:
                 subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/%s/%s.fasta.gz" % (op.target_database, op.target_database), "-P", fo.database_directory],
                                stdout=open(processing_results["uniprot"]["stdout"], "w"),
@@ -468,6 +498,7 @@ if args.uniprot:
                 source_exists = False
 
         if not os.path.isfile(op.target_database_file) and source_exists:
+            sys.stdout.write("Creating UniRef90 DIAMOND database.\n")
             try:
                 subprocess.run([config.steps.map_reads_to_genes.required_programs["diamond"], "makedb", "--in", fo.database_directory + op.target_database + ".fasta.gz", "-d", fo.database_directory + op.target_database],
                                stdout=open(processing_results["uniprot"]["stdout"], "w"),
@@ -479,6 +510,7 @@ if args.uniprot:
                 sys.stderr.write("Error: There was a problem creating a DIAMOND database for the  UniProt target database. Please see %s and %s for processing logs.\n" % (processing_results["uniprot"]["stdout"], processing_results["uniprot"]["stderr"]))
 
         if not os.path.isfile(op.gene_normalization_file) and source_exists:
+            sys.stdout.write("Creating UniRef90 gene length table.\n")
             try:
                 subprocess.run([op.python, fo.source_directory + "create_gene_length_table.py", fo.database_directory + op.target_database + ".fasta.gz", "--output", op.gene_normalization_file],
                                stdout=open(processing_results["uniprot"]["stdout"], "w"),
@@ -491,6 +523,7 @@ if args.uniprot:
 
         source_exists = True
         if not os.path.isfile(fo.database_directory + "idmapping.dat.gz"):
+            sys.stdout.write("Downloading UniRef90 gene-to-ortholog mapping.\n")
             try:
                 subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz", "-P", fo.database_directory],
                                stdout=open(processing_results["uniprot"]["stdout"], "w"),
@@ -504,6 +537,7 @@ if args.uniprot:
                 source_exists = False
 
         if not os.path.isfile(op.gene_to_ortholog_file) and source_exists:
+            sys.stdout.write("Formatting UniRef90 gene-to-ortholog mapping.\n")
             try:
                 subprocess.run([op.python, fo.source_directory + "create_uniref_gene_to_ortholog.py", fo.database_directory + "idmapping.dat.gz", op.target_database, op.target_ortholog, "--output", op.gene_to_ortholog_file],
                                stdout=open(processing_results["uniprot"]["stdout"], "w"),
@@ -520,10 +554,11 @@ if args.uniprot:
         if op.python in all_missing_programs:
             uniprot_missing_programs.append("python")
         sys.stderr.write("Warning: %s not available, skipping download and processing of UniProt target database." % ", ".join(uniprot_missing_programs))
+sys.stdout.write("\n")
 
-print("*" * 80)
-print("SETUP COMPLETE")
-print("Automated installation and reference data processing has finished. Please see above for details on software that could not be automatically installed and/or supporting data files that could not be generated. A summary of missing software and data files is included below:")
+sys.stdout.write("*" * 80 + "\n")
+sys.stdout.write("SETUP COMPLETE\n")
+sys.stdout.write("Automated installation and reference data processing has finished. Please see above for details on software that could not be automatically installed and/or supporting data files that could not be generated.\n\n")
 
 # Report any tools that are missing
 if subprocess.run(["which", op.python], capture_output=True, env=env).returncode != 0:
@@ -585,4 +620,4 @@ if not args.no_jobscript:
         for line in template:
             configured.write(line.format(python=op.python, MetaLAFFA_directory=os.getcwd(), PYTHONPATH="{{PYTHONPATH}}"))
 
-print("End of MetaLAFFA setup")
+sys.stdout.write("End of MetaLAFFA setup\n")
