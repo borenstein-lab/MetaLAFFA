@@ -94,17 +94,14 @@ for database in ["human_reference", "ortholog_mapping", "uniprot"]:
 sys.stdout.write("Checking for tools required for the automated installation of third-party software.\n\n")
 if subprocess.run(["which", args.pip], capture_output=True, env=env).returncode != 0:
     pip_installed = False
-else:
     sys.stderr.write(args.pip + " not found. pip is required for installation of [snakemake, psutil, musicc]. These tools will not be installed during setup.\n")
 
 if subprocess.run(["which", "make"], capture_output=True, env=env).returncode != 0:
     make_installed = False
-else:
     sys.stderr.write("make not found. Make is required for installation of [blast, bmtagger, markduplicates, diamond]. These tools will not be installed during setup.\n")
 
 if subprocess.run(["which", "cmake"], capture_output=True, env=env).returncode != 0:
     cmake_installed = False
-else:
     sys.stderr.write("cmake not found. CMake is required for installation of [diamond]. These tools will not be installed during setup.\n")
 sys.stdout.write("\n")
 
