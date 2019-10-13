@@ -170,6 +170,13 @@ if not args.no_blast:
                 install_error = True
                 install_results["blast"]["error"] = True
                 sys.stderr.write("Error: There was a problem installing BLAST+ locally from source. Please see %s and %s for installation logs.\n" % (install_results["blast"]["stdout"], install_results["blast"]["stderr"]))
+
+            # Adding additional check because BLAST make failure doesn't exit with an error code
+            makeblastdb_location = os.path.dirname(
+                config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
+            if subprocess.run(["which", config.steps.host_filter.required_programs["blastn"]], capture_output=True, env=env).returncode != 0 or subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0:
+                sys.stderr.write("Error: There was a problem installing BLAST+ locally from source. Please see %s and %s for installation logs.\n" % (install_results["blast"]["stdout"], install_results["blast"]["stderr"]))
+
     else:
         sys.stderr.write("Warning: Make not available, skipping installation of: BLAST+.\n")
 sys.stdout.write("\n")
