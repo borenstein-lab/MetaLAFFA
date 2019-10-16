@@ -74,7 +74,7 @@ Follow these steps to annotate your first metagenomic shotgun sequencing dataset
 To download MetaLAFFA, first navigate to the directory in which you would like to save the pipeline. You can then clone the git repository as follows:
 
     # Make a local clone of the MetaLAFFA git repository.
-    git clone git@github.com:engal/MetaLAFFA.git
+    git clone https://github.com/engal/MetaLAFFA.git
 
 Start pipeline setup by running the setup.py script:
 
@@ -82,9 +82,29 @@ Start pipeline setup by running the setup.py script:
     cd MetaLAFFA
     python3 setup.py
 
+This script will attempt to automatically install third-party software locally in MetaLAFFA's `src` directory, download reference data, and process reference data to create support files for the annotation process. If you have previous installations of tools that MetaLAFFA uses, you can skip installing them locally by using the appropriate command line option when running the setup script. However, if you do this, make sure to update the config module to point your existing executables instead of looking for them in MetaLAFFA's local `src` directory. Similarly, if you already have reference data that you would prefer to use (instead of the MetaLAFFA defaults), you can skip downloading that data with command line arguments to the setup script and point the config module to look for that reference data instead.
+
+------------------------------------------------------------------------
+
+**IMPORTANT NOTE**
+
+The setup script will attempt to automatically install third-party tools locally, but some tools may fail to install due to the unforseen specifics of your computing environment. The setup script will print progress messages indicating which tool is currently being installed, and will notify you if a specific tool failed to be installed properly. If this occurs, the setup script will also direct you to the log files that were generated while installing that tool so that you can determine what went wrong and install that tool independently.
+
+Additionally, some default reference data processing requires third-party tools. If these tools failed to install correctly, some of these processing operations may not be performed. In this case, if you install a tool independently and update the config module to point to that tool, you can rerun the setup script to run any reference data processing steps that relied on that tool.
+
+------------------------------------------------------------------------
+
+After the setup script is done installing third-party software and downloading and processing reference data, it will check the config module to determine whether all executables and supporting data files are present at the expected locations. If something is not present, the setup script will notify you what is missing and where in the config module its location was specified (in case you want to, for example, change the config module to use an existing installation of a third-party tool).
+
+Setup is finished when you see:
+
+    End of MetaLAFFA setup
+
 **Note**: Using default options, it can take a few hours to install all third-party tools and download and process all default databases, takes ~10G of RAM, and ~30G of free disk space.
 
 **Note**: By default, setup does not download or configure a database of annotated microbial peptide sequences to map reads against. However, you can use the `--uniprot` option when running `setup.py` to download the UniRef90 database (takes ~80G of free disk space) and create the associated DIAMOND-processed database, gene-to-ortholog mapping file, and gene count normalization file. If you do this, you can skip the following "Configuring MetaLAFFA" section.
+
+**Note**: Depending on your machine, network connection, and the tools/reference data you decide to install via the setup script, setup can take multiple hours. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially if you are downloading the UniRef90 database for read mapping.
 
 ### Configuring MetaLAFFA
 
@@ -172,9 +192,23 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
 ### Trying out MetaLAFFA
 
-1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://portal.hmpdacc.org/)).
+1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line as follows:
 
-2.  Format the names of your initial FASTQs to follow the default naming convention recognized by MetaLAFFA:
+<!-- -->
+
+    wget http://downloads.hmpdacc.org/data/Illumina/stool/SRS017307.tar.bz2
+
+If you download data from HMP through either of these methods, you will receive a compressed directory that you will need to expand, i.e.:
+
+    tar -jxf SRS017307.tar.bz2
+
+which will produce a directory, `SRS017307/` containing three files, a forward read FASTQ (ending in `1.fastq`), a reverse read FASTQ (ending in `2.fastq`), and a singleton FASTQ (ending in `singleton.fastq`). Default MetaLAFFA settings expect gzipped input FASTQs, so you will need to zip these FASTQs:
+
+    gzip SRS017307/*
+
+You can change MetaLAFFA to use unzipped files in `config/operations.py` by changing the `zipped_files` variable to `False`, though this is not recommended due to shotgun metagenomic FASTQs usually being very large.
+
+1.  Format the names of your initial FASTQs to follow the default naming convention recognized by MetaLAFFA:
 
     Forward-read FASTQs should be named `<sample>.R1.fastq.gz`
 
@@ -198,7 +232,7 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
             python3 MetaLAFFA.py 
 
-    3.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [**screen session**](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+    3.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [screen session](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
 
     4.  You can use the `-n <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many jobs should be in your cluster's queue at any one time. This limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
 
@@ -269,7 +303,7 @@ First, if you do not have Python3 (version 3.7 or greater) installed, download t
 To download MetaLAFFA, first navigate to the directory in which you would like to save the pipeline. You can then clone the git repository as follows:
 
     # Make a local clone of the MetaLAFFA git repository.
-    git clone git@github.com:engal/MetaLAFFA.git
+    git clone https://github.com/engal/MetaLAFFA.git
 
 This contains the Snakemake file defining the pipeline, various Python scripts to perform pipeline steps that are not handled by third-party software, a setup script to help configure the environment that MetaLAFFA will run in, and a Python module that configures how the steps of the pipeline are run. This does not include various third-party tools or default databases used by the pipeline.
 
@@ -280,6 +314,30 @@ By default, MetaLAFFA is built to use several third-party tools and one or two d
     # Perform default pipeline setup.
     cd MetaLAFFA
     python3 setup.py
+
+This script will attempt to automatically install third-party software locally in MetaLAFFA's `src` directory, download reference data, and process reference data to create support files for the annotation process. If you have previous installations of tools that MetaLAFFA uses, you can skip installing them locally by using the appropriate command line option when running the setup script. However, if you do this, make sure to update the config module to point your existing executables instead of looking for them in MetaLAFFA's local `src` directory. Similarly, if you already have reference data that you would prefer to use (instead of the MetaLAFFA defaults), you can skip downloading that data with command line arguments to the setup script and point the config module to look for that reference data instead.
+
+------------------------------------------------------------------------
+
+**IMPORTANT NOTE**
+
+The setup script will attempt to automatically install third-party tools locally, but some tools may fail to install due to the unforseen specifics of your computing environment. The setup script will print progress messages indicating which tool is currently being installed, and will notify you if a specific tool failed to be installed properly. If this occurs, the setup script will also direct you to the log files that were generated while installing that tool so that you can determine what went wrong and install that tool independently.
+
+Additionally, some default reference data processing requires third-party tools. If these tools failed to install correctly, some of these processing operations may not be performed. In this case, if you install a tool independently and update the config module to point to that tool, you can rerun the setup script to run any reference data processing steps that relied on that tool.
+
+------------------------------------------------------------------------
+
+After the setup script is done installing third-party software and downloading and processing reference data, it will check the config module to determine whether all executables and supporting data files are present at the expected locations. If something is not present, the setup script will notify you what is missing and where in the config module its location was specified (in case you want to, for example, change the config module to use an existing installation of a third-party tool).
+
+Setup is finished when you see:
+
+    End of MetaLAFFA setup
+
+**Note**: Using default options, it can take a few hours to install all third-party tools and download and process all default databases, takes ~10G of RAM, and ~30G of free disk space.
+
+**Note**: By default, setup does not download or configure a database of annotated microbial peptide sequences to map reads against. However, you can use the `--uniprot` option when running `setup.py` to download the UniRef90 database (takes ~80G of free disk space) and create the associated DIAMOND-processed database, gene-to-ortholog mapping file, and gene count normalization file. If you do this, you can skip the following "Configuring MetaLAFFA" section.
+
+**Note**: Depending on your machine, network connection, and the tools/reference data you decide to install via the setup script, setup can take multiple hours. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially if you are downloading the UniRef90 database for read mapping.
 
 ##### Setup script options
 
@@ -308,8 +366,6 @@ The `setup.py` script has various command-line options to modify the default set
 `--uniprot, -u`: If used, download and configure UniProt's UniRef90 annotated peptide database. Note that the UniRef90 database is used in the default pipeline configuration.
 
 `--no_jobscript, -nj`: If used, do not configure the template jobscript. Note that the jobscript is used to standardize the environment when running cluster jobs remotely.
-
-**Note**: by default, the setup script does not download a target database of functionally annotated genes to map reads to, instead assuming that you will configure MetaLAFFA to use your own database. However, MetaLAFFA's default configuration is set to use the UniRef90 database and its associated KO annotations if the database is present. If you would like to use the UniRef90 database, you can have the setup script download the UniRef90 database from UniProt by using the `--uniprot` option to the `setup.py` script. However, this database requires ~80G and can take a long time to download.
 
 ### Configuring MetaLAFFA
 
@@ -484,9 +540,23 @@ Here we provide a walkthrough for running MetaLAFFA on a metagenomic shotgun seq
 
 ##### Prepare input data files
 
-1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://portal.hmpdacc.org/)).
+1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line as follows:
 
-2.  Format the names of your initial FASTQs to follow the default naming convention recognized by MetaLAFFA:
+<!-- -->
+
+    wget http://downloads.hmpdacc.org/data/Illumina/stool/SRS017307.tar.bz2
+
+If you download data from HMP through either of these methods, you will receive a compressed directory that you will need to expand, i.e.:
+
+    tar -jxf SRS017307.tar.bz2
+
+which will produce a directory, `SRS017307/` containing three files, a forward read FASTQ (ending in `1.fastq`), a reverse read FASTQ (ending in `2.fastq`), and a singleton FASTQ (ending in `singleton.fastq`). Default MetaLAFFA settings expect gzipped input FASTQs, so you will need to zip these FASTQs:
+
+    gzip SRS017307/*
+
+You can change MetaLAFFA to use unzipped files in `config/operations.py` by changing the `zipped_files` variable to `False`, though this is not recommended due to shotgun metagenomic FASTQs usually being very large.
+
+1.  Format the names of your initial FASTQs to follow the default naming convention recognized by MetaLAFFA:
 
     Forward-read FASTQs should be named `<sample>.R1.fastq.gz`
 
@@ -498,7 +568,7 @@ Here we provide a walkthrough for running MetaLAFFA on a metagenomic shotgun seq
 
     **Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
 
-3.  Place the FASTQs in the `data/` directory.
+2.  Place the FASTQs in the `data/` directory.
 
 ##### Starting MetaLAFFA
 
@@ -534,7 +604,7 @@ The `MetaLAFFA.py` script has various command-line options to modify how MetaLAF
 
 Some notes on MetaLAFFA usage:
 
-1.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [**screen session**](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+1.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [screen session](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
 
 2.  You can use the `-n <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many jobs should be in your cluster's queue at any one time. This limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
 
