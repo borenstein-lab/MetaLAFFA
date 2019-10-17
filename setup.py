@@ -92,7 +92,7 @@ for database in ["human_reference", "ortholog_mapping", "uniprot"]:
     processing_results[database]["stderr"] = fo.database_directory + tool + "_processing.err"
 
 sys.stdout.write("Checking for tools required for the automated installation of third-party software.\n\n")
-if subprocess.run(["which", args.pip], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", args.pip], capture_output=True, env=env).returncode != 0 and not os.path.isfile(args.pip):
     pip_installed = False
     sys.stderr.write(args.pip + " not found. pip is required for installation of [snakemake, psutil, musicc]. These tools will not be installed during setup.\n")
 
@@ -128,11 +128,24 @@ if len(pip_install_list) > 0:
             install_error = True
             install_results["python_package"]["error"] = True
             sys.stderr.write("Error: Failed to install: %s. Please see %s and %s for installation logs.\n" % (", ".join(pip_install_list), install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
+
+        # Adding additional checks because pip install failure doesn't exit with an error code
+        if not args.no_snakemake and subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.snakemake):
+            sys.stderr.write("Error: There was a problem installing snakemake locally via pip. Please see %s and %s for installation logs.\n" % (install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
+
+        if not args.no_musicc and subprocess.run(["which", config.steps.ortholog_abundance_correction.required_programs["musicc"]], capture_output=True, env=env).returncode != 0 and not os.path.isfile(config.steps.ortholog_abundance_correction.required_programs["musicc"]):
+            sys.stderr.write("Error: There was a problem installing MUSiCC locally via pip. Please see %s and %s for installation logs.\n" % (install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
+
     else:
         sys.stderr.write("Warning: Pip not available, skipping installation of: %s.\n" % ", ".join(pip_install_list))
 sys.stdout.write("\n")
 
-if not args.no_blast:
+
+def blast_executables_exist():
+    return subprocess.run(["which", config.steps.host_filter.required_programs["blastn"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.host_filter.required_programs["blastn"])
+
+
+if not args.no_blast and not blast_executables_exist():
     if make_installed:
         source_exists = True
         if not os.path.isdir(fo.source_directory + "ncbi-blast-2.2.31+-src"):
@@ -153,7 +166,7 @@ if not args.no_blast:
                 sys.stderr.write("Error: There was a problem downloading and/or expanding the BLAST+ source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["blast"]["stdout"], install_results["blast"]["stderr"]))
                 source_exists = False
 
-        if not os.path.isfile(config.steps.host_filter.required_programs["blastn"]) and source_exists:
+        if source_exists:
             sys.stdout.write("Installing BLAST+ locally.\n")
             try:
                 subprocess.run(["./configure"],
@@ -172,96 +185,123 @@ if not args.no_blast:
                 sys.stderr.write("Error: There was a problem installing BLAST+ locally from source. Please see %s and %s for installation logs.\n" % (install_results["blast"]["stdout"], install_results["blast"]["stderr"]))
 
             # Adding additional check because BLAST make failure doesn't exit with an error code
-            makeblastdb_location = os.path.dirname(
-                config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
-            if subprocess.run(["which", config.steps.host_filter.required_programs["blastn"]], capture_output=True, env=env).returncode != 0 or subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0:
+            if not blast_executables_exist():
                 sys.stderr.write("Error: There was a problem installing BLAST+ locally from source. Please see %s and %s for installation logs.\n" % (install_results["blast"]["stdout"], install_results["blast"]["stderr"]))
 
     else:
         sys.stderr.write("Warning: Make not available, skipping installation of: BLAST+.\n")
 sys.stdout.write("\n")
 
-if not args.no_bmtagger:
+
+def bmtools_executables_exist():
+    return (subprocess.run(["which", config.steps.host_filter.required_programs["bmtool"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.host_filter.required_programs["bmtool"])) and (subprocess.run(["which", config.steps.host_filter.required_programs["bmfilter"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.host_filter.required_programs["bmfilter"])) and (subprocess.run(["which", config.steps.host_filter.required_programs["bmtagger"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.host_filter.required_programs["bmtagger"])) and (subprocess.run(["which", config.steps.host_filter.required_programs["extract_fa"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.host_filter.required_programs["extract_fa"]))
+
+
+def srprism_executables_exist():
+    return subprocess.run(["which", config.steps.host_filter.required_programs["srprism"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.host_filter.required_programs["srprism"])
+
+
+if not args.no_bmtagger and (not bmtools_executables_exist() or not srprism_executables_exist()):
     if make_installed:
-        source_exists = True
-        if not os.path.isdir(fo.source_directory + "bmtools/"):
-            sys.stdout.write("Downloading BMTagger source.\n")
-            try:
-                subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/bmtools.tar.gz", "-P", fo.source_directory],
-                               stdout=open(install_results["bmtools"]["stdout"], "w"),
-                               stderr=open(install_results["bmtools"]["stderr"], "w"),
-                               env=env)
-                subprocess.run(["tar", "-zxf", "bmtools.tar.gz"],
-                               cwd=fo.source_directory,
-                               stdout=open(install_results["bmtools"]["stdout"], "w"),
-                               stderr=open(install_results["bmtools"]["stderr"], "w"),
-                               env=env)
-            except (EnvironmentError, subprocess.CalledProcessError):
-                install_error = True
-                install_results["bmtools"]["error"] = True
-                sys.stderr.write("Error: There was a problem downloading and/or expanding the BMTagger source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["bmtools"]["stdout"], install_results["bmtools"]["stderr"]))
-                source_exists = False
+        if not bmtools_executables_exist():
+            source_exists = True
+            if not os.path.isdir(fo.source_directory + "bmtools/"):
+                sys.stdout.write("Downloading BMTagger source.\n")
+                try:
+                    subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/bmtools.tar.gz", "-P", fo.source_directory],
+                                   stdout=open(install_results["bmtools"]["stdout"], "w"),
+                                   stderr=open(install_results["bmtools"]["stderr"], "w"),
+                                   env=env)
+                    subprocess.run(["tar", "-zxf", "bmtools.tar.gz"],
+                                   cwd=fo.source_directory,
+                                   stdout=open(install_results["bmtools"]["stdout"], "w"),
+                                   stderr=open(install_results["bmtools"]["stderr"], "w"),
+                                   env=env)
+                except (EnvironmentError, subprocess.CalledProcessError):
+                    install_error = True
+                    install_results["bmtools"]["error"] = True
+                    sys.stderr.write("Error: There was a problem downloading and/or expanding the BMTagger source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["bmtools"]["stdout"], install_results["bmtools"]["stderr"]))
+                    source_exists = False
 
-        if (not os.path.isfile(config.steps.host_filter.required_programs["bmtool"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmfilter"]) or not os.path.isfile(config.steps.host_filter.required_programs["bmtagger"]) or not os.path.isfile(config.steps.host_filter.required_programs["extract_fa"])) and source_exists:
-            sys.stdout.write("Installing BMTagger locally.\n")
-            try:
-                subprocess.run(["make"],
-                               cwd=fo.source_directory + "bmtools/",
-                               stdout=open(install_results["bmtools"]["stdout"], "w"),
-                               stderr=open(install_results["bmtools"]["stderr"], "w"),
-                               env=env)
-            except (EnvironmentError, subprocess.CalledProcessError):
-                install_error = True
-                install_results["bmtools"]["error"] = True
-                sys.stderr.write("Error: There was a problem installing BMTagger locally from source. Please see %s and %s for installation logs.\n" % (install_results["bmtools"]["stdout"], install_results["bmtools"]["stderr"]))
+            if source_exists:
+                sys.stdout.write("Installing BMTagger locally.\n")
+                try:
+                    subprocess.run(["make"],
+                                   cwd=fo.source_directory + "bmtools/",
+                                   stdout=open(install_results["bmtools"]["stdout"], "w"),
+                                   stderr=open(install_results["bmtools"]["stderr"], "w"),
+                                   env=env)
+                except (EnvironmentError, subprocess.CalledProcessError):
+                    install_error = True
+                    install_results["bmtools"]["error"] = True
+                    sys.stderr.write("Error: There was a problem installing BMTagger locally from source. Please see %s and %s for installation logs.\n" % (install_results["bmtools"]["stdout"], install_results["bmtools"]["stderr"]))
 
-        source_exists = True
-        if not os.path.isdir(fo.source_directory + "srprism/"):
-            sys.stdout.write("Downloading srprism source.\n")
-            try:
-                subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/src/srprism.tar.gz", "-P", fo.source_directory],
-                               stdout=open(install_results["srprism"]["stdout"], "w"),
-                               stderr=open(install_results["srprism"]["stderr"], "w"),
-                               env=env)
-                subprocess.run(["tar", "-zxf", "srprism.tar.gz"],
-                               cwd=fo.source_directory,
-                               stdout=open(install_results["srprism"]["stdout"], "w"),
-                               stderr=open(install_results["srprism"]["stderr"], "w"),
-                               env=env)
-            except (EnvironmentError, subprocess.CalledProcessError):
-                install_error = True
-                install_results["srprism"]["error"] = True
-                sys.stderr.write("Error: There was a problem downloading and/or expanding the srprism source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["srprism"]["stdout"], install_results["srprism"]["stderr"]))
-                source_exists = False
+                # Adding additional check just in case the installation doesn't exit with an error code
+                if not bmtools_executables_exist():
+                    sys.stderr.write("Error: There was a problem installing BMTagger locally from source. Please see %s and %s for installation logs.\n" % (install_results["bmtools"]["stdout"], install_results["bmtools"]["stderr"]))
 
-        if not os.path.isfile(config.steps.host_filter.required_programs["srprism"]) and source_exists:
-            sys.stdout.write("Installing srprism locally.\n")
-            try:
-                subprocess.run(["./ac.sh"],
-                               cwd=fo.source_directory + "srprism/gnuac/",
-                               stdout=open(install_results["srprism"]["stdout"], "w"),
-                               stderr=open(install_results["srprism"]["stderr"], "w"),
-                               env=env)
-                subprocess.run(["./configure"],
-                               cwd=fo.source_directory + "srprism/gnuac/",
-                               stdout=open(install_results["srprism"]["stdout"], "w"),
-                               stderr=open(install_results["srprism"]["stderr"], "w"),
-                               env=env)
-                subprocess.run(["make"],
-                               cwd=fo.source_directory + "srprism/gnuac/",
-                               stdout=open(install_results["srprism"]["stdout"], "w"),
-                               stderr=open(install_results["srprism"]["stderr"], "w"),
-                               env=env)
-            except (EnvironmentError, subprocess.CalledProcessError):
-                install_error = True
-                install_results["srprism"]["error"] = True
-                sys.stderr.write("Error: There was a problem installing srprism locally from source. Please see %s and %s for installation logs.\n" % (install_results["srprism"]["stdout"], install_results["srprism"]["stderr"]))
+        if not srprism_executables_exist():
+            source_exists = True
+            if not os.path.isdir(fo.source_directory + "srprism/"):
+                sys.stdout.write("Downloading srprism source.\n")
+                try:
+                    subprocess.run(["wget", "ftp://ftp.ncbi.nlm.nih.gov/pub/agarwala/bmtagger/src/srprism.tar.gz", "-P", fo.source_directory],
+                                   stdout=open(install_results["srprism"]["stdout"], "w"),
+                                   stderr=open(install_results["srprism"]["stderr"], "w"),
+                                   env=env)
+                    subprocess.run(["tar", "-zxf", "srprism.tar.gz"],
+                                   cwd=fo.source_directory,
+                                   stdout=open(install_results["srprism"]["stdout"], "w"),
+                                   stderr=open(install_results["srprism"]["stderr"], "w"),
+                                   env=env)
+                except (EnvironmentError, subprocess.CalledProcessError):
+                    install_error = True
+                    install_results["srprism"]["error"] = True
+                    sys.stderr.write("Error: There was a problem downloading and/or expanding the srprism source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["srprism"]["stdout"], install_results["srprism"]["stderr"]))
+                    source_exists = False
+
+            if source_exists:
+                sys.stdout.write("Installing srprism locally.\n")
+                try:
+                    subprocess.run(["./ac.sh"],
+                                   cwd=fo.source_directory + "srprism/gnuac/",
+                                   stdout=open(install_results["srprism"]["stdout"], "w"),
+                                   stderr=open(install_results["srprism"]["stderr"], "w"),
+                                   env=env)
+                    subprocess.run(["./configure"],
+                                   cwd=fo.source_directory + "srprism/gnuac/",
+                                   stdout=open(install_results["srprism"]["stdout"], "w"),
+                                   stderr=open(install_results["srprism"]["stderr"], "w"),
+                                   env=env)
+                    subprocess.run(["make"],
+                                   cwd=fo.source_directory + "srprism/gnuac/",
+                                   stdout=open(install_results["srprism"]["stdout"], "w"),
+                                   stderr=open(install_results["srprism"]["stderr"], "w"),
+                                   env=env)
+                except (EnvironmentError, subprocess.CalledProcessError):
+                    install_error = True
+                    install_results["srprism"]["error"] = True
+                    sys.stderr.write("Error: There was a problem installing srprism locally from source. Please see %s and %s for installation logs.\n" % (install_results["srprism"]["stdout"], install_results["srprism"]["stderr"]))
+
+                # Adding additional check just in case the installation doesn't exit with an error code
+                if not srprism_executables_exist():
+                    sys.stderr.write("Error: There was a problem installing srprism locally from source. Please see %s and %s for installation logs.\n" % (install_results["srprism"]["stdout"], install_results["srprism"]["stderr"]))
+
     else:
         sys.stderr.write("Warning: Make not available, skipping installation of: BMTagger.\n")
 sys.stdout.write("\n")
 
-if not args.no_markduplicates:
-    if not os.path.isfile(fo.source_directory + "picard.jar"):
+
+def picard_executables_exist():
+    return os.path.isfile(fo.source_directory + "picard.jar")
+
+
+def samtools_executables_exist():
+    return subprocess.run(["which", config.steps.duplicate_filter.required_programs["samtools"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.duplicate_filter.required_programs["samtools"])
+
+
+if not args.no_markduplicates and (not picard_executables_exist() or not samtools_executables_exist()):
+    if not picard_executables_exist():
         sys.stdout.write("Downloading PICARD jar.\n")
         try:
             subprocess.run(["wget", "https://github.com/broadinstitute/picard/releases/download/2.20.2/picard.jar", "-P", fo.source_directory],
@@ -271,69 +311,92 @@ if not args.no_markduplicates:
         except (EnvironmentError, subprocess.CalledProcessError):
             install_error = True
             install_results["picard"]["error"] = True
-            sys.stderr.write("Error: There was a problem downloading the PICARD jar. Please see %s and %s for installation logs." % (install_results["picard"]["stdout"], install_results["picard"]["stderr"]))
+            sys.stderr.write("Error: There was a problem downloading the PICARD jar. Please see %s and %s for installation logs.\n" % (install_results["picard"]["stdout"], install_results["picard"]["stderr"]))
 
-    source_exists = True
-    if not os.path.isdir(fo.source_directory + "samtools-1.9/"):
-        sys.stdout.write("Downloading samtools source.\n")
-        try:
-            subprocess.run(["wget", "https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2", "-P", fo.source_directory],
-                           stdout=open(install_results["samtools"]["stdout"], "w"),
-                           stderr=open(install_results["samtools"]["stderr"], "w"),
-                           env=env)
-            subprocess.run(["tar", "-jxf", "samtools-1.9.tar.bz2"],
-                           cwd=fo.source_directory,
-                           stdout=open(install_results["samtools"]["stdout"], "w"),
-                           stderr=open(install_results["samtools"]["stderr"], "w"),
-                           env=env)
-        except (EnvironmentError, subprocess.CalledProcessError):
-            install_error = True
-            install_results["samtools"]["error"] = True
-            sys.stderr.write("Error: There was a problem downloading and/or expanding the samtools source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["samtools"]["stdout"], install_results["samtools"]["stderr"]))
-            source_exists = False
+        # Adding additional check just in case the installation doesn't exit with an error code
+        if not picard_executables_exist():
+            sys.stderr.write("Error: There was a problem downloading the PICARD jar. Please see %s and %s for installation logs.\n" % (install_results["picard"]["stdout"], install_results["picard"]["stderr"]))
 
-    if not os.path.isfile(config.steps.duplicate_filter.required_programs["samtools"]) and source_exists:
+    if not samtools_executables_exist():
         if make_installed:
-            sys.stdout.write("Installing samtools locally.\n")
-            try:
-                subprocess.run(["./configure", "--without-curses", "--disable-lzma"],
-                               cwd=fo.source_directory + "samtools-1.9/",
-                               stdout=open(install_results["samtools"]["stdout"], "w"),
-                               stderr=open(install_results["samtools"]["stderr"], "w"),
-                               env=env)
+            source_exists = True
+            if not os.path.isdir(fo.source_directory + "samtools-1.9/"):
+                sys.stdout.write("Downloading samtools source.\n")
+                try:
+                    subprocess.run(["wget", "https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2", "-P", fo.source_directory],
+                                   stdout=open(install_results["samtools"]["stdout"], "w"),
+                                   stderr=open(install_results["samtools"]["stderr"], "w"),
+                                   env=env)
+                    subprocess.run(["tar", "-jxf", "samtools-1.9.tar.bz2"],
+                                   cwd=fo.source_directory,
+                                   stdout=open(install_results["samtools"]["stdout"], "w"),
+                                   stderr=open(install_results["samtools"]["stderr"], "w"),
+                                   env=env)
+                except (EnvironmentError, subprocess.CalledProcessError):
+                    install_error = True
+                    install_results["samtools"]["error"] = True
+                    sys.stderr.write("Error: There was a problem downloading and/or expanding the samtools source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["samtools"]["stdout"], install_results["samtools"]["stderr"]))
+                    source_exists = False
 
-                subprocess.run(["make"],
-                               cwd=fo.source_directory + "samtools-1.9/",
-                               stdout=open(install_results["samtools"]["stdout"], "w"),
-                               stderr=open(install_results["samtools"]["stderr"], "w"),
-                               env=env)
-            except (EnvironmentError, subprocess.CalledProcessError):
-                install_error = True
-                install_results["samtools"]["error"] = True
-                sys.stderr.write("Error: There was a problem installing samtools locally from source. Please see %s and %s for installation logs.\n" % (install_results["samtools"]["stdout"], install_results["samtools"]["stderr"]))
+            if source_exists:
+                sys.stdout.write("Installing samtools locally.\n")
+                try:
+                    subprocess.run(["./configure", "--without-curses", "--disable-lzma"],
+                                   cwd=fo.source_directory + "samtools-1.9/",
+                                   stdout=open(install_results["samtools"]["stdout"], "w"),
+                                   stderr=open(install_results["samtools"]["stderr"], "w"),
+                                   env=env)
+
+                    subprocess.run(["make"],
+                                   cwd=fo.source_directory + "samtools-1.9/",
+                                   stdout=open(install_results["samtools"]["stdout"], "w"),
+                                   stderr=open(install_results["samtools"]["stderr"], "w"),
+                                   env=env)
+                except (EnvironmentError, subprocess.CalledProcessError):
+                    install_error = True
+                    install_results["samtools"]["error"] = True
+                    sys.stderr.write("Error: There was a problem installing samtools locally from source. Please see %s and %s for installation logs.\n" % (install_results["samtools"]["stdout"], install_results["samtools"]["stderr"]))
+
+                # Adding additional check just in case the installation doesn't exit with an error code
+                if not samtools_executables_exist():
+                    sys.stderr.write("Error: There was a problem installing samtools locally from source. Please see %s and %s for installation logs.\n" % (install_results["samtools"]["stdout"], install_results["samtools"]["stderr"]))
+
         else:
             sys.stderr.write("Warning: Make not available, skipping installation of: samtools.\n")
 sys.stdout.write("\n")
 
-if not args.no_trimmomatic:
-    if not os.path.isfile(config.steps.quality_filter.required_programs["trimmer"]):
-        sys.stdout.write("Downloading TRIMMOMATIC jar.\n")
-        try:
-            subprocess.run(["wget", "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip", "-P", fo.source_directory],
-                           stdout=open(install_results["trimmomatic"]["stdout"], "w"),
-                           stderr=open(install_results["trimmomatic"]["stderr"], "w"),
-                           env=env)
-            subprocess.run(["unzip", fo.source_directory + "Trimmomatic-0.39.zip", "-d", fo.source_directory],
-                           stdout=open(install_results["trimmomatic"]["stdout"], "w"),
-                           stderr=open(install_results["trimmomatic"]["stderr"], "w"),
-                           env=env)
-        except (EnvironmentError, subprocess.CalledProcessError):
-            install_error = True
-            install_error["trimmomatic"]["error"] = True
-            sys.stderr.write("Error: There was a problem downloading the TRIMMOMATIC jar. Please see %s and %s for installation logs." % (install_results["trimmomatic"]["stdout"], install_results["trimmomatic"]["stderr"]))
+
+def trimmomatic_executables_exist():
+    return subprocess.run(["which", config.steps.quality_filter.required_programs["trimmer"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.quality_filter.required_programs["trimmer"])
+
+
+if not args.no_trimmomatic and not trimmomatic_executables_exist():
+    sys.stdout.write("Downloading TRIMMOMATIC jar.\n")
+    try:
+        subprocess.run(["wget", "http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.39.zip", "-P", fo.source_directory],
+                       stdout=open(install_results["trimmomatic"]["stdout"], "w"),
+                       stderr=open(install_results["trimmomatic"]["stderr"], "w"),
+                       env=env)
+        subprocess.run(["unzip", fo.source_directory + "Trimmomatic-0.39.zip", "-d", fo.source_directory],
+                       stdout=open(install_results["trimmomatic"]["stdout"], "w"),
+                       stderr=open(install_results["trimmomatic"]["stderr"], "w"),
+                       env=env)
+    except (EnvironmentError, subprocess.CalledProcessError):
+        install_error = True
+        install_error["trimmomatic"]["error"] = True
+        sys.stderr.write("Error: There was a problem downloading the TRIMMOMATIC jar. Please see %s and %s for installation logs.\n" % (install_results["trimmomatic"]["stdout"], install_results["trimmomatic"]["stderr"]))
+
+    # Adding additional check just in case the installation doesn't exit with an error code
+    if not trimmomatic_executables_exist():
+        sys.stderr.write("Error: There was a problem downloading the TRIMMOMATIC jar. Please see %s and %s for installation logs.\n" % (install_results["trimmomatic"]["stdout"], install_results["trimmomatic"]["stderr"]))
 sys.stdout.write("\n")
 
-if not args.no_diamond:
+
+def diamond_executables_exist():
+    return subprocess.run(["which", config.steps.map_reads_to_genes.required_programs["diamond"]], capture_output=True, env=env).returncode == 0 or os.path.isfile(config.steps.map_reads_to_genes.required_programs["diamond"])
+
+
+if not args.no_diamond and not diamond_executables_exist():
     if make_installed and cmake_installed:
         source_exists = True
         if not os.path.isdir(fo.source_directory + "diamond-0.9.22/"):
@@ -354,7 +417,7 @@ if not args.no_diamond:
                 sys.stderr.write("Error: There was a problem downloading and/or expanding the DIAMOND source in preparation for local installation. Please see %s and %s for installation logs.\n" % (install_results["diamond"]["stdout"], install_results["diamond"]["stderr"]))
                 source_exists = False
 
-        if not os.path.isfile(config.steps.map_reads_to_genes.required_programs["diamond"]) and source_exists:
+        if source_exists:
             sys.stdout.write("Installing DIAMOND locally.\n")
             try:
                 subprocess.run(["cmake", ".", "-DCMAKE_INSTALL_PREFIX=" + os.getcwd() + "/" + fo.source_directory + "diamond-0.9.22/"],
@@ -371,23 +434,28 @@ if not args.no_diamond:
                 install_error = True
                 install_results["diamond"]["error"] = True
                 sys.stderr.write("Error: There was a problem installing DIAMOND locally from source. Please see %s and %s for installation logs.\n" % (install_results["diamond"]["stdout"], install_results["diamond"]["stderr"]))
+
+            # Adding additional check just in case the installation doesn't exit with an error code
+            if not diamond_executables_exist():
+                sys.stderr.write("Error: There was a problem installing DIAMOND locally from source. Please see %s and %s for installation logs.\n" % (install_results["diamond"]["stdout"], install_results["diamond"]["stderr"]))
+
     else:
         sys.stderr.write("Warning: Make and/or CMake not available, skipping installation of: DIAMOND.\n")
 sys.stdout.write("\n")
 
 # Record any tools that are missing
 all_missing_programs = set()
-if subprocess.run(["which", op.python], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", op.python], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.python):
     all_missing_programs.add(op.python)
 
-if subprocess.run(["which", op.java], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", op.java], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.java):
     all_missing_programs.add(op.java)
 
-if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.snakemake):
     all_missing_programs.add(op.snakemake)
 
 makeblastdb_location = os.path.dirname(config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
-if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0 and not os.path.isfile(makeblastdb_location):
     all_missing_programs.add(makeblastdb_location)
 
 for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
@@ -396,7 +464,7 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
     # Check if each file exists or is an executable in the environment
     step_missing_programs = []
     for required_program in required_programs:
-        program_exists = os.path.exists(required_program)
+        program_exists = os.path.isfile(required_program)
         executable_exists = subprocess.run(["which", required_program], capture_output=True, env=env).returncode == 0
         if not program_exists and not executable_exists:
             step_missing_programs.append(required_program)
@@ -467,7 +535,7 @@ if not args.no_human_reference:
             human_reference_missing_programs.append("srprism")
         if makeblastdb_location in all_missing_programs:
             human_reference_missing_programs.append("makeblastdb")
-        sys.stderr.write("Warning: %s not available, skipping download and processing of human reference." % ", ".join(human_reference_missing_programs))
+        sys.stderr.write("Warning: %s not available, skipping download and processing of human reference.\n" % ", ".join(human_reference_missing_programs))
 sys.stdout.write("\n")
 
 if not args.no_ko_mappings:
@@ -557,7 +625,7 @@ if args.uniprot:
             uniprot_missing_programs.append("DIAMOND")
         if op.python in all_missing_programs:
             uniprot_missing_programs.append("python")
-        sys.stderr.write("Warning: %s not available, skipping download and processing of UniProt target database." % ", ".join(uniprot_missing_programs))
+        sys.stderr.write("Warning: %s not available, skipping download and processing of UniProt target database.\n" % ", ".join(uniprot_missing_programs))
 sys.stdout.write("\n")
 
 sys.stdout.write("*" * 80 + "\n")
@@ -565,17 +633,17 @@ sys.stdout.write("SETUP COMPLETE\n")
 sys.stdout.write("Automated installation and reference data processing has finished. Please see above for details on software that could not be automatically installed and/or supporting data files that could not be generated.\n\n")
 
 # Report any tools that are missing
-if subprocess.run(["which", op.python], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", op.python], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.python):
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Python scripts. Please either install Python or change the 'python' variable in the config.operation.py submodule to point to a valid Python executable.\n" % op.python)
 
-if subprocess.run(["which", op.java], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", op.java], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.java):
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Java jars. Please either install Java or change the 'java' variable in the config.operation.py submodule to point to a valid Java executable.\n" % op.java)
 
-if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.snakemake):
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running MetaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable.\n" % op.snakemake)
 
 makeblastdb_location = os.path.dirname(config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
-if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0:
+if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0 and not os.path.isfile(makeblastdb_location):
     sys.stderr.write("Warning: %s is not present and executable in your current environment. This will be required for processing the default human reference database for host filtering. Check for BLAST+ installation errors if you tried to install BLAST+ with the setup script.\n" % makeblastdb_location)
 
 for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
@@ -584,7 +652,7 @@ for importer, modname, ispkg in pkgutil.iter_modules(config.steps.__path__):
     # Check if each file exists or is an executable in the environment
     step_missing_programs = []
     for required_program in required_programs:
-        program_exists = os.path.exists(required_program)
+        program_exists = os.path.isfile(required_program)
         executable_exists = subprocess.run(["which", required_program], capture_output=True, env=env).returncode == 0
         if not program_exists and not executable_exists:
             step_missing_programs.append(required_program)
