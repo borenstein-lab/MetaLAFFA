@@ -857,5 +857,12 @@ This does the following:
     
 Once you have done this, you can then make any project-specific configuration changes to the project's configuration files without affecting the configuration of your original MetaLAFFA installation. For example, you can set the `initial_data_directory` variable in `config/file_organization.py` to point to a different dataset that you want to annotate.
 
+FAQ
+---
+
+Q: What can I do if one or more Python packages fail to install during the automated setup?
+
+A: One alternative is to use [**Conda**](https://docs.conda.io/en/latest/) to create a Python3 environment specific to MetaLAFFA. You can then activate a Conda environment and then run the MetaLAFFA setup script, which should allow you to install the required Python packages locally. Note that you will need to run MetaLAFFA from this Conda environment.
+
 References
 ----------

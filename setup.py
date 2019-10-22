@@ -640,7 +640,7 @@ if subprocess.run(["which", op.java], capture_output=True, env=env).returncode !
     sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running Java jars. Please either install Java or change the 'java' variable in the config.operation.py submodule to point to a valid Java executable.\n" % op.java)
 
 if subprocess.run(["which", op.snakemake], capture_output=True, env=env).returncode != 0 and not os.path.isfile(op.snakemake):
-    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running MetaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable.\n" % op.snakemake)
+    sys.stderr.write("Warning: %s is not present in your current environment. This will be required for running MetaLAFFA. Please either install Snakemake or change the 'snakemake' variable in the config.operation.py submodule to point to a valid snakemake executable. If there was an issue installing Snakemake via PIP, you may consider using a Conda environment for your MetaLAFFA installation. See the README FAQ for more details.\n" % op.snakemake)
 
 makeblastdb_location = os.path.dirname(config.steps.host_filter.required_programs["blastn"]) + "/makeblastdb"
 if subprocess.run(["which", makeblastdb_location], capture_output=True, env=env).returncode != 0 and not os.path.isfile(makeblastdb_location):

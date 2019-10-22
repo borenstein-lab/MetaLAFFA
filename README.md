@@ -39,6 +39,7 @@ Tutorial for running MetaLAFFA
         -   [Locating final outputs](#locating-final-outputs)
         -   [Restarting MetaLAFFA](#restarting-metalaffa)
         -   [Using MetaLAFFA to annotate a new dataset](#using-metalaffa-to-annotate-a-new-dataset)
+-   [FAQ](#faq)
 -   [References](#references)
 
 **Repository:** <https://github.com/engal/MetaLAFFA>
@@ -637,6 +638,13 @@ Once you have successfully used MetaLAFFA to annotate a metagenomic shotgun sequ
 This does the following: 1. Creates a new annotation project directory 2. Copies over the necessary configuration files from your original MetaLAFFA installation, which has two benefits: 1. This provides you with separate configuration files that are specific to your new annotation project and thus can serve as a record of how you run MetaLAFFA for each individual project 2. This maintains any custom adjustments you made to the pipeline configuration when you first ran MetaLAFFA, which means that you do not need to repeat any changes to the default configuration that may be specific to your working environment 3. Pre-modifies the configuration (where appropriate) to point to the same supporting files (e.g. source files, databases, and mapping files) as your original MetaLAFFA installation, which means that you do not have to repeat the setup process for each new annotation project (i.e. you do not have to reinstall local copies of third-party software or redownload and process host and target databases)
 
 Once you have done this, you can then make any project-specific configuration changes to the project's configuration files without affecting the configuration of your original MetaLAFFA installation. For example, you can set the `initial_data_directory` variable in `config/file_organization.py` to point to a different dataset that you want to annotate.
+
+FAQ
+---
+
+Q: What can I do if one or more Python packages fail to install during the automated setup?
+
+A: One alternative is to use [**Conda**](https://docs.conda.io/en/latest/) to create a Python3 environment specific to MetaLAFFA. You can then activate a Conda environment and then run the MetaLAFFA setup script, which should allow you to install the required Python packages locally. Note that you will need to run MetaLAFFA from this Conda environment.
 
 References
 ----------
