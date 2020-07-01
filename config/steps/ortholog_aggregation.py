@@ -25,7 +25,7 @@ The prefix to use in output subdirectory naming and provenance naming
 
 output_list = [
     "{mapping}.aggregated_orthologs.tab",
-    "{mapping}.pathway_ko_counts.tab"
+    "{mapping}.mapped_ortholog_counts.tab"
 ]
 """
 List defining the pipeline step's output structure.
@@ -51,7 +51,8 @@ Dictionary defining the pipeline step's parameters that don't affect the output
 operating_params = {
     "type": "default",  # ID for operation to perform
     "method": "empanada",  # Method to use for ortholog aggregation, options include: empanada, fractional
-    "empanada_method": ["-map by_support"]  # EMPANADA aggregation method, options include: -map by_support, -map naive, -map by_sum_abundance, -map by_avg_abundance
+    "empanada_method": ["-map", "by_support"]  # EMPANADA aggregation method, options include: -map by_support, "
+                                          "-map naive, -map by_sum_abundance, -map by_avg_abundance
 }
 """
 Dictionary defining the pipeline step's parameters using when running the associated software
