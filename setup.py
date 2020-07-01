@@ -46,6 +46,10 @@ parser.add_argument("--no_musicc",
                     "-nmu",
                     action="store_true",
                     help="If used, do not install MUSiCC via pip for ortholog abundance correction.")
+parser.add_argument("--no_empanada",
+                    "-ne",
+                    action="store_true",
+                    help="If used, do not install EMPANADA via pip for ortholog aggregation.")
 parser.add_argument("--no_ko_mappings",
                     "-nkm",
                     action="store_true",
@@ -94,7 +98,7 @@ for database in ["human_reference", "ortholog_mapping", "uniprot"]:
 sys.stdout.write("Checking for tools required for the automated installation of third-party software.\n\n")
 if subprocess.run(["which", args.pip], capture_output=True, env=env).returncode != 0 and not os.path.isfile(args.pip):
     pip_installed = False
-    sys.stderr.write(args.pip + " not found. pip is required for installation of [snakemake, psutil, musicc]. These tools will not be installed during setup.\n")
+    sys.stderr.write(args.pip + " not found. pip is required for installation of [snakemake, psutil, musicc, empanada]. These tools will not be installed during setup.\n")
 
 if subprocess.run(["which", "make"], capture_output=True, env=env).returncode != 0:
     make_installed = False
@@ -116,6 +120,8 @@ if not args.no_snakemake:
     pip_install_list.append("psutil")
 if not args.no_musicc:
     pip_install_list.append("musicc")
+if not args.no_empanada:
+    pip_install_list.append("empanada")
 if len(pip_install_list) > 0:
     if pip_installed:
         sys.stdout.write("Installing python packages.\n\n")
@@ -135,6 +141,8 @@ if len(pip_install_list) > 0:
 
         if not args.no_musicc and subprocess.run(["which", config.steps.ortholog_abundance_correction.required_programs["musicc"]], capture_output=True, env=env).returncode != 0 and not os.path.isfile(config.steps.ortholog_abundance_correction.required_programs["musicc"]):
             sys.stderr.write("Error: There was a problem installing MUSiCC locally via pip. Please see %s and %s for installation logs.\n" % (install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
+        if not args.no_empanada and subprocess.run(["which", config.steps.ortholog_aggregation.required_programs["empanada"]], capture_output=True, env=env).returncode != 0 and not os.path.isfile(config.steps.ortholog_abundance_correction.required_programs["empanada"]):
+            sys.stderr.write("Error: There was a problem installing EMPANADA locally via pip. Please see %s and %s for installation logs.\n" % (install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
 
     else:
         sys.stderr.write("Warning: Pip not available, skipping installation of: %s.\n" % ", ".join(pip_install_list))

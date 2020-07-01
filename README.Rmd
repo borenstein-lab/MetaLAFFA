@@ -410,14 +410,11 @@ functional classifications based on their functional similarity or
 shared membership in a biological process (e.g. carbohydrate
 metabolism). This can result in a more manageable number of functions to
 analyze and can also reveal interesting trends in higher-level
-functional categories. By default, MetaLAFFA uses a similar
-counting scheme to gene and orthology group counting when aggregating
-orthology groups, assigning an orthology group's abundance fractionally
-among all of the functional categories it belongs to at a given
-functional resolution. Associations between KOs and higher-level
+functional categories. By default, MetaLAFFA uses EMPANADA [@manor2017revised] when aggregating
+orthology groups, assigning an orthology group's abundance
+among all of the functional categories it belongs to based on the support for the presence of each of those functional categories. Associations between KOs and higher-level
 functional descriptions (modules and pathways) are determined from the
-KEGG BRITE hierarchy [@kanehisa2018new] under default settings. During default
-operation, this is performed using a custom Python script.
+KEGG BRITE hierarchy [@kanehisa2018new] under default settings.
 
 ##### 10. Summarizing results of steps in MetaLAFFA
 
@@ -513,6 +510,8 @@ The `setup.py` script has various command-line options to modify the default set
 `--no_diamond, -nd`: If used, do not install DIAMOND in the pipeline directory. Note that DIAMOND is used by this setup script to configure the default target microbial peptide database and used for read mapping in the default pipeline configuration.
 
 `--no_musicc, -nmu`: If used, do not install MUSiCC in the pipeline directory via pip. Note that MUSiCC is used for ortholog abundance correction in the default pipeline configuration.
+
+`--no_empanada, -ne`: If used, do not install EMPANADA in the pipeline directory via pip. Note that EMPANADA is used for ortholog aggregation in the default pipeline configuration.
 
 `--no_ko_mappings, -nkm`: If used, do not download the bacterial KO-to-module and KO-to-pathway mappings from the 2013 version of the KEGG database. Note that these mappings are used for aggregating orthologs in the default pipeline configuration.
 

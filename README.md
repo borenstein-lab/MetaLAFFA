@@ -289,7 +289,7 @@ Once initial orthology group abundances have been calculated, it is usually nece
 
 ##### 9. Aggregating orthology groups into higher-level functional descriptions
 
-The final step in MetaLAFFA is to aggregate functional orthology group abundances into abundances at higher-level functional descriptions (e.g. modules or pathways). This can help with interpretability of results, since initial orthology group counting can often result in thousands of unique functions. One way to handle this issue is to aggregate initial functional orthology groups into higher-level functional classifications based on their functional similarity or shared membership in a biological process (e.g. carbohydrate metabolism). This can result in a more manageable number of functions to analyze and can also reveal interesting trends in higher-level functional categories. By default, MetaLAFFA uses a similar counting scheme to gene and orthology group counting when aggregating orthology groups, assigning an orthology group's abundance fractionally among all of the functional categories it belongs to at a given functional resolution. Associations between KOs and higher-level functional descriptions (modules and pathways) are determined from the KEGG BRITE hierarchy (Kanehisa et al. 2018) under default settings. During default operation, this is performed using a custom Python script.
+The final step in MetaLAFFA is to aggregate functional orthology group abundances into abundances at higher-level functional descriptions (e.g. modules or pathways). This can help with interpretability of results, since initial orthology group counting can often result in thousands of unique functions. One way to handle this issue is to aggregate initial functional orthology groups into higher-level functional classifications based on their functional similarity or shared membership in a biological process (e.g. carbohydrate metabolism). This can result in a more manageable number of functions to analyze and can also reveal interesting trends in higher-level functional categories. By default, MetaLAFFA uses EMPANADA (Manor and Borenstein 2017) when aggregating orthology groups, assigning an orthology group's abundance among all of the functional categories it belongs to based on the support for the presence of each of those functional categories. Associations between KOs and higher-level functional descriptions (modules and pathways) are determined from the KEGG BRITE hierarchy (Kanehisa et al. 2018) under default settings.
 
 ##### 10. Summarizing results of steps in MetaLAFFA
 
@@ -361,6 +361,8 @@ The `setup.py` script has various command-line options to modify the default set
 `--no_diamond, -nd`: If used, do not install DIAMOND in the pipeline directory. Note that DIAMOND is used by this setup script to configure the default target microbial peptide database and used for read mapping in the default pipeline configuration.
 
 `--no_musicc, -nmu`: If used, do not install MUSiCC in the pipeline directory via pip. Note that MUSiCC is used for ortholog abundance correction in the default pipeline configuration.
+
+`--no_empanada, -ne`: If used, do not install EMPANADA in the pipeline directory via pip. Note that EMPANADA is used for ortholog aggregation in the default pipeline configuration.
 
 `--no_ko_mappings, -nkm`: If used, do not download the bacterial KO-to-module and KO-to-pathway mappings from the 2013 version of the KEGG database. Note that these mappings are used for aggregating orthologs in the default pipeline configuration.
 
@@ -666,6 +668,8 @@ Kanehisa, Minoru, Yoko Sato, Miho Furumichi, Kanae Morishima, and Mao Tanabe. 20
 Kultima, Jens Roat, Luis Pedro Coelho, Kristoffer Forslund, Jaime Huerta-Cepas, Simone S Li, Marja Driessen, Anita Yvonne Voigt, Georg Zeller, Shinichi Sunagawa, and Peer Bork. 2016. “MOCAT2: A Metagenomic Assembly, Annotation and Profiling Framework.” *Bioinformatics* 32 (16). Oxford University Press: 2520–3.
 
 Manor, Ohad, and Elhanan Borenstein. 2015. “MUSiCC: A Marker Genes Based Framework for Metagenomic Normalization and Accurate Profiling of Gene Abundances in the Microbiome.” *Genome Biology* 16 (1). BioMed Central: 53.
+
+———. 2017. “Revised Computational Metagenomic Processing Uncovers Hidden and Biologically Meaningful Functional Variation in the Human Microbiome.” *Microbiome* 5 (1). BioMed Central: 1–11.
 
 Nayfach, Stephen, and Katherine S Pollard. 2016. “Toward Accurate and Quantitative Comparative Metagenomics.” *Cell* 166 (5). Elsevier: 1103–16.
 

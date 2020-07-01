@@ -66,7 +66,7 @@ The benchmark filename pattern
 
 def default(inputs, outputs, wildcards):
     """
-    Default gene map operations.
+    Default ortholog abundance correction operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names

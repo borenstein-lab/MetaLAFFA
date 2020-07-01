@@ -24,7 +24,8 @@ The prefix to use in output subdirectory naming and provenance naming
 """
 
 output_list = [
-    "{mapping}.aggregated_orthologs.tab"
+    "{mapping}.aggregated_orthologs.tab",
+    "{mapping}.pathway_ko_counts.tab"
 ]
 """
 List defining the pipeline step's output structure.
@@ -35,7 +36,9 @@ cluster_params = {}
 Dictionary defining the pipeline step's cluster parameters
 """
 
-required_programs = {}
+required_programs = {
+    "empanada": fo.python_source_directory + "run_empanada.py"  # Location of the EMPANADA program
+}
 """
 Dictionary defining the paths to programs used by this pipeline step
 """
@@ -47,8 +50,8 @@ Dictionary defining the pipeline step's parameters that don't affect the output
 
 operating_params = {
     "type": "default",  # ID for operation to perform
-    "method": "standard",  # Method to use for ortholog aggregation, options include: standard
-    "standard_method": "fractional"  # Standard aggregation method to use, options include: fractional, whole
+    "method": "empanada",  # Method to use for ortholog aggregation, options include: empanada, fractional
+    "empanada_method": ["-map by_support"]  # EMPANADA aggregation method, options include: -map by_support, -map naive, -map by_sum_abundance, -map by_avg_abundance
 }
 """
 Dictionary defining the pipeline step's parameters using when running the associated software
@@ -64,7 +67,7 @@ The benchmark filename pattern
 
 def default(inputs, outputs, wildcards):
     """
-    Default gene map operations.
+    Default ortholog aggregation operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
@@ -77,12 +80,18 @@ def default(inputs, outputs, wildcards):
 
         mapping = fo.ortholog_to_grouping_directory + wildcards.mapping + op.ortholog_to_grouping_suffix
 
-        if operating_params["method"] == "standard":
-            subprocess.run([op.python, fo.source_directory + "ortholog_aggregation.py", inputs.input, operating_params["standard_method"], mapping, "--grouping_name", wildcards.mapping, "--output", outputs[0]], env=env)
+        if operating_params["method"] == "empanada":
+            command = [required_programs["empanada"], "-ko", inputs.input, "-ko2path", mapping, "-o", outputs[0], "-oc", outputs[1]] + operating_params["empanada_method"]
+            subprocess.run(command, env=env)
+
+        # Otherwise, if the method is unrecognized, just copy the input file to the output
+        else:
+            subprocess.run(["cp", inputs.input, outputs[0]], env=env)
+            subprocess.run(["touch", outputs[1]], env=env)
 
     # Otherwise, if the input file is a dummy file, create dummy outputs
     else:
-        subprocess.run(["touch", outputs[0]], env=env)
+        subprocess.run(["touch", outputs[0], outputs[1]], env=env)
 
 
 # Defining the wrapper function that chooses which defined operation to run
