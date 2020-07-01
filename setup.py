@@ -141,7 +141,8 @@ if len(pip_install_list) > 0:
 
         if not args.no_musicc and subprocess.run(["which", config.steps.ortholog_abundance_correction.required_programs["musicc"]], capture_output=True, env=env).returncode != 0 and not os.path.isfile(config.steps.ortholog_abundance_correction.required_programs["musicc"]):
             sys.stderr.write("Error: There was a problem installing MUSiCC locally via pip. Please see %s and %s for installation logs.\n" % (install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
-        if not args.no_empanada and subprocess.run(["which", config.steps.ortholog_aggregation.required_programs["empanada"]], capture_output=True, env=env).returncode != 0 and not os.path.isfile(config.steps.ortholog_abundance_correction.required_programs["empanada"]):
+
+        if not args.no_empanada and subprocess.run(["which", config.steps.ortholog_aggregation.required_programs["empanada"]], capture_output=True, env=env).returncode != 0 and not os.path.isfile(config.steps.ortholog_aggregation.required_programs["empanada"]):
             sys.stderr.write("Error: There was a problem installing EMPANADA locally via pip. Please see %s and %s for installation logs.\n" % (install_results["python_package"]["stdout"], install_results["python_package"]["stderr"]))
 
     else:
