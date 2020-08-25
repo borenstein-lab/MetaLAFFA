@@ -20,32 +20,27 @@ benchmark_dir = "benchmark/"
 Directory containing benchmarking files. This directory will be created when the pipeline is run for the first time.
 """
 
-bitmask_directory = "bitmasks/"
+installation_directory = "{INSTALL_DIR}/"
 """
-Directory containing database bitmaps
+Directory where MetaLAFFA is installed. By default, this directory is used to store reference databases, supporting files, and as the original source of customizable configuration files when creating new MetaLAFFA projects.
 """
 
-database_directory = "databases/"
+database_directory = installation_directory + "databases/"
 """
 Directory containing databases to map reads to
 """
 
-index_directory = "indices/"
-"""
-Directory containing indices for srprism
-"""
-
-gene_normalization_directory = "gene_normalization_files/"
+gene_normalization_directory = installation_directory + "gene_normalization_files/"
 """
 Directory containing gene count normalization files
 """
 
-gene_to_ortholog_directory = "gene_to_ortholog_maps/"
+gene_to_ortholog_directory = installation_directory + "gene_to_ortholog_maps/"
 """
 Directory containing gene-to-ortholog mapping files
 """
 
-ortholog_to_grouping_directory = "ortholog_to_grouping_maps/"
+ortholog_to_grouping_directory = installation_directory + "ortholog_to_grouping_maps/"
 """
 Directory containing ortholog-to-grouping mapping files for aggregating ortholog abundances into functional groups
 """
@@ -65,19 +60,9 @@ final_output_directory = output_directory + "final/"
 Output subdirectory in which to collect the final output files.
 """
 
-source_directory = "src/"
+source_directory = installation_directory + "src/"
 """
 Directory for scripts and third-party tools used in the pipeline.
-"""
-
-python_package_directory = source_directory + "python/"
-"""
-Local directory to install Python packages in.
-"""
-
-python_source_directory = python_package_directory + "bin/"
-"""
-Local directory where executables installed by Python packages are placed.
 """
 
 tmp_dir = "/tmp/"
@@ -90,14 +75,19 @@ nested_subdirectories = True
 Whether provenance for the output for each step should be tracked in a nested subdirectory structure with subdirectory titles indicating parameters for previous processing steps, or whether previous processing step parameters should be encoded in the name of the output file. This can be used when the filesystem has limits on file name length.
 """
 
-provenance_separator = "_"
+provenance_separator = "/"
 """
-The character to use when separating steps in the pipeline in filenames, which are used to track provenance. If nested subdirectories are used, this is automatically changed to a "/" character to change the single filename into nested subdirectories.
+The character to use when separating steps in the pipeline in filenames, which are used to track provenance. If nested subdirectories are used, this will be the "/" character to change the single filename into nested subdirectories.
 """
-if nested_subdirectories:
-    provenance_separator = "/"
+if not nested_subdirectories:
+    provenance_separator = "_"
 
-required_directories = [initial_data_directory, output_directory, benchmark_dir, bitmask_directory, database_directory, index_directory, gene_normalization_directory, gene_to_ortholog_directory, ortholog_to_grouping_directory, log_directory, summary_directory, final_output_directory, source_directory]
+required_reference_directories = [database_directory, gene_normalization_directory, gene_to_ortholog_directory, ortholog_to_grouping_directory, source_directory]
 """
-List of directories that must exist for proper pipeline operation, these directories should be created during pipeline setup if they do not already exist.
+List of directories for reference data that must exist for proper pipeline operation, these directories should be created during database preparation if they do not already exist.
+"""
+
+required_project_directories = [initial_data_directory, output_directory, benchmark_dir, log_directory, summary_directory, final_output_directory]
+"""
+List of directories for project-specific input, output, and logging data that must exist for proper pipeline operation, these directories should be created when creating a new project directory if they do not already exist.
 """

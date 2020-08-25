@@ -30,6 +30,11 @@ The fifth is for steps that should have their intermediate outputs deleted once 
 Steps can be skipped by commenting them out with the "#" character, though note that any later steps relying on skipped steps should have their input steps updated.
 """
 
+conda_env = "{CONDA_ENV}"
+"""
+The name of the conda environment in which MetaLAFFA should be run.
+"""
+
 snakefile = "Snakefile"
 """
 The file that defines what pipeline steps are available to Snakemake.
@@ -74,7 +79,7 @@ cpu_to_thread_multiplier = 2
 Define how many threads there are per cpu
 """
 
-host_database = "hs37"
+host_database = "hs37d5"
 """
 The name of the host database to map reads to for host filtering
 """
@@ -107,39 +112,14 @@ wildcard_restrictions = {
 Define restrictions on wildcard values for file name patterns
 """
 
-python = "python3"
-"""
-The path to the python executable to use when running the pipeline
-"""
-
-java = "java"
-"""
-The path to the java executable to use when running the pipeline
-"""
-
-snakemake = fo.python_source_directory + "snakemake"
+snakemake = "snakemake"
 """
 The path to the snakemake executable to use when running the pipeline
 """
 
-bitmask_suffix = ".bitmask"
+bowtie2_build = "bowtie2-build"
 """
-Suffix for a bitmask file
-"""
-
-blast_db_suffix = ".nsq"
-"""
-Suffix for a BLAST database sequence file
-"""
-
-srprism_suffix = ".srprism"
-"""
-Suffix for an srprism index ID
-"""
-
-srprism_index_suffix = ".idx"
-"""
-Suffix for an srprism index file
+The path to the bowtie2-build executable to use when processing default databases
 """
 
 diamond_db_suffix = ".dmnd"
@@ -162,17 +142,12 @@ ortholog_to_grouping_suffix = ".map"
 Suffix for an ortholog-to-grouping mapping file
 """
 
-host_bitmask_file = fo.bitmask_directory + host_database + bitmask_suffix
-"""
-The path to the bitmask file for host filtering
-"""
-
-host_database_file = fo.database_directory + host_database
+host_database_file = fo.database_directory + host_database + ".fa"
 """
 The path to the database for host filtering
 """
 
-host_index_file = fo.index_directory + host_database + srprism_suffix
+host_index = fo.database_directory + host_database
 """
 The path to the index file for host filtering
 """

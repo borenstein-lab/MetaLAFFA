@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 import argparse
 import sys
 import os
+import re
 from file_handling_lib import *
 from fastq_summary_lib import *
 

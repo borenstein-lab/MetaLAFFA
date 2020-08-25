@@ -1,6 +1,7 @@
+#!/usr/bin/env python
+
 import argparse
 import re
-import gzip
 from file_handling_lib import *
 
 parser = argparse.ArgumentParser()

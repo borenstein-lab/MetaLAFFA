@@ -1,9 +1,10 @@
+#!/usr/bin/env python
+
 import argparse
 import re
 import math
 import subprocess
 from snakemake.utils import read_job_properties
-from config import env
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Submits a Snakemake job to SGE")
@@ -49,4 +50,4 @@ if reserve:
 
 submission_command += [args.job_script]
 
-subprocess.run(submission_command, env=env)
+subprocess.run(submission_command)

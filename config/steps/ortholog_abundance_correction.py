@@ -5,9 +5,7 @@ Ortholog abundance correction step parameters
 This configuration submodule contains parameters related to the ortholog abundance correction pipeline step.
 """
 
-from config import env
 import config.library_functions as lf
-import config.operation as op
 import config.file_organization as fo
 import subprocess
 
@@ -36,7 +34,7 @@ Dictionary defining the pipeline step's cluster parameters
 """
 
 required_programs = {
-    "musicc": fo.python_source_directory + "run_musicc.py"  # Location of the MUSiCC program
+    "musicc": "run_musicc.py"  # Location of the MUSiCC program
 }
 """
 Dictionary defining the paths to programs used by this pipeline step
@@ -79,18 +77,18 @@ def default(inputs, outputs, wildcards):
 
         if operating_params["method"] == "musicc":
             command = [required_programs["musicc"], inputs.input, "-o", outputs[0]] + operating_params["musicc_method"]
-            subprocess.run(command, env=env)
+            subprocess.run(command)
 
         elif operating_params["method"] == "relative":
-            subprocess.run([op.python, fo.source_directory + "ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]], env=env)
+            subprocess.run([fo.source_directory + "ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]])
 
         # Otherwise, if the method is unrecognized, just copy the input file to the output
         else:
-            subprocess.run(["cp", inputs.input, outputs[0]], env=env)
+            subprocess.run(["cp", inputs.input, outputs[0]])
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
-        subprocess.run(["touch", outputs[0]], env=env)
+        subprocess.run(["touch", outputs[0]])
 
 
 # Defining the wrapper function that chooses which defined operation to run

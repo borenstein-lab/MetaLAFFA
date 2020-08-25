@@ -28,3 +28,6 @@ dummy_input_files_generated.txt
 src/configured_jobscript.sh
 src/*.err
 src/*.out
+build.sh
+meta.yaml
+venv/*

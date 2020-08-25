@@ -5,8 +5,6 @@ Quality filter summary combine step parameters
 This configuration submodule contains parameters related to the quality filter summary combine pipeline step.
 """
 
-from config import env
-import config.operation as op
 import config.file_organization as fo
 import subprocess
 
@@ -69,7 +67,7 @@ def default(inputs, outputs, wildcards):
     :return: None.
     """
 
-    subprocess.run([op.python, fo.source_directory + "summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]], env=env)
+    subprocess.run([fo.source_directory + "summary_combine.py"] + list(inputs.plainstrings()) + ["--output", outputs[0]])
 
 
 # Defining the wrapper function that chooses which defined operation to run

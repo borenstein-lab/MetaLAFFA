@@ -5,7 +5,6 @@ Summary combine step parameters
 This configuration submodule contains parameters related to the summary combine pipeline step.
 """
 
-from config import env
 import config.library_functions as lf
 import subprocess
 
@@ -67,7 +66,7 @@ def default(inputs, outputs, wildcards):
     """
 
     for final_output in list(inputs.plainstrings()):
-        subprocess.run(["cp", final_output, lf.process_final_output_name(final_output)], env=env)
+        subprocess.run(["cp", final_output, lf.process_final_output_name(final_output)])
 
 
 # Defining the wrapper function that chooses which defined operation to run

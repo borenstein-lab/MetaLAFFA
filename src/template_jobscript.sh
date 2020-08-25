@@ -1,5 +1,5 @@
 #!/bin/sh
 # properties = {{properties}}
+conda activate {conda_environment}
 cd {MetaLAFFA_directory}
-export PYTHONPATH=${PYTHONPATH}:$({python} -c "from config import env; print(env['PYTHONPATH'])")
 {{exec_job}}

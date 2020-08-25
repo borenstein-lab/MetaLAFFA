@@ -5,7 +5,6 @@ Hit filter step parameters
 This configuration submodule contains parameters related to the hit filter pipeline step.
 """
 
-from config import env
 import config.operation as op
 import config.file_organization as fo
 import config.library_functions as lf
@@ -86,17 +85,17 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.input):
 
         # Create the shell command to run, adding optional parameters as necessary
-        command = [op.python, fo.source_directory + "hit_filter.py", inputs.input, operating_params["method"], "--output", outputs[0]]
+        command = [fo.source_directory + "hit_filter.py", inputs.input, operating_params["method"], "--output", outputs[0]]
         if ortholog_method:
             command += ["--gene_to_ortholog_map", gene_to_ortholog]
         if n_method:
             command += ["-n", operating_params["best_n"]]
 
-        subprocess.run(command, env=env)
+        subprocess.run(command)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
-        subprocess.run(["touch", outputs[0]], env=env)
+        subprocess.run(["touch", outputs[0]])
 
 
 # Defining the wrapper function that chooses which defined operation to run

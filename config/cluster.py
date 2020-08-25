@@ -21,7 +21,7 @@ Dictionary defining the default pipeline step cluster parameters
 
 submission_wrapper = fo.source_directory + "sge_submission_wrapper.py"
 """
-The path to the submission wrapper script for interpretting Snakemake-determined job parameters when using a cluster
+The path to the submission wrapper script for interpreting Snakemake-determined job parameters when using a cluster
 """
 
 jobscript = fo.source_directory + "configured_jobscript.sh"
