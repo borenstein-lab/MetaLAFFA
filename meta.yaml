@@ -1,0 +1,29 @@
+package:
+  name: metalaffa
+  version: "0.1.0"
+
+source:
+  git_rev: 0.1.0
+  git_url: https://github.com/borenstein-lab/MetaLAFFA.git
+
+requirements:
+  build:
+    - python=3.6.10
+  run:
+    - python=3.6.10
+    - snakemake=3.13.3
+    - bowtie2=2.3.5.1
+    - diamond=0.9.14
+    - samtools=1.7
+    - trimmomatic=0.39
+    - picard=2.23.3
+    - musicc=1.0.4
+    - empanada=0.0.3
+
+#test:
+#  imports:
+#    -
+
+about:
+  home: https://github.com/borenstein-lab/MetaLAFFA
+  license: GPLv3
