@@ -1,12 +1,12 @@
 Tutorial for running MetaLAFFA
 ================
 
+-   [Software Requirements](#software-requirements)
 -   [Overview](#overview)
 -   [Quick Start Summary](#quick-start-summary)
-    -   [Downloading MetaLAFFA](#downloading-metalaffa)
-    -   [Configuring MetaLAFFA](#configuring-metalaffa)
-        -   [Using a custom functionally-annotated gene database](#using-a-custom-functionally-annotated-gene-database)
-        -   [Configuring MetaLAFFA to submit jobs to a cluster](#configuring-metalaffa-to-submit-jobs-to-a-cluster)
+    -   [Installing MetaLAFFA](#installing-metalaffa)
+    -   [Downloading and preparing reference databases for MetaLAFFA annotation](#downloading-and-preparing-reference-databases-for-metalaffa-annotation)
+    -   [Configuring MetaLAFFA to submit jobs to a cluster](#configuring-metalaffa-to-submit-jobs-to-a-cluster)
     -   [Trying out MetaLAFFA](#trying-out-metalaffa)
 -   [Full-length Tutorial](#full-length-tutorial)
     -   [MetaLAFFA step descriptions](#metalaffa-step-descriptions)
@@ -20,10 +20,10 @@ Tutorial for running MetaLAFFA
         -   [8. Correcting orthology group abundances](#correcting-orthology-group-abundances)
         -   [9. Aggregating orthology groups into higher-level functional descriptions](#aggregating-orthology-groups-into-higher-level-functional-descriptions)
         -   [10. Summarizing results of steps in MetaLAFFA](#summarizing-results-of-steps-in-metalaffa)
-    -   [Downloading MetaLAFFA](#downloading-metalaffa-1)
-        -   [Installing third-party tools and processing default databases](#installing-third-party-tools-and-processing-default-databases)
-        -   [Setup script options](#setup-script-options)
-    -   [Configuring MetaLAFFA](#configuring-metalaffa-1)
+    -   [Installing MetaLAFFA](#installing-metalaffa-1)
+    -   [Downloading and preparing reference databases for MetaLAFFA annotation](#downloading-and-preparing-reference-databases-for-metalaffa-annotation-1)
+    -   [Creating a MetaLAFFA project directory](#creating-a-metalaffa-project-directory)
+    -   [Configuring MetaLAFFA](#configuring-metalaffa)
         -   [config/file\_organization.py](#configfile_organization.py)
         -   [config/operation.py](#configoperation.py)
         -   [config/cluster.py](#configcluster.py)
@@ -38,7 +38,6 @@ Tutorial for running MetaLAFFA
         -   [MetaLAFFA script options](#metalaffa-script-options)
         -   [Locating final outputs](#locating-final-outputs)
         -   [Restarting MetaLAFFA](#restarting-metalaffa)
-        -   [Using MetaLAFFA to annotate a new dataset](#using-metalaffa-to-annotate-a-new-dataset)
 -   [FAQ](#faq)
 -   [References](#references)
 
@@ -47,6 +46,10 @@ Tutorial for running MetaLAFFA
 **Publication:** TBD
 
 **Note:** MetaLAFFA is supported on Mac and Linux, but not on Windows.
+
+### Software Requirements
+
+MetaLAFFA requires [**Conda**](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) (version 4.8 or greater) for installation and operation.
 
 ### Overview
 
@@ -64,102 +67,52 @@ Quick Start Summary
 
 Follow these steps to annotate your first metagenomic shotgun sequencing dataset using MetaLAFFA.
 
-1.  If not already installed, install [**Python3**](https://www.python.org/downloads/) (version 3.7 or greater is required).
+1.  Install MetaLAFFA via Conda
 
-2.  Download and set up the MetaLAFFA.
+2.  Download and prepare reference databases.
 
 3.  Try out MetaLAFFA with your own data or download some publicly available data to play with.
 
-### Downloading MetaLAFFA
+### Installing MetaLAFFA
 
-To download MetaLAFFA, first navigate to the directory in which you would like to save the pipeline. You can then clone the git repository as follows:
+To install MetaLAFFA via Conda, create a new environment using the following command:
 
-    # Make a local clone of the MetaLAFFA git repository.
-    git clone https://github.com/engal/MetaLAFFA.git
+    # Create a new Conda environment for running MetaLAFFA.
+    conda create -n metalaffa metalaffa -c bioconda -c borenstein-lab
 
-Start pipeline setup by running the setup.py script:
+All MetaLAFFA software dependencies will be installed and available in the resulting environment. When operating MetaLAFFA, be sure to activate this environment:
 
-    # Perform pipeline setup.
-    cd MetaLAFFA
-    python3 setup.py
+    # Activate the MetaLAFFA environment
+    conda activate metalaffa
 
-This script will attempt to automatically install third-party software locally in MetaLAFFA's `src` directory, download reference data, and process reference data to create support files for the annotation process. If you have previous installations of tools that MetaLAFFA uses, you can skip installing them locally by using the appropriate command line option when running the setup script. However, if you do this, make sure to update the config module to point your existing executables instead of looking for them in MetaLAFFA's local `src` directory. Similarly, if you already have reference data that you would prefer to use (instead of the MetaLAFFA defaults), you can skip downloading that data with command line arguments to the setup script and point the config module to look for that reference data instead.
+### Downloading and preparing reference databases for MetaLAFFA annotation
 
-------------------------------------------------------------------------
+Default reference databases can be downloaded and prepared for MetaLAFFA using the `prepare_databases.py` script. These databases will be installed in the base directory for the `metalaffa` environment, which can be found at `$CONDA_PREFIX/MetaLAFFA`. Activate the `metalaffa` environment and then run:
 
-**IMPORTANT NOTE**
+    # Download and prepare default reference databases
+    prepare_databases.py -hr -km -u
 
-The setup script will attempt to automatically install third-party tools locally, but some tools may fail to install due to the unforseen specifics of your computing environment. The setup script will print progress messages indicating which tool is currently being installed, and will notify you if a specific tool failed to be installed properly. If this occurs, the setup script will also direct you to the log files that were generated while installing that tool so that you can determine what went wrong and install that tool independently.
+where each option to the script specifies a different reference database:
 
-Additionally, some default reference data processing requires third-party tools. If these tools failed to install correctly, some of these processing operations may not be performed. In this case, if you install a tool independently and update the config module to point to that tool, you can rerun the setup script to run any reference data processing steps that relied on that tool.
+`-hr`: Download and prepare the database of human reference and decoy sequences (used in the 1000 genomes project) for host filtering.
 
-------------------------------------------------------------------------
+`-km`: Download KEGG ko-to-module and ko-to-pathway mappings.
 
-After the setup script is done installing third-party software and downloading and processing reference data, it will check the config module to determine whether all executables and supporting data files are present at the expected locations. If something is not present, the setup script will notify you what is missing and where in the config module its location was specified (in case you want to, for example, change the config module to use an existing installation of a third-party tool).
+`-u`: Download and prepare the UniRef90 database for read mapping and functional annotation.
 
-Setup is finished when you see:
+**Note**: This process can be time and resource intensive, taking several hours, ~108GB of free disk space, and ~40GB of RAM.
 
-    End of MetaLAFFA setup
+### Configuring MetaLAFFA to submit jobs to a cluster
 
-**Note**: Using default options, it can take a few hours to install all third-party tools and download and process all default databases, takes ~10G of RAM, and ~30G of free disk space.
+Though MetaLAFFA can be run locally, running MetaLAFFA on a cluster will allow you to best utilize its ability to parallelize the annotation of many metagenomic shotgun sequencing samples. If you plan to run MetaLAFFA locally, you can skip the following section on configuring MetaLAFFA to run on a cluster. However, you should make sure to modify `$CONDA_PREFIX/MetaLAFFA/config/steps/map_reads_to_genes.py`, changing the number of cores defined in `cluster_params` to be the number of cores you want a single DIAMOND alignment process to use.
 
-**Note**: By default, setup does not download or configure a database of annotated microbial peptide sequences to map reads against. However, you can use the `--uniprot` option when running `setup.py` to download the UniRef90 database (takes ~80G of free disk space) and create the associated DIAMOND-processed database, gene-to-ortholog mapping file, and gene count normalization file. If you do this, you can skip the following "Configuring MetaLAFFA" section.
+**Note**: MetaLAFFA's default installation via Conda uses Snakemake version 3.13.3, but if you have access to Snakemake version 4.1 or greater, then you can make use of [**Snakemake profiles**](https://snakemake.readthedocs.io/en/v5.1.4/executable.html#profiles), a convenient option for configuring Snakemake pipelines for different computing ennvironments. This should replace the use of environment-specific jobscripts outlines below.
 
-**Note**: Depending on your machine, network connection, and the tools/reference data you decide to install via the setup script, setup can take multiple hours. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially if you are downloading the UniRef90 database for read mapping.
-
-### Configuring MetaLAFFA
-
-##### Using a custom functionally-annotated gene database
-
-By default, the setup script does not download or configure a database of annotated microbial peptdie sequences to map reads against, instead assuming you will use your own existing database by modifying the pipeline configuration module. If you used the `--uniprot` option during setup, then you can ignore the following section on configuring a custom target database since MetaLAFFA defaults will be set to use the downloaded UniRef90 database.
-
-Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
-
-1.  Change the configuration module to point to your database and use your ortholog nomenclature of choice by editing the `config/operation.py` submodule, changing line 77 to:
-
-        target_database = <name_of_your_database>
-
-    and changing line 82 to:
-
-        target_ortholog = <name_of_your_ortholog>
-
-2.  Using DIAMOND, create a DIAMOND database from your database FASTA file:
-
-        # Create a DIAMOND database
-        diamond makedb --in <path_to_your_database_fasta> -d databases/<name_of_your_database>
-
-    This will create a file called `databases/<name_of_your_database>.dmnd` what will then be used by DIAMOND to map reads to genes.
-
-3.  Create a gene length normalization table from your database FASTA file using the included `create_gene_length_table.py` script:
-
-        python3 src/create_gene_length_table.py <path_to_your_database_fasta> --output gene_normalization_files/<name_of_your_database>.norm
-
-4.  Create a mapping file linking genes to orthologs. Annotations for databases can be in many formats, which means we are unable to provide a general-use script for producing a gene-to-ortholog mapping table. Instead, you will need to create a tab-separated table in the following format:
-
-        ortholog_id1   gene_id1
-        ortholog_id2   gene_id2
-        ortholog_id1   gene_id3
-        ...            ...
-
-    where the first column consists of ortholog IDs and the second column consists of the IDs (same as in the FASTA) for genes associated with those orthologs. Note that this mapping can be many-to-many, with one ortholog being associated with multiple genes and one gene being associated with multiple orthologs. To work with default pipeline settings, place this gene-to-ortholog mapping table in `gene_to_ortholog_maps/<name_of_your_database>_to_<name_of_your_ortholog>.map`.
-
-5.  If you are using KOs as your ortholog nomenclature, then you do not need to make any further changes for the pipeline to run and can ignore this step. However, if you are using a different functional annotation system, then you will need to make the following additional modifications.
-
-    1.  Change the configuration module to use relative abundance normalization for ortholog counts, rather than MUSiCC because MUSiCC only works with KO counts. You can do this by editing the `config/steps/ortholog_abundance_correction.py` submodule, changing line 50 to:
-
-                "method": "relative",
-
-    2.  Configure the pipeline to skip aggregating orthologs to higher-level functional descriptions by commenting out lines 48-50 in `pipeline_steps.txt`. Do this by adding a `#` at the beginning of each line.
-
-##### Configuring MetaLAFFA to submit jobs to a cluster
-
-Though MetaLAFFA can be run locally, running MetaLAFFA on a cluster will allow you to best utilize its ability to parallelize the annotation of many metagenomic shotgun sequencing samples. If you plan to run MetaLAFFA locally, you can skip the following section on configuring MetaLAFFA to run on a cluster. However, you should make sure to modify `config/steps/map_reads_to_genes.py`, changing the number of cores defined in `cluster_params` to be the number of cores you want a single DIAMOND alignment process to use.
-
-By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCondor clusters. This is achieved via the use of Python job submission wrapper scripts, included in the `src/` directory (`src/sge_submission_wrapper.py` and `src/condor_submission_wrapper.py` respectively). If your cluster uses a different cluster management system, then you will need to create your own job submission wrapper by following these steps:
+By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCondor clusters. This is achieved via the use of Python job submission wrapper scripts, included in the `$CONDA_PREFIX/MetaLAFFA/src/` directory (`$CONDA_PREFIX/MetaLAFFA/src/sge_submission_wrapper.py` and `$CONDA_PREFIX/src/condor_submission_wrapper.py` respectively). If your cluster uses a different cluster management system, then you will need to create your own job submission wrapper by following these steps:
 
 1.  Copy the appropriate example job submission wrapper script to serve as a template for your new wrapper.
 
-        cp src/<sge|condor>_submission_wrapper.py src/<name_of_your_cluster_system>_submission_wrapper.py
+        cp $CONDA_PREFIX/MetaLAFFA/src/<sge|condor>_submission_wrapper.py $CONDA_PREFIX/MetaLAFFA/src/<name_of_your_cluster_system>_submission_wrapper.py
 
     Which example script you should use as a template depends on how you parameterize jobs when submitting them to the cluster. If you request cluster resources (memory, cores, etc.) via command-line arguments and just provide the name of a shell script to run (i.e. SGE uses `qsub <name_of_shell_script>`), then you should use the SGE wrapper as a template. If you instead specify cluster resources and which script to run via a config file (i.e. HTCondor uses `condor_submit <name_of_config_file>`), then you should use the HTCondor wrapper as a template.
 
@@ -191,21 +144,34 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
         5.  Finally, the script runs `condor_submit` on the command-line, providing the path to the config file for this job.
 
+3.  Change the indicated submission wrapper in `CONDA_PREFIX/MetaLAFFA/config/cluster.py` to indicate your new submission wrapper (i.e. change `submissionn_wrapper = "src/sge_submission_wrapper.py"` to `submission_wrapper = "src/<name_of_your_cluster_system>_submission_wrapper.py"`). This will ensure that when you create new MetaLAFFA project directories (described next), both your custom submission wrapper and the configuration to use it will be included in the new project.
+
 ### Trying out MetaLAFFA
 
-1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line as follows:
+1.  After installation and database preparation, you can create a new MetaLAFFA project directory to try out MetaLAFFA. With your MetaLAFFA Conda environment active, you can create a new project directory using the associated script as follows:
 
 <!-- -->
 
-    wget http://downloads.hmpdacc.org/data/Illumina/stool/SRS017307.tar.bz2
+    create_new_MetaLAFFA_project.py metalaffa_example
+    cd metalaffa_example
+
+MetaLAFFA project directories created in this way will contain all of the files necessary to run the pipeline, including a local copy of a configuration module that will allow you to both keep a record of how the pipeline was run for the associated project and have project-specific configurations in case you have multiple projects that require different pipeline configurations.
+
+**Note**: Any configuration changes made in the configuration module located at `$CONDA_PREFIX/MetaLAFFA/config` will be the default configurations for any newly created projects. Thus, if you have custom settings that you think should be preset in any new projects, you should make those changes to this base configuration module.
+
+1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line from your example project directory as follows:
+
+<!-- -->
+
+    wget http://downloads.hmpdacc.org/data/Illumina/stool/SRS017307.tar.bz2 -P data/
 
 If you download data from HMP through either of these methods, you will receive a compressed directory that you will need to expand, i.e.:
 
-    tar -jxf SRS017307.tar.bz2
+    tar -jxf data/SRS017307.tar.bz2 --one-top-level=data --strip-components=1
 
-which will produce a directory, `SRS017307/` containing three files, a forward read FASTQ (ending in `1.fastq`), a reverse read FASTQ (ending in `2.fastq`), and a singleton FASTQ (ending in `singleton.fastq`). Default MetaLAFFA settings expect gzipped input FASTQs, so you will need to zip these FASTQs:
+which will extract he associated FASTQs to the `data/` directory. After extract, it is recommended you delete the original compressed directory to save disk space. These will consist of three files, a forward read FASTQ (ending in `1.fastq`), a reverse read FASTQ (ending in `2.fastq`), and a singleton FASTQ (ending in `singleton.fastq`). Default MetaLAFFA settings expect gzipped input FASTQs, so you will need to zip these FASTQs:
 
-    gzip SRS017307/*
+    gzip data/*.fastq
 
 You can change MetaLAFFA to use unzipped files in `config/operations.py` by changing the `zipped_files` variable to `False`, though this is not recommended due to shotgun metagenomic FASTQs usually being very large.
 
@@ -217,29 +183,29 @@ You can change MetaLAFFA to use unzipped files in `config/operations.py` by chan
 
     Singleton/unpaired FASTQs should be named `<sample>.S.fastq.gz`
 
-**Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
+    **Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
 
-1.  Place the FASTQs in the `data/` directory.
-
-2.  Start MetaLAFFA with one of the following commands:
+2.  Start MetaLAFFA with one of the following commands from your example project directory:
 
     1.  If you are running MetaLAFFA locally, use:
 
-            python3 MetaLAFFA.py --local --n <number_of_cores>
+            ./MetaLAFFA.py
 
-        where <number_of_cores> is the number of coress that you want to allow MetaLAFFA to use to parallelize pipeline steps (i.e. each core will be running a separate pipeline operation).
+        If you are running MetaLAFFA on a cluster, use:
 
-    2.  If you are running MetaLAFFA on a cluster, use:
+            ./MetaLAFFA.py --use-cluster
 
-            python3 MetaLAFFA.py 
+        This option will use the submission wrapper and jobscript specified in your project's `config/cluster.py` configuration submodule to submit jobs to your cluster system.
 
-    3.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [screen session](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
+    2.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [screen session](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
 
-    4.  You can use the `-n <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many jobs should be in your cluster's queue at any one time. This limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
+    3.  You can use the `-j <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many cores should be used locally/jobs should be in your cluster's queue at any one time. Regarding cluster usage, this limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
 
-    5.  You can use the `-w <time_in_seconds>` (default is 60 for <time_in_seconds>) option to specify the time to wait after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and if running on a cluster, there can often be some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. When running on a cluster, you should modify this setting according to the expected latency for your cluster environment.
+    4.  You can use the `-w <time_in_seconds>` (default is 60 for <time_in_seconds>) option to specify the time to wait after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and if running on a cluster, there can often be some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. When running on a cluster, you should modify this setting according to the expected latency for your cluster environment.
 
-    6.  When running on a cluster, MetaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing lines 9-13 of `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
+    5.  When running on a cluster, MetaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
+
+3.  Once MetaLAFFA has finished running, you should find the final output files in your project's `output/final` directory. You can see example final output files in the `example_output` folder of this repository.
 
 Full-length Tutorial
 --------------------
@@ -255,7 +221,7 @@ This tutorial includes:
 
 ##### 1. Host read filtering
 
-The first step in MetaLAFFA is host read filtering. Host reads should be removed to ensure that later analyses are only considering the functional potential of the microbial community of interest. This is particularly important in cases where samples might consist of a majority of host reads, as in human fecal samples from hosts with certain gastrointestinal disorders that cause excessive shedding of epithelial cells (e.g. ulcerative colitis). Host read filtering is usually performed by aligning reads to one or more reference genomes for the host species and removing reads with match qualities above a certain threshold. Based on the original Human Microbiome Project (Huttenhower et al. 2012) study protocols, MetaLAFFA defaults to using BMTagger (Rotmistrovsky and Agarwala 2011) for host read filtering. The default host database is the human reference hs37.
+The first step in MetaLAFFA is host read filtering. Host reads should be removed to ensure that later analyses are only considering the functional potential of the microbial community of interest. This is particularly important in cases where samples might consist of a majority of host reads, as in human fecal samples from hosts with certain gastrointestinal disorders that cause excessive shedding of epithelial cells (e.g. ulcerative colitis). Host read filtering is usually performed by aligning reads to one or more reference genomes for the host species and removing reads with match qualities above a certain threshold. MetaLAFFA defaults to using Bowtie 2 (Langmead and Salzberg 2012) for host read filtering. The default host database is the human reference with decoys from the 1000 Genomes Project, hs37d5 (1000 Genomes Project Consortium 2015).
 
 ##### 2. Duplicate read filtering
 
@@ -295,84 +261,52 @@ The final step in MetaLAFFA is to aggregate functional orthology group abundance
 
 Another important component of MetaLAFFA is the automatic summary statistic generation that accompanies each step in the pipeline. Default summary statistics include number of reads, average read length, and average base quality for input FASTQs and the resulting FASTQs after each FASTQ filtering step, as well as number of hits, number of mapped reads, number of associated genes, and number of annotated orthology groups as determined after each step in the pipeline. These summary statistics are merged at the end into a single table summarizing the results of each step of the pipeline.
 
-### Downloading MetaLAFFA
+### Installing MetaLAFFA
 
 MetaLAFFA is a Snakemake pipeline configured via Python scripts that manages the functional annotation of shotgun metagenomic data via various Python scripts and third-party tools.
 
-First, if you do not have Python3 (version 3.7 or greater) installed, download the installation executable from [**here**](https://www.python.org/downloads/) and run it.
+First, MetaLAFFA requires Conda (version 4.8 or greater). If you do not have Conda installed, look [**here**](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) for installation instructions.
 
-To download MetaLAFFA, first navigate to the directory in which you would like to save the pipeline. You can then clone the git repository as follows:
+To install MetaLAFFA via Conda, create a new environment using the following command:
 
-    # Make a local clone of the MetaLAFFA git repository.
-    git clone https://github.com/engal/MetaLAFFA.git
+    # Create a new Conda environment for running MetaLAFFA.
+    conda create -n metalaffa metalaffa -c bioconda -c borenstein-lab
 
-This contains the Snakemake file defining the pipeline, various Python scripts to perform pipeline steps that are not handled by third-party software, a setup script to help configure the environment that MetaLAFFA will run in, and a Python module that configures how the steps of the pipeline are run. This does not include various third-party tools or default databases used by the pipeline.
+All MetaLAFFA software dependencies will be installed and available in the resulting environment. When operating MetaLAFFA, be sure to activate this environment:
 
-##### Installing third-party tools and processing default databases
+    # Activate the MetaLAFFA environment
+    conda activate metalaffa
 
-By default, MetaLAFFA is built to use several third-party tools and one or two default databases for various pipeline steps. The third-party tools include Snakemake, BLAST+, BMTagger, MarkDuplicates, Samtools, Trimmomatic, DIAMOND, and MUSiCC, and by default MetaLAFFA downloads the hs37 human reference for host filtering. You can complete pipeline setup, (installing these tools and database locally within the MetaLAFFA directory) by running the setup.py script:
+### Downloading and preparing reference databases for MetaLAFFA annotation
 
-    # Perform default pipeline setup.
-    cd MetaLAFFA
-    python3 setup.py
+Default reference databases can be downloaded and prepared for MetaLAFFA using the `prepare_databases.py` script. These databases will be installed in the base directory for the `metalaffa` environment, which can be found at `$CONDA_PREFIX/MetaLAFFA`. Activate the `metalaffa` environment and then run:
 
-This script will attempt to automatically install third-party software locally in MetaLAFFA's `src` directory, download reference data, and process reference data to create support files for the annotation process. If you have previous installations of tools that MetaLAFFA uses, you can skip installing them locally by using the appropriate command line option when running the setup script. However, if you do this, make sure to update the config module to point your existing executables instead of looking for them in MetaLAFFA's local `src` directory. Similarly, if you already have reference data that you would prefer to use (instead of the MetaLAFFA defaults), you can skip downloading that data with command line arguments to the setup script and point the config module to look for that reference data instead.
+    # Download and prepare default reference databases
+    prepare_databases.py -hr -km -u
 
-------------------------------------------------------------------------
+where each option to the script specifies a different reference database:
 
-**IMPORTANT NOTE**
+`-hr`: Download and prepare the database of human reference and decoy sequences (used in the 1000 genomes project) for host filtering.
 
-The setup script will attempt to automatically install third-party tools locally, but some tools may fail to install due to the unforseen specifics of your computing environment. The setup script will print progress messages indicating which tool is currently being installed, and will notify you if a specific tool failed to be installed properly. If this occurs, the setup script will also direct you to the log files that were generated while installing that tool so that you can determine what went wrong and install that tool independently.
+`-km`: Download KEGG ko-to-module and ko-to-pathway mappings.
 
-Additionally, some default reference data processing requires third-party tools. If these tools failed to install correctly, some of these processing operations may not be performed. In this case, if you install a tool independently and update the config module to point to that tool, you can rerun the setup script to run any reference data processing steps that relied on that tool.
+`-u`: Download and prepare the UniRef90 database for read mapping and functional annotation.
 
-------------------------------------------------------------------------
+**Note**: This process can be time and resource intensive, taking several hours, ~108GB of free disk space, and ~40GB of RAM. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially when downloading the UniRef90 database for read mapping.
 
-After the setup script is done installing third-party software and downloading and processing reference data, it will check the config module to determine whether all executables and supporting data files are present at the expected locations. If something is not present, the setup script will notify you what is missing and where in the config module its location was specified (in case you want to, for example, change the config module to use an existing installation of a third-party tool).
+### Creating a MetaLAFFA project directory
 
-Setup is finished when you see:
+MetaLAFFA is designed to be run within project-specific directories that contain their own project-specific configurations and maintain all project-related data generated by MetaLAFFA within the associated project directory. You can create a new MetaLAFFA project directory from within your MetaLAFFA Conda environment active using the associated script as follows:
 
-    End of MetaLAFFA setup
+    create_new_MetaLAFFA_project.py <project_directory_name>
 
-**Note**: Using default options, it can take a few hours to install all third-party tools and download and process all default databases, takes ~10G of RAM, and ~30G of free disk space.
-
-**Note**: By default, setup does not download or configure a database of annotated microbial peptide sequences to map reads against. However, you can use the `--uniprot` option when running `setup.py` to download the UniRef90 database (takes ~80G of free disk space) and create the associated DIAMOND-processed database, gene-to-ortholog mapping file, and gene count normalization file. If you do this, you can skip the following "Configuring MetaLAFFA" section.
-
-**Note**: Depending on your machine, network connection, and the tools/reference data you decide to install via the setup script, setup can take multiple hours. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially if you are downloading the UniRef90 database for read mapping.
-
-##### Setup script options
-
-The `setup.py` script has various command-line options to modify the default setup procedure:
-
-`--pip PIP, -p PIP`: Which pip to run for local python package installation (default: `pip3`).
-
-`--no_snakemake, -ns`: If used, do not install Snakemake in the pipeline directory. Note that Snakemake is required for pipeline operation, so only use this option if you have already installed Snakemake.
-
-`--no_blast, -nbl`: If used, do not install BLAST+ in the pipeline directory. Note that BLAST+'s `makeblastdb` program is used by this setup script to configure the default database for host read filtering.
-
-`--no_bmtagger, -nbm`: If used, do not install BMTagger in the pipeline directory. BMTagger is used for host filtering in the default pipeline configuration.
-
-`--no_human_reference, -nh`: If used, do not download the default human reference that is packaged with BMTagger (hs37) in the pipeline database directory. Note that the human reference is used for host filtering in the default pipeline configuration.
-
-`--no_markduplicates, -nma`: If used, do not download PICARD and samtools in the pipeline source directory. Note that MarkDuplicates and samtools are used for duplicate filtering in the default pipeline configuration.
-
-`--no_trimmomatic, -nt`: If used, do not download Trimmomatic in the pipeline source directory. Note that Trimmomatic is used for quality trimming and filtering in the default pipeline configuration.
-
-`--no_diamond, -nd`: If used, do not install DIAMOND in the pipeline directory. Note that DIAMOND is used by this setup script to configure the default target microbial peptide database and used for read mapping in the default pipeline configuration.
-
-`--no_musicc, -nmu`: If used, do not install MUSiCC in the pipeline directory via pip. Note that MUSiCC is used for ortholog abundance correction in the default pipeline configuration.
-
-`--no_empanada, -ne`: If used, do not install EMPANADA in the pipeline directory via pip. Note that EMPANADA is used for ortholog aggregation in the default pipeline configuration.
-
-`--no_ko_mappings, -nkm`: If used, do not download the bacterial KO-to-module and KO-to-pathway mappings from the 2013 version of the KEGG database. Note that these mappings are used for aggregating orthologs in the default pipeline configuration.
-
-`--uniprot, -u`: If used, download and configure UniProt's UniRef90 annotated peptide database. Note that the UniRef90 database is used in the default pipeline configuration.
-
-`--no_jobscript, -nj`: If used, do not configure the template jobscript. Note that the jobscript is used to standardize the environment when running cluster jobs remotely.
+MetaLAFFA project directories created in this way will contain all of the files necessary to run the pipeline, including a local copy of a configuration module that will allow you to both keep a record of how the pipeline was run for the associated project and have project-specific configurations in case you have multiple projects that require different pipeline configurations. When you run MetaLAFFA, you will run it from within the associated project directory (more details below on running MetaLAFFA).
 
 ### Configuring MetaLAFFA
 
-MetaLAFFA is configured via a Python module partitioned into various submodules targeted at specific aspects of the pipeline and defined in the "config" directory:
+MetaLAFFA is configured via a Python module partitioned into various submodules targeted at specific aspects of the pipeline and defined in a project's `config` directory:
+
+**Note**: Any configuration changes made in the configuration module located at `$CONDA_PREFIX/MetaLAFFA/config` will be the default configurations for any newly created projects. Thus, if you have custom settings that you think should be preset in any new projects, you should make those changes to this base configuration module.
 
 ##### config/file\_organization.py
 
@@ -394,7 +328,7 @@ This submodule defines global settings that MetaLAFFA uses during pipeline opera
 
 `fastq_types`: The mapping between the types of FASTQs (i.e. forward paired-reads, reverse paired-reads, and singleton reads) and the expected file name pattern. MetaLAFFA will look for samples in the initial data directory that follow the pattern `<sample_id>.<type_id>.fastq.gz`, and you can use this configuration setting to alter the `type_id` that MetaLAFFA will accept.
 
-`host_database`: The name of the database to use for host filtering. By default, MetaLAFFA uses the hs37 human reference genome for removing human reads from metagenomic samples, but you may want to use a different host reference for filtering depending on your project. This name should be the part that comes before the `.n*` suffix for the BLAST database (i.e. one of the default host reference database files is `hs37.nsq`). *Note*: BMTagger also requires a bitmask and an index, generated by `bmtools` and `srprism` respectively, that are associated with the host reference database. If you do change the host reference database, you will also need to generate `bitmasks/<your_database_name>.bitmask` and `indices/<your_database_name>.srprism.*` as described by [the HMP instructions for BMTagger](https://www.hmpdacc.org/hmp/doc/HumanSequenceRemoval_SOP.pdf).
+`host_database`: The name of the database to use for host filtering. By default, MetaLAFFA uses the hs37d5 human reference genome with decoy sequences from the 1000 genomes project (1000 Genomes Project Consortium 2015) for removing human reads from metagenomic samples, but you may want to use a different host reference for filtering depending on your project. This name should be the part that comes before the `.*.bt2` suffix for the Bowtie 2 index (i.e. one of the default host reference index files is `hs37d5.1.bt2`).
 
 `target_database`: The name of the database to use for mapping reads to genes with functional annotations. By default, MetaLAFFA is configured to use the UniRef90 database, but you may want to use a different target database. See below for detailed instructions on all steps required to configure MetaLAFFA to use a custom target database.
 
@@ -414,7 +348,7 @@ Some important default step-specific resource requests (when running on a cluste
 
 `quality_filter`: 40G of RAM for Trimmomatic
 
-`map_reads_to_genes`: 220G of RAM and 22 cores for DIAMOND run with `--block_size 36` and `--index_chunks 1`. If you need to reduce the memory request for DIAMOND, you will also need to adjust the `block_size` and `index_chunks` settings in the read mapping configuration submodule as these control how much of the reference database DIAMOND loads into memory at a time. For more information on adjusting these DIAMOND parameters, see the DIAMOND manual [**here**](https://github.com/bbuchfink/diamond/raw/master/diamond_manual.pdf).
+`map_reads_to_genes`: 220G of RAM and 22 cores for DIAMOND run with `--block_size 36` and `--index_chunks 1`. These settings should be adjusted for your specific computing environment. If you need to reduce the memory request for DIAMOND, you will also need to adjust the `block_size` and `index_chunks` settings in the read mapping configuration submodule as these control how much of the reference database DIAMOND loads into memory at a time. For more information on adjusting these DIAMOND parameters, see the DIAMOND manual [**here**](https://github.com/bbuchfink/diamond_docs).
 
 `hit_filter`: 200G of local disk space for creating a filtered version of DIAMOND output and then gzipping it.
 
@@ -426,28 +360,30 @@ This configuration submodule contains functions used in multiple places elsewher
 
 ##### Configuring MetaLAFFA to use a custom annotated gene database
 
-By default, the setup script does not download any target protein database to map reads against for annotation purposes. You can either enable the `--uniprot` flag for the setup script, which will download the UniRef90 database (takes ~80G of free disk space and multiple hours depending on your download speed) and create the necessary gene-to-ortholog and gene count normalization files automatically, or you can use your own existing database by modifying the pipeline configuration module. If you use the `--uniprot` option during setup, then you can ignore the following section on configuring a custom target database since MetaLAFFA defaults are configured to use the UniRef90 database when present.
+By default, MetaLAFFA is designed to use the UniRef90 database, which can be downloaded and prepared using the included script as described above. However, you can use your own existing database by modifying the pipeline configuration module. Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
 
-Using your own database (starting from a FASTA file of gene sequences) with the default pipeline configuration will require the following steps:
+**Note**: The following steps assume you want to create your custom database-specific files in the default locations expected by MetaLAFFA. You can adjust the location of these files as appropriate to the organization of data on your system, but make sure to also update where MetaLAFFA looks for it in `config/file_organization.py`.
 
-1.  Change the configuration module to point to your database and use your ortholog nomenclature of choice by editing the `config/operation.py` submodule, changing line 77 to:
+1.  Change the configuration module to point to your database and use your ortholog nomenclature of choice by editing the `config/operation.py` submodule, making the following changes:
 
         target_database = <name_of_your_database>
 
-    and changing line 82 to:
+    and:
 
         target_ortholog = <name_of_your_ortholog>
 
 2.  Using DIAMOND, create a DIAMOND database from your database FASTA file:
 
         # Create a DIAMOND database
-        diamond makedb --in <path_to_your_database_fasta> -d databases/<name_of_your_database>
+        diamond makedb --in <path_to_your_database_fasta> -d $CONDA_PREFIX/MetaLAFFA/databases/<name_of_your_database>
 
-    This will create a file called `databases/<name_of_your_database>.dmnd` what will then be used by DIAMOND to map reads to genes.
+    This will create a file called `<name_of_your_database>.dmnd` in the default MetaLAFFA database location that will then be used by DIAMOND to map reads to genes.
 
 3.  Create a gene length normalization table from your database FASTA file using the included `create_gene_length_table.py` script:
 
-        python3 src/create_gene_length_table.py <path_to_your_database_fasta> --output gene_normalization_files/<name_of_your_database>.norm
+        $CONDA_PREFIX/MetaLAFFA/src/create_gene_length_table.py <path_to_your_database_fasta> --output $CONDA_PREFIX/MetaLAFFA/gene_normalization_files/<name_of_your_database>.norm
+
+    This will create a file called `<name_of_your_database>.norm` in the default MetaLAFFA gene normalization file location that contains the average gene length in your database, the length of each gene in your database, and a normalization factor for each gene calculated as `(gene length/average gene length)`.
 
 4.  Create a mapping file linking genes to orthologs. Annotations for databases can be in many formats, which means we are unable to provide a general-use script for producing a gene-to-ortholog mapping table. Instead, you will need to create a tab-separated table in the following format:
 
@@ -456,7 +392,7 @@ Using your own database (starting from a FASTA file of gene sequences) with the 
         ortholog_id1   gene_id3
         ...            ...
 
-    where the first column consists of ortholog IDs and the second column consists of the IDs (same as in the FASTA) for genes associated with those orthologs. Note that this mapping can be many-to-many, with one ortholog being associated with multiple genes and one gene being associated with multiple orthologs. To work with default pipeline settings, place this gene-to-ortholog mapping table in `gene_to_ortholog_maps/<name_of_your_database>_to_<name_of_your_ortholog>.map`.
+    where the first column consists of ortholog IDs and the second column consists of the IDs (same as in the FASTA) for genes associated with those orthologs. Note that this mapping can be many-to-many, with one ortholog being associated with multiple genes and one gene being associated with multiple orthologs. To work with default pipeline settings, place this gene-to-ortholog mapping table in `$CONDA_PREFIX/MetaLAFFA/gene_to_ortholog_maps/<name_of_your_database>_to_<name_of_your_ortholog>.map`.
 
 5.  If you are using KOs as your ortholog nomenclature, then you do not need to make any further changes for the pipeline to run and can ignore this step. However, if you are using a different functional annotation system, then you will need to make the following additional modifications.
 
@@ -465,7 +401,7 @@ Using your own database (starting from a FASTA file of gene sequences) with the 
                 "method": "relative",
 
     2.  Configure the pipeline to either skip aggregating orthologs to higher-level functional descriptions or provide your own ortholog-to-functional-grouping mapping files.
-        1.  To skip ortholog aggregation and just have the pipeline output corrected ortholog abundances as the final output, comment out lines 48-50 in `pipeline_steps.txt` by putting a `#` at the beginning of each line.
+        1.  To skip ortholog aggregation and just have the pipeline output corrected ortholog abundances as the final output, edit the `pipeline_steps.txt` file by first removing the `$` at the beginning of the line that contains `$ortholog_aggregation:ortholog_abundance_correction` and next removing the `*` at the beginning of the linne that contains `*ortholog_aggregation_summary_combine:ortholog_aggregation_summary`. These two changes will cause MetaLAFFA to skip the ortholog aggregation step because the output of the ortholog aggregation step will no longer be considered a required output (removing the `$`) and the combined summary of the ortholog aggregation step will no longer be considered a required input for generating the final pipeline run summary (removing the `*`).
 
         2.  To provide your own mapping files, you must create tab-delimited tables in the form
 
@@ -482,17 +418,19 @@ Using your own database (starting from a FASTA file of gene sequences) with the 
 
                     ortholog_to_grouping_mappings = [<name_of_your_mapping>]
 
-                *Note* You can use any number of mapping files (e.g. if you want to map to multiple levels of higher level function description such as modules and pathways). Just add each mapping file to the `ortholog_to_grouping_maps/` directory and include the name of each mapping in the list of mappings at line 92 in the `config/operation.py` submodule.
+                **Note** You can use any number of mapping files (e.g. if you want to map to multiple levels of higher level function description such as modules and pathways). Just add each mapping file to the `ortholog_to_grouping_maps/` directory and include the name of each mapping in the list of mappings at line 92 in the `config/operation.py` submodule.
 
 ##### Configuring MetaLAFFA to submit jobs to a cluster
 
-Though MetaLAFFA can be run locally, running MetaLAFFA on a cluster will allow you to best utilize its ability to parallelize the annotation of many metagenomic shotgun sequencing samples. If you plan to run MetaLAFFA locally, you can skip the following section on configuring MetaLAFFA to run on a cluster. However, you should make sure to modify `config/steps/map_reads_to_genes.py`, changing the number of cores defined in `cluster_params` to be the number of cores you want a single DIAMOND alignment process to use.
+Though MetaLAFFA can be run locally, running MetaLAFFA on a cluster will allow you to best utilize its ability to parallelize the annotation of many metagenomic shotgun sequencing samples. If you plan to run MetaLAFFA locally, you can skip the following section on configuring MetaLAFFA to run on a cluster. However, you should make sure to modify `$CONDA_PREFIX/MetaLAFFA/config/steps/map_reads_to_genes.py`, changing the number of cores defined in `cluster_params` to be the number of cores you want a single DIAMOND alignment process to use.
 
-By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCondor clusters. This is achieved via the use of Python job submission wrapper scripts, included in the `src/` directory (`src/sge_submission_wrapper.py` and `src/condor_submission_wrapper.py` respectively). If your cluster uses a different cluster management system, then you will need to create your own job submission wrapper by following these steps:
+**Note**: MetaLAFFA's default installation via Conda uses Snakemake version 3.13.3, but if you have access to Snakemake version 4.1 or greater, then you can make use of [**Snakemake profiles**](https://snakemake.readthedocs.io/en/v5.1.4/executable.html#profiles), a convenient option for configuring Snakemake pipelines for different computing ennvironments. This should replace the use of environment-specific jobscripts outlines below.
+
+By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCondor clusters. This is achieved via the use of Python job submission wrapper scripts, included in the `$CONDA_PREFIX/MetaLAFFA/src/` directory (`$CONDA_PREFIX/MetaLAFFA/src/sge_submission_wrapper.py` and `$CONDA_PREFIX/src/condor_submission_wrapper.py` respectively). If your cluster uses a different cluster management system, then you will need to create your own job submission wrapper by following these steps:
 
 1.  Copy the appropriate example job submission wrapper script to serve as a template for your new wrapper.
 
-        cp src/<sge|condor>_submission_wrapper.py src/<name_of_your_cluster_system>_submission_wrapper.py
+        cp $CONDA_PREFIX/MetaLAFFA/src/<sge|condor>_submission_wrapper.py $CONDA_PREFIX/MetaLAFFA/src/<name_of_your_cluster_system>_submission_wrapper.py
 
     Which example script you should use as a template depends on how you parameterize jobs when submitting them to the cluster. If you request cluster resources (memory, cores, etc.) via command-line arguments and just provide the name of a shell script to run (i.e. SGE uses `qsub <name_of_shell_script>`), then you should use the SGE wrapper as a template. If you instead specify cluster resources and which script to run via a config file (i.e. HTCondor uses `condor_submit <name_of_config_file>`), then you should use the HTCondor wrapper as a template.
 
@@ -500,7 +438,7 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
     1.  Starting from the cluster-specific section of the SGE template wrapper script:
 
-        1.  First, the script initializes the list of components that make up the command to submit the job to the cluster. On SGE, the basic submission command is `qsub`, but you'll want to change this to the correct submission command for your cluster. The second component of the base submission command is the name of the script to run for the cluster job.
+        1.  First, the script initializes the list of components that make up the command to submit the job to the cluster. On SGE, the basic submission command is `qsub`, but you'll want to change this to the correct submission command for your cluster.
 
         2.  Next, there is some example processing for multi-core jobs. For the cluster where this was developed, multi-core jobs must request memory-per-core, rather than total memory for the job, so the script must calculate this. At the end of these calculations, the `qsub` command-line option for requesting multiple cores is added to the base submission command.
 
@@ -508,7 +446,9 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
         4.  After the common resource requests and job settings have been added, the script next checks whether it should include a request for local disk space on a cluster node and whether it should request that resources be set aside until the job can run. The former is important if you have limited disk space on your shared file system and need to process intermediate files locally on cluster nodes during pipeline steps. The latter is useful for ensuring the jobs with large resource requests get to run.
 
-        5.  Finally, the script runs the final submission command on the command-line.
+        5.  Next, the name of the script to run is added at the end of the command.
+
+        6.  Finally, the script runs the final submission command on the command-line.
 
     2.  Starting from the cluster-specific section of the HTCondor wrapper script:
 
@@ -522,14 +462,16 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
         5.  Finally, the script runs `condor_submit` on the command-line, providing the path to the config file for this job.
 
+3.  Change the indicated submission wrapper in `CONDA_PREFIX/MetaLAFFA/config/cluster.py` to indicate your new submission wrapper (i.e. change `submissionn_wrapper = "src/sge_submission_wrapper.py"` to `submission_wrapper = "src/<name_of_your_cluster_system>_submission_wrapper.py"`). This will ensure that when you create new MetaLAFFA project directories (described next), both your custom submission wrapper and the configuration to use it will be included in the new project.
+
 ##### Using a different step in MetaLAFFA as a starting point
 
 While MetaLAFFA defaults to taking in unfiltered FASTQs, it is also possible for MetaLAFFA to take input files appropriate for any step in the pipeline. For example, if you have already processed and filtered your FASTQ files, you can use those as input to the pipeline as long as they follow the correct naming scheme (e.g. `<sample_id>.<type_id>.fastq.gz` for FASTQs). To find the naming scheme for input files for different steps in the pipeline, you can look in the configuration submodule associated with the step and look at the `input` setting.
 
 You must indicate which intermediate step you want MetaLAFFA to start from by appropriately modifying the `pipeline_steps.txt` file. This file tells the pipeline what the input to each step in the pipeline is (either initial input data or the output of previous steps). For example, by default the host filtering step takes in the initial input data as its input, and this is indicated by the line `host_filter:INPUT` (step name on the left, followed by a colon and then a comma-separated list of where the input to the step comes from). If you want to start from FASTQs that you have already filtered, you would make the following changes to `pipeline_steps.txt`:
 
--   Change the reading mapping step input to be the initial input data (i.e. changing `map_reads_to_genes:quality_filter` -&gt;; `map_reads_to_genes:INPUT`).
--   Comment-out or delete steps that you don't want to run (i.e. for all lines for steps starting with `host_filter`, `duplicate_filter`, or `quality_filter`, either put a `#` at the front of the line or delete the line).
+-   Change the read mapping step input to be the initial input data (i.e. changing `map_reads_to_genes:quality_filter` -&gt; `map_reads_to_genes:INPUT`).
+-   Remove the `*` from the summary steps associated with steps you don't want to run (i.e. remove the `*`'s from the front of the lines that contain `*host_filter_summary_combine:host_filter_summary`, `*duplicate_filter_summary_combine:duplicate_filter_summary`, `*quality_filter_summary_combine:quality_filter_summary`, and `*quality_filter_fastq_summary_combine:quality_filter_fastq_summary`).
 
 Once you've made those changes, MetaLAFFA will start from the read mapping step and use files in the `data` directory as input. There are step markers that can be used to indicate certain features of each step, and these should be placed at the beginning of the line for the associated step in`pipeline_steps.txt`. These markers include:
 
@@ -543,19 +485,19 @@ Here we provide a walkthrough for running MetaLAFFA on a metagenomic shotgun seq
 
 ##### Prepare input data files
 
-1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line as follows:
+1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line from your example project directory as follows:
 
 <!-- -->
 
-    wget http://downloads.hmpdacc.org/data/Illumina/stool/SRS017307.tar.bz2
+    wget http://downloads.hmpdacc.org/data/Illumina/stool/SRS017307.tar.bz2 -P data/
 
 If you download data from HMP through either of these methods, you will receive a compressed directory that you will need to expand, i.e.:
 
-    tar -jxf SRS017307.tar.bz2
+    tar -jxf data/SRS017307.tar.bz2 --one-top-level=data --strip-components=1
 
-which will produce a directory, `SRS017307/` containing three files, a forward read FASTQ (ending in `1.fastq`), a reverse read FASTQ (ending in `2.fastq`), and a singleton FASTQ (ending in `singleton.fastq`). Default MetaLAFFA settings expect gzipped input FASTQs, so you will need to zip these FASTQs:
+which will extract he associated FASTQs to the `data/` directory. After extract, it is recommended you delete the original compressed directory to save disk space. These will consist of three files, a forward read FASTQ (ending in `1.fastq`), a reverse read FASTQ (ending in `2.fastq`), and a singleton FASTQ (ending in `singleton.fastq`). Default MetaLAFFA settings expect gzipped input FASTQs, so you will need to zip these FASTQs:
 
-    gzip SRS017307/*
+    gzip data/*.fastq
 
 You can change MetaLAFFA to use unzipped files in `config/operations.py` by changing the `zipped_files` variable to `False`, though this is not recommended due to shotgun metagenomic FASTQs usually being very large.
 
@@ -571,49 +513,43 @@ You can change MetaLAFFA to use unzipped files in `config/operations.py` by chan
 
     **Note** If you only have a single, unpaired read file (e.g. just forward reads), make sure that they are labeled as a singleton/unpaired FASTQ.
 
-2.  Place the FASTQs in the `data/` directory.
-
 ##### Starting MetaLAFFA
 
-Start MetaLAFFA with one of the following commands:
+Start MetaLAFFA with one of the following commands from your example project directory:
 
-1.  If you are running MetaLAFFA locally, use:
+If you are running MetaLAFFA locally, use:
 
-        python3 MetaLAFFA.py --local --n <number_of_cores>
+    ./MetaLAFFA.py
 
-    where <number_of_cores> is the number of coress that you want to allow MetaLAFFA to use to parallelize pipeline steps (i.e. each core will be running a separate pipeline operation).
+If you are running MetaLAFFA on a cluster, use:
 
-2.  If you are running MetaLAFFA on a cluster, use:
+    ./MetaLAFFA.py --use-cluster
 
-        python3 MetaLAFFA.py 
+This option will use the submission wrapper and jobscript specified in your project's `config/cluster.py` configuration submodule to submit jobs to your cluster system.
 
 ##### MetaLAFFA script options
 
-The `MetaLAFFA.py` script has various command-line options to modify how MetaLAFFA runs:
+The `MetaLAFFA.py` script has various command-line options to modify how MetaLAFFA runs. For users that want to further configure how Snakemake runs, this script will also accept any other arguments and pass them directly to Snakemake:
 
-`--submission_wrapper SUBMISSION_WRAPPER, -s SUBMISSION_WRAPPER`: How to call the wrapper script to use to parse job settings, parse resource requests, and submit a job to the cluster (default: `python3 src/sge_submission_wrapper.py`)
+`--use-cluster`: MetaLAFFA should use the settings for submittinngn jobs to a cluster as defined in `config/cluster.py`.
 
-`--jobscript JOBSCRIPT, -j JOBSCRIPT`: The jobscript to use when submitting an individual cluster job (default `src/configured_jobscript.sh`)
+`--cluster SUBMISSION_WRAPPER, -c SUBMISSION_WRAPPER`: How to call the wrapper script to use to parse job settings, parse resource requests, and submit a job to the cluster (default: `src/sge_submission_wrapper.py`)
 
-`--number_of_jobs NUMBER_OF_JOBS, -n NUMBER_OF_JOBS`: Number of jobs that should be active at a time (jobs in the queue when running on a cluster, number of cores to use in parallel when running locally) (default 50 jobs)
+`--jobscript JOBSCRIPT, --js JOBSCRIPT`: The jobscript to use when submitting an individual cluster job (default `src/configured_jobscript.sh`)
 
-`--wait WAIT, -w WAIT`: Number of seconds to wait after a job finishes before checking that the output exists. This wait time can help avoid Snakemake incorrectly marking a step as failed if network latency delays a file becoming visible (default 60 seconds)
+`--cores NUMBER_OF_JOBS, --jobs NUMBER_OF_JOBS, -j NUMBER_OF_JOBS`: Number of jobs that should be active at a time (jobs in the queue when running on a cluster, number of cores to use in parallel when running locally) (default 50 jobs)
 
-`--dryrun, -d`: If used, determine what steps would be performed and report to the user, but do not actually run the steps
-
-`--verbose, -v`: If used, run Snakemake in verbose mode to print the bodies of generated job scripts and additional running information
-
-`--local, -l`: If used, run MetaLAFFA locally rather than submitting each step as a job to a cluster
+`--latency-wait WAIT, --output-wait WAIT, -w WAIT`: Number of seconds to wait after a job finishes before checking that the output exists. This wait time can help avoid Snakemake incorrectly marking a step as failed if network latency delays a file becoming visible (default 60 seconds)
 
 Some notes on MetaLAFFA usage:
 
 1.  Since Snakemake (and thus MetaLAFFA) needs to run for the entire annotation process, we recommend that you begin a [screen session](https://ss64.com/bash/screen.html) to start the pipeline and then detach the screen so you do not need to keep your terminal open.
 
-2.  You can use the `-n <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many jobs should be in your cluster's queue at any one time. This limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
+2.  You can use the `-j <number_of_jobs>` (default is 50 for <number_of_jobs>) option to specify how many cores should be used locally/jobs should be in your cluster's queue at any one time. Regarding cluster usage, this limits the number of jobs that will be running at any one time but also avoids flooding the job queue with the potentially enormous number of jobs that may be generated. You should modify this setting according to your cluster resources and job queue etiquette.
 
 3.  You can use the `-w <time_in_seconds>` (default is 60 for <time_in_seconds>) option to specify the time to wait after a job finishes running before checking for the existence of the expected output file. Snakemake does this to determine whether the job completed successfully, and if running on a cluster, there can often be some delay between jobs technically finishing and output files being detectable when shared filesystems are involved. When running on a cluster, you should modify this setting according to the expected latency for your cluster environment.
 
-4.  When running on a cluster, MetaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing lines 9-13 of `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
+4.  When running on a cluster, MetaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
 
 ##### Locating final outputs
 
@@ -627,29 +563,27 @@ Once the pipeline has finished running, you can find your desired output files i
 
 `output/final/summary.txt`: The master table summarizing each step in the pipeline
 
+Examples of final output files for three HMP samples can be found in the `example_output` folder of this repository.
+
 ##### Restarting MetaLAFFA
 
-You can stop MetaLAFFA at any point (e.g. CTRL-C while running Snakemake) and if you rerun the same Snakemake command, the pipeline will pick up where it left off.
+If MetaLAFFA encounters an error while processing your data, you can look at the output from Snakemake to identify which step failed, what error message was received, and fix any issues accordingly. Once that is complete, you can rerun MetaLAFFA and the pipeline will pick up where it left off.
 
-##### Using MetaLAFFA to annotate a new dataset
+If MetaLAFFA is interrupted at any point (including a manual interrupt, e.g. CTRL-C), you can also restart MetaLAFFA from where it left off after a couple of steps. First, if possible, you should make sure that any associated jobs have finished. For example, if MetaLAFFA was running a DIAMOND job mapping reads to genes, you should check that there are no DIAMOND jobs running. If they are still running, wait for them to finish. Next, you should run the following command:
 
-Once you have successfully used MetaLAFFA to annotate a metagenomic shotgun sequencing data, hopefully you will want to use MetaLAFFA again in the future as you obtain new data to annotate. However, different datasets may require different pipeline configurations (e.g. different host databases for samples from different host species, different target databases if you want to map reads to a specific set of genes, etc.) and you will probably want to save the specific pipeline configuration you used for each individual dataset for future reference. Thus, MetaLAFFA also includes a script, `create_new_MetaLAFFA_project.py`, which is run as follows:
+    ./MetaLAFFA.py --unlock
 
-    create_new_MetaLAFFA_project.py <path_to_new_annotation_project_directory>
-
-This does the following: 1. Creates a new annotation project directory 2. Copies over the necessary configuration files from your original MetaLAFFA installation, which has two benefits: 1. This provides you with separate configuration files that are specific to your new annotation project and thus can serve as a record of how you run MetaLAFFA for each individual project 2. This maintains any custom adjustments you made to the pipeline configuration when you first ran MetaLAFFA, which means that you do not need to repeat any changes to the default configuration that may be specific to your working environment 3. Pre-modifies the configuration (where appropriate) to point to the same supporting files (e.g. source files, databases, and mapping files) as your original MetaLAFFA installation, which means that you do not have to repeat the setup process for each new annotation project (i.e. you do not have to reinstall local copies of third-party software or redownload and process host and target databases)
-
-Once you have done this, you can then make any project-specific configuration changes to the project's configuration files without affecting the configuration of your original MetaLAFFA installation. For example, you can set the `initial_data_directory` variable in `config/file_organization.py` to point to a different dataset that you want to annotate.
+After that has finished, you can then rerun MetaLAFFA and it will pick up at the point it was interrupted.
 
 FAQ
 ---
 
-Q: What can I do if one or more Python packages fail to install during the automated setup?
-
-A: One alternative is to use [**Conda**](https://docs.conda.io/en/latest/) to create a Python3 environment specific to MetaLAFFA. You can then activate a Conda environment and then run the MetaLAFFA setup script, which should allow you to install the required Python packages locally. Note that you will need to run MetaLAFFA from this Conda environment.
+*Coming soon*
 
 References
 ----------
+
+1000 Genomes Project Consortium. 2015. “A Global Reference for Human Genetic Variation.” *Nature* 526 (7571). Nature Publishing Group: 68–74.
 
 Bolger, Anthony M, Marc Lohse, and Bjoern Usadel. 2014. “Trimmomatic: A Flexible Trimmer for Illumina Sequence Data.” *Bioinformatics* 30 (15). Oxford University Press: 2114–20.
 
@@ -661,11 +595,11 @@ Caspi, Ron, Hartmut Foerster, Carol A Fulcher, Pallavi Kaipa, Markus Krummenacke
 
 Consortium, UniProt. 2018. “UniProt: A Worldwide Hub of Protein Knowledge.” *Nucleic Acids Research* 47 (D1). Oxford University Press: D506–D515.
 
-Huttenhower, Curtis, Dirk Gevers, Rob Knight, Sahar Abubucker, Jonathan H Badger, Asif T Chinwalla, Heather H Creasy, et al. 2012. “Structure, Function and Diversity of the Healthy Human Microbiome.” *Nature* 486 (7402). Nature Publishing Group: 207.
-
 Kanehisa, Minoru, Yoko Sato, Miho Furumichi, Kanae Morishima, and Mao Tanabe. 2018. “New Approach for Understanding Genome Variations in Kegg.” *Nucleic Acids Research* 47 (D1). Oxford University Press: D590–D595.
 
 Kultima, Jens Roat, Luis Pedro Coelho, Kristoffer Forslund, Jaime Huerta-Cepas, Simone S Li, Marja Driessen, Anita Yvonne Voigt, Georg Zeller, Shinichi Sunagawa, and Peer Bork. 2016. “MOCAT2: A Metagenomic Assembly, Annotation and Profiling Framework.” *Bioinformatics* 32 (16). Oxford University Press: 2520–3.
+
+Langmead, Ben, and Steven L Salzberg. 2012. “Fast Gapped-Read Alignment with Bowtie 2.” *Nature Methods* 9 (4). Nature Publishing Group: 357.
 
 Manor, Ohad, and Elhanan Borenstein. 2015. “MUSiCC: A Marker Genes Based Framework for Metagenomic Normalization and Accurate Profiling of Gene Abundances in the Microbiome.” *Genome Biology* 16 (1). BioMed Central: 53.
 
@@ -674,5 +608,3 @@ Manor, Ohad, and Elhanan Borenstein. 2015. “MUSiCC: A Marker Genes Based Frame
 Nayfach, Stephen, and Katherine S Pollard. 2016. “Toward Accurate and Quantitative Comparative Metagenomics.” *Cell* 166 (5). Elsevier: 1103–16.
 
 “Picard.” n.d. <http://broadinstitute.github.io/picard/>.
-
-Rotmistrovsky, Kirill, and Richa Agarwala. 2011. “BMTagger: Best Match Tagger for Removing Human Reads from Metagenomics Datasets.” *Unpublished*.

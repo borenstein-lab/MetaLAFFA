@@ -27,7 +27,10 @@ The fourth is for steps that take as input all pipeline step summaries (the outp
 
 The fifth is for steps that should have their intermediate outputs deleted once they are no longer needed. These steps should be marked by including a "~" at the beginning of the step name.  
 
-Steps can be skipped by commenting them out with the "#" character, though note that any later steps relying on skipped steps should have their input steps updated.
+You can alter which pipeline steps are run by adjusting which steps generate required output. For example, 
+removing the `$` before a step will stop it from being considered a required final output, and if no other 
+following steps generate required final outputs, then the step will be skipped. Note that any associated summary 
+steps should also have their `*` removed so that they are not considered required for the final pipeline summary. For example, if you want to have the pipeline only generate the gene tables and skip any steps related to ortholog abundance calculations, then you would prepend a `$` to the gene_map step, remove the `$`'s from the ortholog_abundance_correction and ortholog_aggregation steps, and remove the `*`'s from all summary steps following the gene_map_summary_combine step. 
 """
 
 conda_env = "{CONDA_ENV}"

@@ -48,8 +48,7 @@ if args.human_reference:
         sys.stdout.write("Downloading human reference.\n")
         try:
             subprocess.run(["wget",
-                            "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference"
-                            "/phase2_reference_assembly_sequence/%s.fa.gz" % op.host_database,
+                            "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/%s.fa.gz" % op.host_database,
                             "-P",
                             fo.database_directory],
                            stdout=open(processing_results["human_reference"]["stdout"], "a"),
@@ -124,7 +123,9 @@ if args.uniprot:
     if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz"):
         sys.stdout.write("Downloading UniProt UniRef90 database.\n")
         try:
-            subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/%s/%s.fasta.gz" % (op.target_database, op.target_database), "-P", fo.database_directory],
+            subprocess.run(["wget",
+                            "ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/%s/%s.fasta.gz" % (op.target_database, op.target_database),
+                            "-P", fo.database_directory],
                            stdout=open(processing_results["uniprot"]["stdout"], "a"),
                            stderr=open(processing_results["uniprot"]["stderr"], "a"))
         except (EnvironmentError, subprocess.CalledProcessError):
@@ -186,7 +187,9 @@ if args.uniprot:
     if not os.path.isfile(fo.database_directory + "idmapping.dat.gz"):
         sys.stdout.write("Downloading UniRef90 gene-to-ortholog mapping.\n")
         try:
-            subprocess.run(["wget", "ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz", "-P", fo.database_directory],
+            subprocess.run(["wget",
+                            "ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/idmapping.dat.gz",
+                            "-P", fo.database_directory],
                            stdout=open(processing_results["uniprot"]["stdout"], "a"),
                            stderr=open(processing_results["uniprot"]["stderr"], "a"))
         except (EnvironmentError, subprocess.CalledProcessError):
