@@ -31,7 +31,9 @@ subprocess.run(["cp", "-r", fo.installation_directory + "/config", absolute_new_
 subprocess.run(["cp", fo.installation_directory + "/" + op.pipeline_step_list, absolute_new_directory])
 subprocess.run(["cp", fo.installation_directory + "/" + op.snakefile, absolute_new_directory])
 subprocess.run(["cp", fo.installation_directory + "/MetaLAFFA.py", absolute_new_directory])
+subprocess.run(["chmod", "+x", absolute_new_directory + "/MetaLAFFA.py"])
 subprocess.run(["cp", fo.installation_directory + "/" + cl.submission_wrapper, absolute_new_directory + "/" + cl.submission_wrapper])
+subprocess.run(["chmod", "+x", absolute_new_directory + "/" + cl.submission_wrapper])
 
 # Configure the jobscript for the new project
 with open(fo.source_directory + "/template_jobscript.sh") as template, open(args.new_directory + "/" + cl.jobscript, "w") as configured:

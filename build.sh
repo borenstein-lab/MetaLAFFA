@@ -1,10 +1,12 @@
 mkdir -p $PREFIX/MetaLAFFA
 cp -r bin $PREFIX
+chmod +x $PREFIX/bin/*
 cp -r config $PREFIX/lib/python*/
 cp lib/* $PREFIX/lib/python*/
 cp -r config $PREFIX/MetaLAFFA
 cp lib/* $PREFIX/MetaLAFFA
 cp -r src $PREFIX/MetaLAFFA
+chmod +x $PREFIX/MetaLAFFA/src/*
 cp Snakefile $PREFIX/MetaLAFFA
 cp pipeline_steps.txt $PREFIX/MetaLAFFA
 cp MetaLAFFA.py $PREFIX/MetaLAFFA
