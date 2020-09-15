@@ -23,6 +23,10 @@ parser.add_argument("--uniprot",
                     "-u",
                     action="store_true",
                     help="If used, download the default UniProt gene sequence reference database for read mapping.")
+parser.add_argument("--force",
+                    "-f",
+                    action="store_true",
+                    help="Normally, if the expected output files already exists, this script will skip generating them. Use this option to force the script re-download and/or regenerate all specified databases, even if they already exist.")
 
 args = parser.parse_args()
 
@@ -44,7 +48,7 @@ sys.stdout.write("Beginning processing of reference data.\n\n")
 # Try to create and process default database files
 if args.human_reference:
     source_exists = True
-    if not os.path.isfile(op.host_database_file):
+    if not os.path.isfile(op.host_database_file) or args.force:
         sys.stdout.write("Downloading human reference.\n")
         try:
             subprocess.run(["wget",
@@ -65,7 +69,7 @@ if args.human_reference:
     else:
         sys.stdout.write("Human reference exists, skipping download.\n")
 
-    if len(glob.glob(op.host_index + "*.bt2")) == 0 and source_exists:
+    if (len(glob.glob(op.host_index + "*.bt2")) == 0 and source_exists) or (source_exists and args.force):
         sys.stdout.write("Creating human reference Bowtie 2 index.\n")
         try:
             # Tag output index files with a ".tmp" tag and remove it once all index files have been generated
@@ -95,14 +99,14 @@ if args.ko_mappings:
     for ortholog_to_grouping_mapping in op.ortholog_to_grouping_mappings:
         if not os.path.isfile(fo.ortholog_to_grouping_directory +
                               ortholog_to_grouping_mapping +
-                              op.ortholog_to_grouping_suffix):
+                              op.ortholog_to_grouping_suffix) or args.force:
             missing_mappings.append(ortholog_to_grouping_mapping)
     if len(missing_mappings) > 0:
         sys.stdout.write("Downloading ortholog-to-grouping mappings.\n")
         for ortholog_to_grouping_mapping in missing_mappings:
             if not os.path.isfile(fo.ortholog_to_grouping_directory +
                                   ortholog_to_grouping_mapping +
-                                  op.ortholog_to_grouping_suffix):
+                                  op.ortholog_to_grouping_suffix) or args.force:
                 try:
                     subprocess.run(["wget",
                                     "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/" + ortholog_to_grouping_mapping,
@@ -120,7 +124,7 @@ sys.stdout.write("\n")
 
 if args.uniprot:
     source_exists = True
-    if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz"):
+    if not os.path.isfile(fo.database_directory + op.target_database + ".fasta.gz") or args.force:
         sys.stdout.write("Downloading UniProt UniRef90 database.\n")
         try:
             subprocess.run(["wget",
@@ -136,7 +140,7 @@ if args.uniprot:
     else:
         sys.stdout.write("UniRef90 database exists, skipping download.\n")
 
-    if not os.path.isfile(op.target_database_file) and source_exists:
+    if (not os.path.isfile(op.target_database_file) and source_exists) or (source_exists and args.force):
         sys.stdout.write("Creating UniRef90 DIAMOND database.\n")
         try:
             # Tag output database file with a ".tmp" tag and remove it once the database has been generated
@@ -161,7 +165,7 @@ if args.uniprot:
     else:
         sys.stdout.write("UniRef90 DIAMOND database exists, skipping DIAMOND database generation.\n")
 
-    if not os.path.isfile(op.gene_normalization_file) and source_exists:
+    if (not os.path.isfile(op.gene_normalization_file) and source_exists) or (source_exists and args.force):
         sys.stdout.write("Creating UniRef90 gene length table.\n")
         try:
             # Tag output gene length table with a ".tmp" tag and remove it once the table has been generated
@@ -184,7 +188,7 @@ if args.uniprot:
         sys.stdout.write("UniRef90 gene length table exists, skipping gene length table generation.\n")
 
     source_exists = True
-    if not os.path.isfile(fo.database_directory + "idmapping.dat.gz"):
+    if not os.path.isfile(fo.database_directory + "idmapping.dat.gz") or args.force:
         sys.stdout.write("Downloading UniRef90 gene-to-ortholog mapping.\n")
         try:
             subprocess.run(["wget",
@@ -201,7 +205,7 @@ if args.uniprot:
     else:
         sys.stdout.write("UniRef90 gene-to-ortholog mapping exists, skipping download.\n")
 
-    if not os.path.isfile(op.gene_to_ortholog_file) and source_exists:
+    if (not os.path.isfile(op.gene_to_ortholog_file) and source_exists) or (source_exists and args.force):
         sys.stdout.write("Formatting UniRef90 gene-to-ortholog mapping.\n")
         try:
             # Tag output gene length table with a ".tmp" tag and remove it once the table has been generated
