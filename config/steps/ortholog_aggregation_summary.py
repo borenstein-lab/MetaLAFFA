@@ -69,7 +69,10 @@ def default(inputs, outputs, wildcards):
     """
 
     if not lf.is_empty(inputs.input):
-        subprocess.run([fo.source_directory + "ortholog_aggregation_summary.py", inputs.input, "--output", outputs[0]])
+        subprocess.run([fo.source_directory + "ortholog_aggregation_summary.py",
+                        inputs.input,
+                        "--grouping_name", wildcards.mapping,
+                        "--output", outputs[0]])
     else:
         subprocess.run(["touch", outputs[0]])
 

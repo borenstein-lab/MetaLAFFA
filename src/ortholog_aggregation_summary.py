@@ -7,6 +7,7 @@ SAMPLE_COLUMN_HEADER = "sample"
 
 parser = argparse.ArgumentParser(description="Summarizes the results of summarizing ortholog profiles to a higher functional grouping")
 parser.add_argument("profiles", help="The table of higher functional grouping profiles to summarize")
+parser.add_argument("--grouping_name", "-g", help="If provided, the label for the grouping name to include in the summary column header")
 parser.add_argument("--output", "-o", default=None, help="File to write output to (default: print to standard output)")
 args = parser.parse_args()
 
@@ -15,6 +16,8 @@ profiles = pandas.read_csv(args.profiles, sep="\t", header=0, index_col=0)
 
 # Get the name of the functional group that was summarized to
 functional_group = profiles.index.name
+if args.grouping_name is not None:
+	functional_group = args.grouping_name
 
 # Count the number of non-zeros in each column (number of the higher groupings found in each sample)
 output_table = profiles.astype(bool).sum(axis=0).to_frame()
