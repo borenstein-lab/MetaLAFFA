@@ -151,7 +151,7 @@ if args.uniprot:
                             "-d", fo.database_directory + op.target_database + ".tmp"],
                            stdout=open(processing_results["uniprot"]["stdout"], "a"),
                            stderr=open(processing_results["uniprot"]["stderr"], "a"))
-            temp_database_file = glob.glob(fo.database_directory + op.target_database + "*.dmnd*")[0]
+            temp_database_file = fo.database_directory + op.target_database + ".tmp" + op.diamond_db_suffix
             permanent_file = re.sub("\\.tmp", "", temp_database_file)
             subprocess.run(["mv",
                             temp_database_file,
