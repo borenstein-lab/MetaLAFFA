@@ -1,9 +1,9 @@
 package:
   name: metalaffa
-  version: "0.1.0"
+  version: "1.0.0"
 
 source:
-  git_rev: 0.1.0
+  git_rev: 1.0.0
   git_url: https://github.com/borenstein-lab/MetaLAFFA.git
 
 requirements:
@@ -19,7 +19,10 @@ requirements:
     - picard=2.23.3
     - musicc=1.0.4
     - empanada=0.0.3
+    - tbb=2020.2
 
+build:
+  target_platform: osx
 #test:
 #  imports:
 #    -

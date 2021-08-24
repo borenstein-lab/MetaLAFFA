@@ -27,7 +27,7 @@ for required_directory in fo.required_project_directories:
     if not os.path.isdir(absolute_new_directory + "/" + required_directory):
         os.makedirs(absolute_new_directory + "/" + required_directory)
 
-subprocess.run(["cp", "-r", fo.installation_directory + "/config", absolute_new_directory + "/config"])
+subprocess.run(["cp", "-r", fo.installation_directory + "../lib/python3.6/config", absolute_new_directory + "/config"])
 subprocess.run(["cp", fo.installation_directory + "/" + op.pipeline_step_list, absolute_new_directory])
 subprocess.run(["cp", fo.installation_directory + "/" + op.snakefile, absolute_new_directory])
 subprocess.run(["cp", fo.installation_directory + "/MetaLAFFA.py", absolute_new_directory])
