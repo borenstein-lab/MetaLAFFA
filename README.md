@@ -36,7 +36,7 @@ Tutorial for running MetaLAFFA
         -   [Prepare input data files](#prepare-input-data-files)
         -   [Starting MetaLAFFA](#starting-metalaffa)
         -   [MetaLAFFA script options](#metalaffa-script-options)
-        -   [Locating final outputs](#locating-final-outputs)
+        -   [Final outputs location and descriptions](#final-outputs-location-and-descriptions)
         -   [Restarting MetaLAFFA](#restarting-metalaffa)
 -   [FAQ](#faq)
 -   [References](#references)
@@ -157,7 +157,7 @@ By default, MetaLAFFA is able to interface with Sun Grid Engine (SGE) and HTCond
 
 MetaLAFFA project directories created in this way will contain all of the files necessary to run the pipeline, including a local copy of a configuration module that will allow you to both keep a record of how the pipeline was run for the associated project and have project-specific configurations in case you have multiple projects that require different pipeline configurations.
 
-**Note**: Any configuration changes made in the configuration module located at `$CONDA_PREFIX/MetaLAFFA/config` will be the default configurations for any newly created projects. Thus, if you have custom settings that you think should be preset in any new projects, you should make those changes to this base configuration module.
+**Note**: Any configuration changes made in the configuration module located at `$CONDA_PREFIX/lib/python3.6/config` will be the default configurations for any newly created projects. Thus, if you have custom settings that you think should be preset in any new projects, you should make those changes to this base configuration module.
 
 1.  Obtain metagenomic shotgun sequencing data in FASTQ format to annotate. This can either be your own data, or you can download publicly available data to try annotating (e.g. from [the Human Microbiome Project](https://www.hmpdacc.org/hmp/HMASM/)). You can either download samples via the web interface or via the command line from your example project directory as follows:
 
@@ -306,7 +306,7 @@ MetaLAFFA project directories created in this way will contain all of the files 
 
 MetaLAFFA is configured via a Python module partitioned into various submodules targeted at specific aspects of the pipeline and defined in a project's `config` directory:
 
-**Note**: Any configuration changes made in the configuration module located at `$CONDA_PREFIX/MetaLAFFA/config` will be the default configurations for any newly created projects. Thus, if you have custom settings that you think should be preset in any new projects, you should make those changes to this base configuration module.
+**Note**: Any configuration changes made in the configuration module located at `$CONDA_PREFIX/lib/python3.6/config` will be the default configurations for any newly created projects. Thus, if you have custom settings that you think should be preset in any new projects, you should make those changes to this base configuration module.
 
 ##### config/file\_organization.py
 
@@ -551,13 +551,17 @@ Some notes on MetaLAFFA usage:
 
 4.  When running on a cluster, MetaLAFFA, by default, requests 10G of RAM per job, along with some step-specific memory requests according to the needs of the various tools used in the pipeline. You can modify the default resource requests by editing `config/cluster.py`, and you can modify step-specific resource requests by editing the `cluster_params` Python dictionary of each step's configuration submodule in `config/steps/<name_of_pipeline_step>.py`.
 
-##### Locating final outputs
+##### Final outputs location and descriptions
 
 Once the pipeline has finished running, you can find your desired output files in the default final output directory, `output/final/`. If you ran the pipeline in the default configuration, these should include:
 
 `output/final/KOvsMODULE_BACTERIAL_KEGG_2013_07_15.aggregated_orthologs.tab`: The module-level functional profile
 
+`output/final/KOvsMODULE_BACTERIAL_KEGG_2013_07_15.mapped_ortholog_counts.tab`: The module-level counts of the number of orthologs from each module that were detected in each sample
+
 `output/final/KOvsPATHWAY_BACTERIAL_KEGG_2013_07_15.aggregated_orthologs.tab`: The pathway-level functional profile
+
+`output/final/KOvsPATHWAY_BACTERIAL_KEGG_2013_07_15.mapped_ortholog_counts.tab`: The pathway-level counts of the number of orthologs from each pathway that were detected in each sample
 
 `output/final/orthologs.tab`: The average KO copy number per genome, as determined by MUSiCC
 
