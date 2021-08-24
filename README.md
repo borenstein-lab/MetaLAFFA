@@ -43,7 +43,7 @@ Tutorial for running MetaLAFFA
 
 **Repository:** <https://github.com/engal/MetaLAFFA>
 
-**Publication:** TBD
+**Publication:** Eng, A., Verster, A. J., & Borenstein, E. (2020). MetaLAFFA: a flexible, end-to-end, distributed computing-compatible metagenomic functional annotation pipeline. *BMC bioinformatics*, 21(1), 1-9.
 
 **Note:** MetaLAFFA is supported on Mac and Linux, but not on Windows.
 
