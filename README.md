@@ -39,6 +39,7 @@ Tutorial for running MetaLAFFA
         -   [Final outputs location and descriptions](#final-outputs-location-and-descriptions)
         -   [Restarting MetaLAFFA](#restarting-metalaffa)
 -   [FAQ](#faq)
+    -   [How do I fix the "undefined symbol: omp\_get\_num\_procs" error when MetaLAFFA tries to run MUSiCC?](#how-do-i-fix-the-undefined-symbol-omp_get_num_procs-error-when-metalaffa-tries-to-run-musicc)
 -   [References](#references)
 
 **Repository:** <https://github.com/engal/MetaLAFFA>
@@ -582,7 +583,13 @@ After that has finished, you can then rerun MetaLAFFA and it will pick up at the
 FAQ
 ---
 
-*Coming soon*
+### How do I fix the "undefined symbol: omp\_get\_num\_procs" error when MetaLAFFA tries to run MUSiCC?
+
+This can be fixed by installing the llvm-openmp package in your MetaLAFFA conda environment as follows:
+
+    conda install llvm-openmp -c conda-forge
+
+This error appears to be caused by issues with the libiomp5.so library that may arise during installation. However, llvm-openmp is not included as a standard dependency of MetaLAFFA because the addition of the conda-forge channel during initial environment creation can cause problems for conda's environment solver.
 
 References
 ----------
