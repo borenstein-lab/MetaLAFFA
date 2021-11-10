@@ -9,7 +9,7 @@ Tutorial for running MetaLAFFA
     -   [Configuring MetaLAFFA to submit jobs to a cluster](#configuring-metalaffa-to-submit-jobs-to-a-cluster)
     -   [Trying out MetaLAFFA](#trying-out-metalaffa)
 -   [Full-length Tutorial](#full-length-tutorial)
-    -   [MetaLAFFA step descriptions](#metalaffa-step-descriptions)
+    -   [MetaLAFFA step descriptions](#metalaffa-step-descriptions)`
         -   [1. Host read filtering](#host-read-filtering)
         -   [2. Duplicate read filtering](#duplicate-read-filtering)
         -   [3. Quality trimming and filtering](#quality-trimming-and-filtering)
@@ -39,6 +39,7 @@ Tutorial for running MetaLAFFA
         -   [Final outputs location and descriptions](#final-outputs-location-and-descriptions)
         -   [Restarting MetaLAFFA](#restarting-metalaffa)
 -   [FAQ](#faq)
+    -   [Why does MetaLAFFA default to using an older version of UniProt?](#why-does-metalaffa-default-to-using-an-older-version-of-uniprot)
     -   [How do I fix the "undefined symbol: omp\_get\_num\_procs" error when MetaLAFFA tries to run MUSiCC?](#how-do-i-fix-the-undefined-symbol-omp_get_num_procs-error-when-metalaffa-tries-to-run-musicc)
 -   [References](#references)
 
@@ -101,7 +102,9 @@ where each option to the script specifies a different reference database:
 
 `-u`: Download and prepare the UniRef90 database for read mapping and functional annotation.
 
-**Note**: This process can be time and resource intensive, taking several hours, ~108GB of free disk space, and ~40GB of RAM.
+`-c`: Optionally, the script can remove intermediate files after they are processed. This can save significant disk space, however if something interrupts the script, you may have to start the entire process from the beginning.
+
+**Note**: This process can be time and resource intensive, taking several hours, ~40GB of RAM, and ~300GB of free disk space if not cleaning up intermediate files, or ~150GB if cleaning up intermediate files.
 
 ### Configuring MetaLAFFA to submit jobs to a cluster
 
@@ -236,7 +239,7 @@ The final pre-processing step in MetaLAFFA is quality trimming and filtering. Th
 
 Given filtered and quality-controlled FASTQs, MetaLAFFA next maps these reads against a database of protein sequences corresponding to identified genes. Note that this (read-based annotation) method is one of two main annotation approaches, the other being assembly-based annotation, such as performed by MOCAT2 (Kultima et al. 2016). Read-based annotation works by assigning functional annotations to individual reads rather than by assembling contigs from reads, assigning functional annotations to ORFs identified in the contigs, and then mapping reads to the ORFs to get counts.
 
-Read annotations are most often performed by aligning reads to a database of gene sequences that have prior functional associations. These alignments are often performed as translated alignments, i.e. doing a 6-frame translation of a read's nucleotide sequence to possible amino acid sequences and then aligning those amino acid sequences to the protein sequences associated with genes. MetaLAFFA uses DIAMOND (Buchfink, Xie, and Huson 2015) as its default aligner due to its speed and built-in parallelization. By default, MetaLAFFA is configured to use the UniRef90 reference database of gene sequences (from UniProt (Consortium 2018)) when present, though other databases of annotated gene sequences could be used if available (e.g. KEGG).
+Read annotations are most often performed by aligning reads to a database of gene sequences that have prior functional associations. These alignments are often performed as translated alignments, i.e. doing a 6-frame translation of a read's nucleotide sequence to possible amino acid sequences and then aligning those amino acid sequences to the protein sequences associated with genes. MetaLAFFA uses DIAMOND (Buchfink, Xie, and Huson 2015) as its default aligner due to its speed and built-in parallelization. By default, MetaLAFFA is configured to use the 2020 UniRef90 reference database of gene sequences (from UniProt (Consortium 2018)) when present, though other databases of annotated gene sequences could be used if available (e.g. KEGG).
 
 ##### 5. Filtering read mapping hits
 
@@ -293,7 +296,9 @@ where each option to the script specifies a different reference database:
 
 `-u`: Download and prepare the UniRef90 database for read mapping and functional annotation.
 
-**Note**: This process can be time and resource intensive, taking several hours, ~108GB of free disk space, and ~40GB of RAM. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially when downloading the UniRef90 database for read mapping.
+`-c`: Optionally, the script can remove intermediate files after they are processed. This can save significant disk space, however if something interrupts the script, you may have to start the entire process from the beginning.
+
+**Note**: This process can be time and resource intensive, taking several hours, ~40GB of RAM, and ~300GB of free disk space if not cleaning up intermediate files, or ~150GB if cleaning up intermediate files. You may consider running the setup script in a [screen session](https://ss64.com/bash/screen.html), especially when downloading the UniRef90 database for read mapping.
 
 ### Creating a MetaLAFFA project directory
 
@@ -331,7 +336,7 @@ This submodule defines global settings that MetaLAFFA uses during pipeline opera
 
 `host_database`: The name of the database to use for host filtering. By default, MetaLAFFA uses the hs37d5 human reference genome with decoy sequences from the 1000 genomes project (1000 Genomes Project Consortium 2015) for removing human reads from metagenomic samples, but you may want to use a different host reference for filtering depending on your project. This name should be the part that comes before the `.*.bt2` suffix for the Bowtie 2 index (i.e. one of the default host reference index files is `hs37d5.1.bt2`).
 
-`target_database`: The name of the database to use for mapping reads to genes with functional annotations. By default, MetaLAFFA is configured to use the UniRef90 database, but you may want to use a different target database. See below for detailed instructions on all steps required to configure MetaLAFFA to use a custom target database.
+`target_database`: The name of the database to use for mapping reads to genes with functional annotations. By default, MetaLAFFA is configured to use the 2020 UniRef90 database, but you may want to use a different target database. See below for detailed instructions on all steps required to configure MetaLAFFA to use a custom target database.
 
 ##### config/cluster.py
 
@@ -582,6 +587,10 @@ After that has finished, you can then rerun MetaLAFFA and it will pick up at the
 
 FAQ
 ---
+
+### Why does MetaLAFFA default to using an older version of UniProt?
+
+In December 2020, UniProt encountered KEGG licensing issues, which resulted in the removal of KEGG Orthology mappings for UniProt genes. Since the default ortholog abundance correction and ortholog aggregation steps rely on KEGG Orthology data, MetaLAFFA now defaults to an older version of the UniProt database where KEGG Orthology mappings are still available.
 
 ### How do I fix the "undefined symbol: omp\_get\_num\_procs" error when MetaLAFFA tries to run MUSiCC?
 
