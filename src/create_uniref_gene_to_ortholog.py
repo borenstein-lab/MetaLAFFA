@@ -9,100 +9,64 @@ from file_handling_lib import *
 # Parse command line arguments
 parser = argparse.ArgumentParser(
     description="Using a UniRef ID mapping file, creates a table mapping UniRef gene IDs to ortholog groups.")
-parser.add_argument("uniref_id_mapping", help="File from UniRef mapping gene IDs to various annotations")
-parser.add_argument("uniref_version", help="The version of the UniRef database to match orthologs to (e.g. uniref90)")
+parser.add_argument("uniref_to_uniprot", help="File from UniProt mapping UniRef IDs to UniProt IDs")
+parser.add_argument("uniprot_to_ortholog", help="File from UniProt mapping UniProt IDs to ortholog IDs")
 parser.add_argument("ortholog_type", help="The identifier for the type of ortholog to map genes to (e.g. ko, eggnog)")
 parser.add_argument("--output", "-o", help="File to write output to (default: print to standard output)")
 args = parser.parse_args()
 
 # Standardize strings to be lower-case
-args.uniref_version = args.uniref_version.lower()
 args.ortholog_type = args.ortholog_type.lower()
 
-# Read in the mapping file, identifying IDs that have definitions for both the specified UniRef version and the
-# specified ortholog type. We only grab these IDs first so that we know which IDs we care about and can save memory
-# down the line when we read in the data we use to match up the mapping types. This costs us some time because we
-# will be scanning the file twice.
-uniref_ids = set()
-ortholog_ids = set()
-paired_ids = set()
-with custom_read(args.uniref_id_mapping) as full_mapping:
-    for line in full_mapping:
+uniprot_to_ortholog = {}
+with custom_read(args.uniprot_to_ortholog) as ortholog_mapping:
+    curr_accession = None
+    curr_orthologs = set()
+    for line in ortholog_mapping:
 
-        # Split the line into its three components (ID, mapping type, mapped value)
-        mapping_info = line.strip().split()
+        fields = line.strip().split()
 
-        # Parse out the base ID (ignore isoform specification) and grab the mapping type
-        mapping_id = re.match("^([^-]*)", mapping_info[0]).groups()[0]
-        mapping_type = mapping_info[1].lower()
+        # If we hit a new accession ID, add any available accession data to the mapping dictionary and reset trackers
+        # Trailing semicolons are stripped from all fields except first
+        if fields[0] == "AC" and len(fields) > 1:
+            if len(curr_orthologs) > 0:
+                uniprot_to_ortholog[curr_accession] = curr_orthologs
+            curr_accession = fields[1][:-1]
+            curr_orthologs = set()
 
-        # If this ID has not been identified as matching both desired mapping types, check for matches
-        if mapping_id not in paired_ids:
-            if mapping_type == args.uniref_version:
-                if mapping_id in ortholog_ids:
-                    paired_ids.add(mapping_id)
-                    ortholog_ids.remove(mapping_id)
-                else:
-                    uniref_ids.add(mapping_id)
-            elif mapping_type == args.ortholog_type:
-                if mapping_id in uniref_ids:
-                    paired_ids.add(mapping_id)
-                    uniref_ids.remove(mapping_id)
-                else:
-                    ortholog_ids.add(mapping_id)
+        # Otherwise, if we find a mapping to the ortholog type of interest, add that to the set of orthologs associated with our current accession ID
+        elif fields[0] == "DR" and len(fields) > 2 and fields[1][:-1].lower() == args.ortholog_type:
+            curr_orthologs.add(fields[2][:-1])
 
-# Remove sets of IDs that don't match both mapping types to save memory
-del uniref_ids
-del ortholog_ids
-
-# Now rescan the mapping file, extracting matching mapping type data for each ID
-id_to_labels = {}
-with custom_read(args.uniref_id_mapping) as full_mapping:
-    for line in full_mapping:
-
-        # Split the line into its three components (ID, mapping type, mapped value)
-        mapping_info = line.strip().split()
-
-        # Parse out the base ID (ignore isoform specification) and grab the mapping type and mapped value
-        mapping_id = re.match("^([^-]*)", mapping_info[0]).groups()[0]
-        mapping_type = mapping_info[1].lower()
-        mapped_value = mapping_info[2]
-
-        # If this ID is associated with both mapping types, then process it
-        if mapping_id in paired_ids:
-            if mapping_id not in id_to_labels:
-                id_to_labels[mapping_id] = {"uniref": set(), "ortholog": set()}
-            if mapping_type == args.uniref_version:
-                id_to_labels[mapping_id]["uniref"].add(mapped_value)
-            elif mapping_type == args.ortholog_type:
-                id_to_labels[mapping_id]["ortholog"].add(mapped_value)
-
-# Remove set of paired IDs to save memory
-del paired_ids
-
-# Convert mapping from IDs to UniRef ID and ortholog to an ortholog-to-UniRef ID mapping
-ortholog_to_uniref = {}
-ids = list(id_to_labels.keys())
-for curr_id in ids:
-    if len(id_to_labels[curr_id]["uniref"]) > 0 and len(id_to_labels[curr_id]["ortholog"]) > 0:
-        for ortholog in id_to_labels[curr_id]["ortholog"]:
-            if ortholog not in ortholog_to_uniref:
-                ortholog_to_uniref[ortholog] = set()
-            for uniref in id_to_labels[curr_id]["uniref"]:
-                ortholog_to_uniref[ortholog].add(uniref)
-
-    # Remove the entry from the first map to save memory
-    del id_to_labels[curr_id]
+    # Don't forget last entry
+    if len(curr_orthologs) > 0:
+        uniprot_to_ortholog[curr_accession] = curr_orthologs
 
 # Open the output stream
-# Set output stream
 output = sys.stdout
 if args.output:
     output = open(args.output, "w")
 
-# For each ortholog, write a line for each UniRef version ID that maps to it
-for ortholog in ortholog_to_uniref.keys():
-    for uniref in ortholog_to_uniref[ortholog]:
-        output.write("\t".join([ortholog, uniref]) + os.linesep)
+# Scan UniRef-to-UniProt mapping file and write ortholog-to-UniRef mappings to output file
+with custom_read(args.uniref_to_uniprot) as uniref_mapping:
+    curr_uniref = None
+    curr_orthologs = set()
+    for line in uniref_mapping:
+
+        fields = line.strip().split()
+
+        # If we hit a new UniRef ID, write out ortholog-to-UniRef mappings for this UniRef ID
+        if fields[0] != curr_uniref:
+            if len(curr_orthologs) > 0:
+                curr_orthologs = list(curr_orthologs)
+                for ortholog in curr_orthologs:
+                    output.write("\t".join([ortholog, curr_uniref]) + os.linesep)
+
+            curr_uniref = fields[0]
+            curr_orthologs = set()
+
+        curr_uniprot = fields[1]
+        if curr_uniprot in uniprot_to_ortholog:
+            curr_orthologs = set.union(curr_orthologs, uniprot_to_ortholog[curr_uniprot])
 
 output.close()

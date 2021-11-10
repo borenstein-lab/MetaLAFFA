@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import argparse
+import os
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -27,8 +29,8 @@ with open(args.fasta, "w") as fasta, open(args.mapping, "w") as mapping:
             representative_member = elem.find("representativeMember")
 
             # FASTA output requires entry ID and protein sequence
-            fasta.write("".join([">", entry_id, "\n"]))
-            fasta.write("".join([representative_member.find("sequence").text, "\n"]))
+            fasta.write("".join([">", entry_id, os.linesep]))
+            fasta.write("".join([representative_member.find("sequence").text, os.linesep]))
 
             # Mapping output requires entry ID and associated UniProt KB accession IDs, including representative member
             representative_member_id = None
@@ -38,12 +40,12 @@ with open(args.fasta, "w") as fasta, open(args.mapping, "w") as mapping:
                     if "type" in elem_property.attrib and "value" in elem_property.attrib and elem_property.attrib["type"] == "UniProtKB accession":
                         representative_member_id = elem_property.attrib["value"]
             if representative_member_id is not None:
-                mapping.write("".join([entry_id, "\t", representative_member_id, "\n"]))
+                mapping.write("".join([entry_id, "\t", representative_member_id, os.linesep]))
 
             for member in elem.iterfind("member"):
                 member_db_reference = member.find("dbReference")
                 if member_db_reference is not None and "type" in member_db_reference.attrib and member_db_reference.attrib["type"] == "UniProtKB ID":
                     for elem_property in member_db_reference.iterfind("property"):
                         if "type" in elem_property.attrib and "value" in elem_property.attrib and elem_property.attrib["type"] == "UniProtKB accession":
-                            mapping.write("".join([entry_id, "\t", elem_property.attrib["value"], "\n"]))
+                            mapping.write("".join([entry_id, "\t", elem_property.attrib["value"], os.linesep]))
             elem.clear()

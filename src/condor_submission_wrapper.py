@@ -40,11 +40,11 @@ elif memory_units == "G":
 # Create a Condor submission file and submit the job to the cluster)
 submission_file_path = submission_dir + os.path.basename(args.job_script)
 with open(submission_file_path, "w") as submission_file:
-    submission_file.write("Executable = %s\n" % args.job_script)
+    submission_file.write("Executable = %s%s" % (args.job_script, os.linesep))
     if node is not None:
-        submission_file.write("Requirements = (Machine == \"%s\")\n" % node)
-    # submission_file.write("Request_CPUs = %d\n" % cores)
-    submission_file.write("Image_Size = %d\n" % memory_int)
-    submission_file.write("Queue\n")
+        submission_file.write("Requirements = (Machine == \"%s\")%s" % (node, os.linesep))
+    # submission_file.write("Request_CPUs = %d%s" % (cores, os.linesep))
+    submission_file.write("Image_Size = %d%s" % (memory_int, os.linesep))
+    submission_file.write("Queue%s" % os.linesep)
 
 subprocess.run(["condor_submit", submission_file_path])

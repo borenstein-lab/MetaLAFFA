@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 import sys
 from file_handling_lib import *
 
@@ -28,6 +29,6 @@ while line1 != "" and line2 != "":
     line1 = f1.readline()
     line2 = f2.readline()
 if line1 != "" or line2 != "":
-    sys.stderr.write("WARNING: Numbers of reads did not match between files.  Reads may not be paired properly.\n")
+    sys.stderr.write("WARNING: Numbers of reads did not match between files.  Reads may not be paired properly.%s" % os.linesep)
 f1.close()
 f2.close()

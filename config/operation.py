@@ -87,9 +87,24 @@ host_database = "hs37d5"
 The name of the host database to map reads to for host filtering
 """
 
+host_database_source = "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/%s.fa.gz" % host_database
+"""
+The source from which to download the host database when preparing databases
+"""
+
 target_database = "uniref90"
 """
 The name of the target database to map reads to for gene identification 
+"""
+
+target_database_source = "ftp://ftp.uniprot.org/pub/databases/uniprot/previous_major_releases/"
+"""
+The source from which to download the target database when preparing databases
+"""
+
+target_database_release = "2020_05"
+"""
+Release version of target database source
 """
 
 target_ortholog = "ko"
@@ -105,6 +120,11 @@ The mapping to use for linking genes to orthologs
 ortholog_to_grouping_mappings = ["KOvsMODULE_BACTERIAL_KEGG_2013_07_15", "KOvsPATHWAY_BACTERIAL_KEGG_2013_07_15"]
 """
 List of ortholog-to-grouping mapping files for aggregating ortholog abundances into functional groups 
+"""
+
+ortholog_to_grouping_mapping_source = "https://github.com/borenstein-lab/fishtaco/raw/master/fishtaco/data/"
+"""
+The source from which to download the ortholog-to-grouping mapping files
 """
 
 wildcard_restrictions = {

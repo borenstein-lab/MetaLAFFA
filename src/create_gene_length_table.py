@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 import sys
 from file_handling_lib import *
 
@@ -57,9 +58,9 @@ if args.output:
 
 # Calculate and write the average length as a comment at the top of the output
 avg_length = float(total_length) / float(total_genes)
-output.write("# " + str(avg_length) + "\n")
+output.write("# " + str(avg_length) + os.linesep)
 
 # Write the output table (three columns, gene name, gene length, and normalized gene length)
 for gene in gene_lengths:
-	output.write("\t".join([gene, str(gene_lengths[gene]), str(float(gene_lengths[gene]) / float(avg_length))]) + "\n")
+	output.write("\t".join([gene, str(gene_lengths[gene]), str(float(gene_lengths[gene]) / float(avg_length))]) + os.linesep)
 output.close()
