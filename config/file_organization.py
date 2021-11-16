@@ -45,7 +45,7 @@ ortholog_to_grouping_directory = installation_directory + "ortholog_to_grouping_
 Directory containing ortholog-to-grouping mapping files for aggregating ortholog abundances into functional groups
 """
 
-log_directory = output_directory + "logging/"
+log_directory = "logging/"
 """
 Output subdirectory for pipeline log files.
 """

@@ -61,16 +61,22 @@ benchmark_file = "{sample}.{type}.log"
 The benchmark filename pattern
 """
 
+log_file = "{sample}.{type}.log"
+"""
+The log filename pattern
+"""
+
 # Defining options for different operations to run during this step
 
 
-def default(inputs, outputs, wildcards):
+def default(inputs, outputs, wildcards, log):
     """
     Default FASTQ summary operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
@@ -91,7 +97,9 @@ def default(inputs, outputs, wildcards):
         if n_method:
             command += ["-n", operating_params["best_n"]]
 
-        subprocess.run(command)
+        subprocess.run(command,
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
@@ -100,15 +108,16 @@ def default(inputs, outputs, wildcards):
 
 # Defining the wrapper function that chooses which defined operation to run
 
-def rule_function(inputs, outputs, wildcards):
+def rule_function(inputs, outputs, wildcards, log):
     """
     How to run the software associated with this step
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
     if operating_params["type"] == "default":
-        default(inputs, outputs, wildcards)
+        default(inputs, outputs, wildcards, log)

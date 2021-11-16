@@ -96,29 +96,38 @@ def is_empty(filename):
     return num_lines == 0
 
 
-def combine_list_rows(lists_to_combine, combined_list):
+def combine_list_rows(lists_to_combine, combined_list, log):
     """
     Standard combining of list rows.
 
     :param lists_to_combine: List of list files to combine
     :param combined_list: Name of output list file
+    :param log: The log file
     :return: None
     """
 
     # Initialize the combined list file
     with open(combined_list, "w") as combined_list_file:
         if is_zipped(lists_to_combine[0]):
-            subprocess.run(["zcat", lists_to_combine[0]], stdout=combined_list_file)
+            subprocess.run(["zcat", lists_to_combine[0]],
+                           stdout=combined_list_file,
+                           stderr=open(log, "a"))
         else:
-            subprocess.run(["cat", lists_to_combine[0]], stdout=combined_list_file)
+            subprocess.run(["cat", lists_to_combine[0]],
+                           stdout=combined_list_file,
+                           stderr=open(log, "a"))
 
     # Now add rows from the rest of the lists
     with open(combined_list, "a") as combined_list_file:
         for curr_list in lists_to_combine[1:]:
             if is_zipped(curr_list):
-                subprocess.run(["zcat", curr_list], stdout=combined_list_file)
+                subprocess.run(["zcat", curr_list],
+                               stdout=combined_list_file,
+                               stderr=open(log, "a"))
             else:
-                subprocess.run(["cat", curr_list], stdout=combined_list_file)
+                subprocess.run(["cat", curr_list],
+                               stdout=combined_list_file,
+                               stderr=open(log, "a"))
 
 
 def replace_restricted_patterns(pattern, pattern_restrictions):
@@ -311,7 +320,7 @@ def create_dummy_inputs(sample_list, step_info, step_params):
                 dummy_log_file.write(expected_input_file + os.linesep)
 
 
-def run_step(curr_step_params, inputs, outputs, wildcards, process_files=True):
+def run_step(curr_step_params, inputs, outputs, wildcards, log=["/dev/null"], process_files=True):
     """
     Runs standard and rule-specific operations
 
@@ -319,6 +328,7 @@ def run_step(curr_step_params, inputs, outputs, wildcards, process_files=True):
     :param inputs: The Snakemake inputs object
     :param outputs: The dictionary of output files
     :param wildcards: The Snakemake wildcards object
+    :param log: The log file
     :param process_files: Flag indicating whether we should process the input and output files at either end of the pipeline step (e.g. automating the unzipping, operating in the temporary directory, etc.).
     :return: None
     """
@@ -329,7 +339,7 @@ def run_step(curr_step_params, inputs, outputs, wildcards, process_files=True):
             working_outputs.append(get_working_output_name(output, curr_step_params["step_id"]))
         else:
             working_outputs.append(output)
-    curr_step_params["rule_function"](inputs, working_outputs, wildcards)
+    curr_step_params["rule_function"](inputs, working_outputs, wildcards, log)
     for output in outputs:
         if process_files:
             process_output(output, curr_step_params["step_id"])

@@ -753,6 +753,10 @@ the pipeline in the default configuration, these should include:
 
 Examples of final output files for three HMP samples can be found in the `example_output` folder of this repository.
 
+##### Log files
+
+When running MetaLAFFA, log files are generated in the `logging/` directory for each job run by the pipeline. You can refer to these files to look for the cause of any errors that may have occurred during operation.
+
 ##### Restarting MetaLAFFA
 
 If MetaLAFFA encounters an error while processing your data, you can look at the output from Snakemake to identify which step failed, what error message was received, and fix any issues accordingly. Once that is complete, you can rerun MetaLAFFA and the pipeline will pick up where it left off.

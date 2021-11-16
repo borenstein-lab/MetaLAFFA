@@ -67,16 +67,22 @@ benchmark_file = "{sample}.log"
 The benchmark filename pattern
 """
 
+log_file = "{sample}.log"
+"""
+The log filename pattern
+"""
+
 # Defining options for different operations to run during this step
 
 
-def default(inputs, outputs, wildcards):
+def default(inputs, outputs, wildcards, log):
     """
     Default FASTQ summary operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
@@ -90,16 +96,22 @@ def default(inputs, outputs, wildcards):
         new_reverse_singletons = outputs[3] + ".reverse_singletons.fastq"
 
         # Perform paired-end quality filtering and trimming
-        subprocess.run([required_programs["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters)
+        subprocess.run([required_programs["trimmer"], "PE", inputs.forward, inputs.reverse, outputs[0], new_forward_singletons, outputs[1], new_reverse_singletons] + trimming_parameters,
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
         # Merge new singletons into single new singleton file
         with open(outputs[3], "w") as output_file:
-            subprocess.run(["cat", new_forward_singletons, new_reverse_singletons], stdout=output_file)
+            subprocess.run(["cat", new_forward_singletons, new_reverse_singletons],
+                           stdout=output_file,
+                           stderr=open(log[0], "a"))
         subprocess.run(["rm", new_forward_singletons, new_reverse_singletons])
 
         # Add new singletons to combined singleton output file
         with open(outputs[2], "w") as output_file:
-            subprocess.run(["cat", outputs[3]], stdout=output_file)
+            subprocess.run(["cat", outputs[3]],
+                           stdout=output_file,
+                           stderr=open(log[0], "a"))
 
     # Otherwise, if both paired read files were dummy files, create dummy outputs
     else:
@@ -109,17 +121,23 @@ def default(inputs, outputs, wildcards):
     if not lf.is_empty(inputs.singleton):
 
         # Perform single-end quality filtering and trimming
-        subprocess.run([required_programs["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters)
+        subprocess.run([required_programs["trimmer"], "SE", inputs.singleton, outputs[4]] + trimming_parameters,
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
         # If we quality filtered the paired-end reads, add singletons to combined singleton output file
         if not lf.is_empty(inputs.forward) or not lf.is_empty(inputs.reverse):
             with open(outputs[2], "a") as output_file:
-                subprocess.run(["cat", outputs[4]], stdout=output_file)
+                subprocess.run(["cat", outputs[4]],
+                               stdout=output_file,
+                               stderr=open(log[0], "a"))
 
         # Otherwise, the combined singleton output file is the same as the results of the singleton quality filtering
         else:
             with open(outputs[2], "w") as output_file:
-                subprocess.run(["cat", outputs[4]], stdout=output_file)
+                subprocess.run(["cat", outputs[4]],
+                               stdout=output_file,
+                               stderr=open(log[0], "a"))
 
     # Otherwise, if the singleton read file was a dummy file, create dummy outputs
     else:
@@ -128,15 +146,16 @@ def default(inputs, outputs, wildcards):
 
 # Defining the wrapper function that chooses which defined operation to run
 
-def rule_function(inputs, outputs, wildcards):
+def rule_function(inputs, outputs, wildcards, log):
     """
     How to run the software associated with this step
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
     if operating_params["type"] == "default":
-        default(inputs, outputs, wildcards)
+        default(inputs, outputs, wildcards, log)

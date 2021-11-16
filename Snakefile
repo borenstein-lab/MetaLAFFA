@@ -37,8 +37,10 @@ rule fastq_summary:
         cluster=step_params["fastq_summary"]["cluster_params"]
     benchmark:
         step_params["fastq_summary"]["benchmark"]
+    log:
+        step_params["fastq_summary"]["log"]
     run:
-        run_step(step_params["fastq_summary"], input, output, wildcards)
+        run_step(step_params["fastq_summary"], input, output, wildcards, log)
 
 rule fastq_summary_combine:
     input:
@@ -49,8 +51,10 @@ rule fastq_summary_combine:
         cluster=step_params["fastq_summary_combine"]["cluster_params"]
     benchmark:
         step_params["fastq_summary_combine"]["benchmark"]
+    log:
+        step_params["fastq_summary_combine"]["log"]
     run:
-        run_step(step_params["fastq_summary_combine"], input, output, wildcards)
+        run_step(step_params["fastq_summary_combine"], input, output, wildcards, log)
 
 rule host_filter:
     input:
@@ -61,8 +65,10 @@ rule host_filter:
         cluster=step_params["host_filter"]["cluster_params"]
     benchmark:
         step_params["host_filter"]["benchmark"]
+    log:
+        step_params["host_filter"]["log"]
     run:
-        run_step(step_params["host_filter"], input, output, wildcards)
+        run_step(step_params["host_filter"], input, output, wildcards, log)
 
 rule host_filter_summary:
     input:
@@ -73,8 +79,10 @@ rule host_filter_summary:
         cluster=step_params["host_filter_summary"]["cluster_params"]
     benchmark:
         step_params["host_filter_summary"]["benchmark"]
+    log:
+        step_params["host_filter_summary"]["log"]
     run:
-        run_step(step_params["host_filter_summary"], input, output, wildcards)
+        run_step(step_params["host_filter_summary"], input, output, wildcards, log)
 
 rule host_filter_summary_combine:
     input:
@@ -85,8 +93,10 @@ rule host_filter_summary_combine:
         cluster=step_params["host_filter_summary_combine"]["cluster_params"]
     benchmark:
         step_params["host_filter_summary_combine"]["benchmark"]
+    log:
+        step_params["host_filter_summary_combine"]["log"]
     run:
-        run_step(step_params["host_filter_summary_combine"], input, output, wildcards)
+        run_step(step_params["host_filter_summary_combine"], input, output, wildcards, log)
 
 rule duplicate_filter:
     input:
@@ -97,8 +107,10 @@ rule duplicate_filter:
         cluster=step_params["duplicate_filter"]["cluster_params"]
     benchmark:
         step_params["duplicate_filter"]["benchmark"]
+    log:
+        step_params["duplicate_filter"]["log"]
     run:
-        run_step(step_params["duplicate_filter"], input, output, wildcards)
+        run_step(step_params["duplicate_filter"], input, output, wildcards, log)
 
 rule duplicate_filter_summary:
     input:
@@ -109,8 +121,10 @@ rule duplicate_filter_summary:
         cluster=step_params["duplicate_filter_summary"]["cluster_params"]
     benchmark:
         step_params["duplicate_filter_summary"]["benchmark"]
+    log:
+        step_params["duplicate_filter_summary"]["log"]
     run:
-        run_step(step_params["duplicate_filter_summary"], input, output, wildcards)
+        run_step(step_params["duplicate_filter_summary"], input, output, wildcards, log)
 
 rule duplicate_filter_summary_combine:
     input:
@@ -121,8 +135,10 @@ rule duplicate_filter_summary_combine:
         cluster=step_params["duplicate_filter_summary_combine"]["cluster_params"]
     benchmark:
         step_params["duplicate_filter_summary_combine"]["benchmark"]
+    log:
+        step_params["duplicate_filter_summary_combine"]["log"]
     run:
-        run_step(step_params["duplicate_filter_summary_combine"], input, output, wildcards)
+        run_step(step_params["duplicate_filter_summary_combine"], input, output, wildcards, log)
 
 rule quality_filter:
     input:
@@ -133,8 +149,10 @@ rule quality_filter:
         cluster=step_params["quality_filter"]["cluster_params"]
     benchmark:
         step_params["quality_filter"]["benchmark"]
+    log:
+        step_params["quality_filter"]["log"]
     run:
-        run_step(step_params["quality_filter"], input, output, wildcards)
+        run_step(step_params["quality_filter"], input, output, wildcards, log)
 
 rule quality_filter_summary:
     input:
@@ -145,8 +163,10 @@ rule quality_filter_summary:
         cluster=step_params["quality_filter_summary"]["cluster_params"]
     benchmark:
         step_params["quality_filter_summary"]["benchmark"]
+    log:
+        step_params["quality_filter_summary"]["log"]
     run:
-        run_step(step_params["quality_filter_summary"], input, output, wildcards)
+        run_step(step_params["quality_filter_summary"], input, output, wildcards, log)
 
 rule quality_filter_summary_combine:
     input:
@@ -157,8 +177,10 @@ rule quality_filter_summary_combine:
         cluster=step_params["quality_filter_summary_combine"]["cluster_params"]
     benchmark:
         step_params["quality_filter_summary_combine"]["benchmark"]
+    log:
+        step_params["quality_filter_summary_combine"]["log"]
     run:
-        run_step(step_params["quality_filter_summary_combine"], input, output, wildcards)
+        run_step(step_params["quality_filter_summary_combine"], input, output, wildcards, log)
 
 rule quality_filter_fastq_summary:
     input:
@@ -169,8 +191,10 @@ rule quality_filter_fastq_summary:
         cluster=step_params["quality_filter_fastq_summary"]["cluster_params"]
     benchmark:
         step_params["quality_filter_fastq_summary"]["benchmark"]
+    log:
+        step_params["quality_filter_fastq_summary"]["log"]
     run:
-        run_step(step_params["quality_filter_fastq_summary"], input, output, wildcards)
+        run_step(step_params["quality_filter_fastq_summary"], input, output, wildcards, log)
 
 rule quality_filter_fastq_summary_combine:
     input:
@@ -181,8 +205,10 @@ rule quality_filter_fastq_summary_combine:
         cluster=step_params["quality_filter_fastq_summary_combine"]["cluster_params"]
     benchmark:
         step_params["quality_filter_fastq_summary_combine"]["benchmark"]
+    log:
+        step_params["quality_filter_fastq_summary_combine"]["log"]
     run:
-        run_step(step_params["quality_filter_fastq_summary_combine"], input, output, wildcards)
+        run_step(step_params["quality_filter_fastq_summary_combine"], input, output, wildcards, log)
 
 rule map_reads_to_genes:
     input:
@@ -195,8 +221,10 @@ rule map_reads_to_genes:
         step_params["map_reads_to_genes"]["threads"]
     benchmark:
         step_params["map_reads_to_genes"]["benchmark"]
+    log:
+        step_params["map_reads_to_genes"]["log"]
     run:
-        run_step(step_params["map_reads_to_genes"], input, output, wildcards)
+        run_step(step_params["map_reads_to_genes"], input, output, wildcards, log)
 
 rule map_reads_to_genes_summary:
     input:
@@ -207,8 +235,10 @@ rule map_reads_to_genes_summary:
         cluster=step_params["map_reads_to_genes_summary"]["cluster_params"]
     benchmark:
         step_params["map_reads_to_genes_summary"]["benchmark"]
+    log:
+        step_params["map_reads_to_genes_summary"]["log"]
     run:
-        run_step(step_params["map_reads_to_genes_summary"], input, output, wildcards)
+        run_step(step_params["map_reads_to_genes_summary"], input, output, wildcards, log)
 
 rule map_reads_to_genes_summary_combine:
     input:
@@ -219,8 +249,10 @@ rule map_reads_to_genes_summary_combine:
         cluster=step_params["map_reads_to_genes_summary_combine"]["cluster_params"]
     benchmark:
         step_params["map_reads_to_genes_summary_combine"]["benchmark"]
+    log:
+        step_params["map_reads_to_genes_summary_combine"]["log"]
     run:
-        run_step(step_params["map_reads_to_genes_summary_combine"], input, output, wildcards)
+        run_step(step_params["map_reads_to_genes_summary_combine"], input, output, wildcards, log)
 
 rule hit_filter:
     input:
@@ -231,8 +263,10 @@ rule hit_filter:
         cluster=step_params["hit_filter"]["cluster_params"]
     benchmark:
         step_params["hit_filter"]["benchmark"]
+    log:
+        step_params["hit_filter"]["log"]
     run:
-        run_step(step_params["hit_filter"], input, output, wildcards)
+        run_step(step_params["hit_filter"], input, output, wildcards, log)
 
 rule hit_filter_summary:
     input:
@@ -243,8 +277,10 @@ rule hit_filter_summary:
         cluster=step_params["hit_filter_summary"]["cluster_params"]
     benchmark:
         step_params["hit_filter_summary"]["benchmark"]
+    log:
+        step_params["hit_filter_summary"]["log"]
     run:
-        run_step(step_params["hit_filter_summary"], input, output, wildcards)
+        run_step(step_params["hit_filter_summary"], input, output, wildcards, log)
 
 rule hit_filter_summary_combine:
     input:
@@ -255,8 +291,10 @@ rule hit_filter_summary_combine:
         cluster=step_params["hit_filter_summary_combine"]["cluster_params"]
     benchmark:
         step_params["hit_filter_summary_combine"]["benchmark"]
+    log:
+        step_params["hit_filter_summary_combine"]["log"]
     run:
-        run_step(step_params["hit_filter_summary_combine"], input, output, wildcards)
+        run_step(step_params["hit_filter_summary_combine"], input, output, wildcards, log)
 
 rule hit_filter_combine:
     input:
@@ -267,8 +305,10 @@ rule hit_filter_combine:
         cluster=step_params["hit_filter_combine"]["cluster_params"]
     benchmark:
         step_params["hit_filter_combine"]["benchmark"]
+    log:
+        step_params["hit_filter_combine"]["log"]
     run:
-        run_step(step_params["hit_filter_combine"], input, output, wildcards)
+        run_step(step_params["hit_filter_combine"], input, output, wildcards, log)
 
 rule gene_map:
     input:
@@ -279,8 +319,10 @@ rule gene_map:
         cluster=step_params["gene_map"]["cluster_params"]
     benchmark:
         step_params["gene_map"]["benchmark"]
+    log:
+        step_params["gene_map"]["log"]
     run:
-        run_step(step_params["gene_map"], input, output, wildcards)
+        run_step(step_params["gene_map"], input, output, wildcards, log)
 
 rule gene_map_summary:
     input:
@@ -291,8 +333,10 @@ rule gene_map_summary:
         cluster=step_params["gene_map_summary"]["cluster_params"]
     benchmark:
         step_params["gene_map_summary"]["benchmark"]
+    log:
+        step_params["gene_map_summary"]["log"]
     run:
-        run_step(step_params["gene_map_summary"], input, output, wildcards)
+        run_step(step_params["gene_map_summary"], input, output, wildcards, log)
 
 rule gene_map_summary_combine:
     input:
@@ -303,8 +347,10 @@ rule gene_map_summary_combine:
         cluster=step_params["gene_map_summary_combine"]["cluster_params"]
     benchmark:
         step_params["gene_map_summary_combine"]["benchmark"]
+    log:
+        step_params["gene_map_summary_combine"]["log"]
     run:
-        run_step(step_params["gene_map_summary_combine"], input, output, wildcards)
+        run_step(step_params["gene_map_summary_combine"], input, output, wildcards, log)
 
 rule ortholog_map:
     input:
@@ -315,8 +361,10 @@ rule ortholog_map:
         cluster=step_params["ortholog_map"]["cluster_params"]
     benchmark:
         step_params["ortholog_map"]["benchmark"]
+    log:
+        step_params["ortholog_map"]["log"]
     run:
-        run_step(step_params["ortholog_map"], input, output, wildcards)
+        run_step(step_params["ortholog_map"], input, output, wildcards, log)
 
 rule ortholog_map_summary:
     input:
@@ -327,8 +375,10 @@ rule ortholog_map_summary:
         cluster=step_params["ortholog_map_summary"]["cluster_params"]
     benchmark:
         step_params["ortholog_map_summary"]["benchmark"]
+    log:
+        step_params["ortholog_map_summary"]["log"]
     run:
-        run_step(step_params["ortholog_map_summary"], input, output, wildcards)
+        run_step(step_params["ortholog_map_summary"], input, output, wildcards, log)
 
 rule ortholog_map_summary_combine:
     input:
@@ -339,8 +389,10 @@ rule ortholog_map_summary_combine:
         cluster=step_params["ortholog_map_summary_combine"]["cluster_params"]
     benchmark:
         step_params["ortholog_map_summary_combine"]["benchmark"]
+    log:
+        step_params["ortholog_map_summary_combine"]["log"]
     run:
-        run_step(step_params["ortholog_map_summary_combine"], input, output, wildcards)
+        run_step(step_params["ortholog_map_summary_combine"], input, output, wildcards, log)
 
 rule ortholog_map_combine:
     input:
@@ -351,8 +403,10 @@ rule ortholog_map_combine:
         cluster=step_params["ortholog_map_combine"]["cluster_params"]
     benchmark:
         step_params["ortholog_map_combine"]["benchmark"]
+    log:
+        step_params["ortholog_map_combine"]["log"]
     run:
-        run_step(step_params["ortholog_map_combine"], input, output, wildcards)
+        run_step(step_params["ortholog_map_combine"], input, output, wildcards, log)
 
 rule ortholog_abundance_correction:
     input:
@@ -363,8 +417,10 @@ rule ortholog_abundance_correction:
         cluster=step_params["ortholog_abundance_correction"]["cluster_params"]
     benchmark:
         step_params["ortholog_abundance_correction"]["benchmark"]
+    log:
+        step_params["ortholog_abundance_correction"]["log"]
     run:
-        run_step(step_params["ortholog_abundance_correction"], input, output, wildcards)
+        run_step(step_params["ortholog_abundance_correction"], input, output, wildcards, log)
 
 rule ortholog_aggregation:
     input:
@@ -375,8 +431,10 @@ rule ortholog_aggregation:
         cluster=step_params["ortholog_aggregation"]["cluster_params"]
     benchmark:
         step_params["ortholog_aggregation"]["benchmark"]
+    log:
+        step_params["ortholog_aggregation"]["log"]
     run:
-        run_step(step_params["ortholog_aggregation"], input, output, wildcards)
+        run_step(step_params["ortholog_aggregation"], input, output, wildcards, log)
 
 rule ortholog_aggregation_summary:
     input:
@@ -387,8 +445,10 @@ rule ortholog_aggregation_summary:
         cluster=step_params["ortholog_aggregation_summary"]["cluster_params"]
     benchmark:
         step_params["ortholog_aggregation_summary"]["benchmark"]
+    log:
+        step_params["ortholog_aggregation_summary"]["log"]
     run:
-        run_step(step_params["ortholog_aggregation_summary"], input, output, wildcards)
+        run_step(step_params["ortholog_aggregation_summary"], input, output, wildcards, log)
 
 rule ortholog_aggregation_summary_combine:
     input:
@@ -399,8 +459,10 @@ rule ortholog_aggregation_summary_combine:
         cluster=step_params["ortholog_aggregation_summary_combine"]["cluster_params"]
     benchmark:
         step_params["ortholog_aggregation_summary_combine"]["benchmark"]
+    log:
+        step_params["ortholog_aggregation_summary_combine"]["log"]
     run:
-        run_step(step_params["ortholog_aggregation_summary_combine"], input, output, wildcards)
+        run_step(step_params["ortholog_aggregation_summary_combine"], input, output, wildcards, log)
 
 rule summary_combine:
     input:
@@ -411,8 +473,10 @@ rule summary_combine:
         cluster=step_params["summary_combine"]["cluster_params"]
     benchmark:
         step_params["summary_combine"]["benchmark"]
+    log:
+        step_params["summary_combine"]["log"]
     run:
-        run_step(step_params["summary_combine"], input, output, wildcards)
+        run_step(step_params["summary_combine"], input, output, wildcards, log)
 
 rule process_final_output:
     input:
@@ -421,5 +485,9 @@ rule process_final_output:
         step_params["final_outputs"]
     params:
         cluster=cl.default_cluster_params
+    benchmark:
+        step_params["summary_combine"]["benchmark"]
+    log:
+        step_params["summary_combine"]["log"]
     run:
-        run_step(step_params["process_final_output"], input, output, wildcards, process_files=False)
+        run_step(step_params["process_final_output"], input, output, wildcards, log, process_files=False)

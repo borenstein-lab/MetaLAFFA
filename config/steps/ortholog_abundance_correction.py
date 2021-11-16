@@ -59,16 +59,22 @@ benchmark_file = "log"
 The benchmark filename pattern
 """
 
+log_file = "log"
+"""
+The log filename pattern
+"""
+
 # Defining options for different operations to run during this step
 
 
-def default(inputs, outputs, wildcards):
+def default(inputs, outputs, wildcards, log):
     """
     Default ortholog abundance correction operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
@@ -77,10 +83,14 @@ def default(inputs, outputs, wildcards):
 
         if operating_params["method"] == "musicc":
             command = [required_programs["musicc"], inputs.input, "-o", outputs[0]] + operating_params["musicc_method"]
-            subprocess.run(command)
+            subprocess.run(command,
+                           stdout=open(log[0], "a"),
+                           stderr=subprocess.STDOUT)
 
         elif operating_params["method"] == "relative":
-            subprocess.run([fo.source_directory + "ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]])
+            subprocess.run([fo.source_directory + "ortholog_abundance_correction.py", inputs.input, "--output", outputs[0]],
+                           stdout=open(log[0], "a"),
+                           stderr=subprocess.STDOUT)
 
         # Otherwise, if the method is unrecognized, just copy the input file to the output
         else:
@@ -93,15 +103,16 @@ def default(inputs, outputs, wildcards):
 
 # Defining the wrapper function that chooses which defined operation to run
 
-def rule_function(inputs, outputs, wildcards):
+def rule_function(inputs, outputs, wildcards, log):
     """
     How to run the software associated with this step
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
     if operating_params["type"] == "default":
-        default(inputs, outputs, wildcards)
+        default(inputs, outputs, wildcards, log)

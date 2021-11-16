@@ -235,6 +235,9 @@ def create_step_params(step_info):
         # Set the benchmark file name pattern
         step_params[step_name]["benchmark"] = get_working_name(fo.benchmark_dir + prefix_components[0] + fo.provenance_separator.join(prefix_components[1:]) + "/" + step_module.benchmark_file)
 
+        # Set the log file name pattern
+        step_params[step_name]["log"] = get_working_name(fo.log_directory + prefix_components[0] + fo.provenance_separator.join(prefix_components[1:]) + "/" + step_module.log_file)
+
         # Set the code that runs
         step_params[step_name]["rule_function"] = step_module.rule_function
 

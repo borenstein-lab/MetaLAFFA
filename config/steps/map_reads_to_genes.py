@@ -67,16 +67,22 @@ benchmark_file = "{sample}.{type}.log"
 The benchmark filename pattern
 """
 
+log_file = "{sample}.{type}.log"
+"""
+The log filename pattern
+"""
+
 # Defining options for different operations to run during this step
 
 
-def default(inputs, outputs, wildcards):
+def default(inputs, outputs, wildcards, log):
     """
     Default FASTQ summary operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
@@ -89,7 +95,9 @@ def default(inputs, outputs, wildcards):
         command = [required_programs["diamond"], operating_params["method"], "--block-size", str(non_essential_params["block_size"]), "--index-chunks", str(non_essential_params["index_chunks"]), "--threads", str(cluster_params["cores"] * op.cpu_to_thread_multiplier), "--db", target_database, "--query", inputs.input, "--out", outputs[0], "--top", str(operating_params["top_percentage"]), "--evalue", str(operating_params["evalue_cutoff"])]
         if operating_params["sensitivity"] != "":
             command += operating_params["sensitivity"]
-        subprocess.run(command)
+        subprocess.run(command,
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
     # Otherwise, if the input file is a dummy file, create a dummy output
     else:
@@ -98,15 +106,16 @@ def default(inputs, outputs, wildcards):
 
 # Defining the wrapper function that chooses which defined operation to run
 
-def rule_function(inputs, outputs, wildcards):
+def rule_function(inputs, outputs, wildcards, log):
     """
     How to run the software associated with this step
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
     if operating_params["type"] == "default":
-        default(inputs, outputs, wildcards)
+        default(inputs, outputs, wildcards, log)

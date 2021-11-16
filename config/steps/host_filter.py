@@ -65,16 +65,22 @@ benchmark_file = "{sample}.log"
 The benchmark filename pattern
 """
 
+log_file = "{sample}.log"
+"""
+The log filename pattern
+"""
+
 # Defining options for different operations to run during this step
 
 
-def default(inputs, outputs, wildcards):
+def default(inputs, outputs, wildcards, log):
     """
     Default FASTQ summary operations.
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
@@ -91,11 +97,17 @@ def default(inputs, outputs, wildcards):
                         "-2", inputs.reverse,
                         "--un-conc", outputs[0],
                         "--no-unal",
-                        "-S", "/dev/null"])
+                        "-S", "/dev/null"],
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
         # Fix output file names
-        subprocess.run(["mv", re.sub('(\\.[^.]*)$', r'.1\1', outputs[0]), outputs[0]])
-        subprocess.run(["mv", re.sub('(\\.[^.]*)$', r'.2\1', outputs[0]), outputs[1]])
+        subprocess.run(["mv", re.sub('(\\.[^.]*)$', r'.1\1', outputs[0]), outputs[0]],
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
+        subprocess.run(["mv", re.sub('(\\.[^.]*)$', r'.2\1', outputs[0]), outputs[1]],
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
     # Otherwise, if both paired read files were dummy files, create dummy outputs
     else:
@@ -110,7 +122,9 @@ def default(inputs, outputs, wildcards):
                         "-U", inputs.singleton,
                         "--un", outputs[2],
                         "--no-unal",
-                        "-S", "/dev/null"])
+                        "-S", "/dev/null"],
+                       stdout=open(log[0], "a"),
+                       stderr=subprocess.STDOUT)
 
     # Otherwise, if the singleton read file was a dummy file, create dummy outputs
     else:
@@ -119,15 +133,16 @@ def default(inputs, outputs, wildcards):
 
 # Defining the wrapper function that chooses which defined operation to run
 
-def rule_function(inputs, outputs, wildcards):
+def rule_function(inputs, outputs, wildcards, log):
     """
     How to run the software associated with this step
 
     :param inputs: Object containing the input file names
     :param outputs: Dictionary containing the output file names
     :param wildcards: Wildcards determined from input file name patterns
+    :param log: The log file
     :return: None.
     """
 
     if operating_params["type"] == "default":
-        default(inputs, outputs, wildcards)
+        default(inputs, outputs, wildcards, log)

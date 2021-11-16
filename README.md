@@ -9,7 +9,7 @@ Tutorial for running MetaLAFFA
     -   [Configuring MetaLAFFA to submit jobs to a cluster](#configuring-metalaffa-to-submit-jobs-to-a-cluster)
     -   [Trying out MetaLAFFA](#trying-out-metalaffa)
 -   [Full-length Tutorial](#full-length-tutorial)
-    -   [MetaLAFFA step descriptions](#metalaffa-step-descriptions)`
+    -   [MetaLAFFA step descriptions](#metalaffa-step-descriptions)
         -   [1. Host read filtering](#host-read-filtering)
         -   [2. Duplicate read filtering](#duplicate-read-filtering)
         -   [3. Quality trimming and filtering](#quality-trimming-and-filtering)
@@ -37,6 +37,7 @@ Tutorial for running MetaLAFFA
         -   [Starting MetaLAFFA](#starting-metalaffa)
         -   [MetaLAFFA script options](#metalaffa-script-options)
         -   [Final outputs location and descriptions](#final-outputs-location-and-descriptions)
+        -   [Log files](#log-files)
         -   [Restarting MetaLAFFA](#restarting-metalaffa)
 -   [FAQ](#faq)
     -   [Why does MetaLAFFA default to using an older version of UniProt?](#why-does-metalaffa-default-to-using-an-older-version-of-uniprot)
@@ -574,6 +575,10 @@ Once the pipeline has finished running, you can find your desired output files i
 `output/final/summary.txt`: The master table summarizing each step in the pipeline
 
 Examples of final output files for three HMP samples can be found in the `example_output` folder of this repository.
+
+##### Log files
+
+When running MetaLAFFA, log files are generated in the `logging/` directory for each job run by the pipeline. You can refer to these files to look for the cause of any errors that may have occurred during operation.
 
 ##### Restarting MetaLAFFA
 
